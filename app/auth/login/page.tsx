@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
@@ -30,6 +30,20 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const supabase = createClientComponentClient()
 
+  // Verificar si el usuario ya está autenticado
+  useEffect(() => {
+    const checkSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (session) {
+        router.push("/profile")
+      }
+    }
+
+    checkSession()
+  }, [router, supabase.auth])
+
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -43,7 +57,7 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data: authData } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       })
@@ -54,7 +68,6 @@ export default function LoginPage() {
 
       // Redirigir al perfil después del inicio de sesión exitoso
       router.push("/profile")
-      router.refresh()
     } catch (error: any) {
       console.error("Error de inicio de sesión:", error)
       setError(error.message || "Error al iniciar sesión")

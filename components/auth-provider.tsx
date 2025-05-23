@@ -4,7 +4,7 @@ import type React from "react"
 
 import { createContext, useContext, useEffect, useState } from "react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import type { Session, User } from "@supabase/supabase-js"
 import type { Database } from "@/lib/supabase-types"
 
@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = createClientComponentClient<Database>()
 
   useEffect(() => {
@@ -44,13 +45,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
       setIsLoading(false)
+
+      // Redirigir a la página de perfil si el usuario inicia sesión
+      // y está en una página de autenticación
+      if (session && (pathname?.startsWith("/auth/login") || pathname?.startsWith("/auth/register"))) {
+        router.push("/profile")
+      }
+
       router.refresh()
     })
 
     return () => {
       subscription.unsubscribe()
     }
-  }, [supabase, router])
+  }, [supabase, router, pathname])
 
   const signOut = async () => {
     await supabase.auth.signOut()

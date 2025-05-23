@@ -14,7 +14,9 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Registro Nacional de Bicis",
   description: "Sistema nacional para el registro de bicicletas",
-    generator: 'v0.dev'
+  icons: {
+    icon: "/favicon.ico",
+  },
 }
 
 export default async function RootLayout({

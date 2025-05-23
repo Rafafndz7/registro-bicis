@@ -3,34 +3,18 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { z } from "zod"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-
 import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
-import { validateCURP, validatePhone } from "@/lib/utils"
 
-// Esquema de validación
+// Esquema de validación simplificado
 const registerSchema = z.object({
   fullName: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres" }),
   email: z.string().email({ message: "Correo electrónico inválido" }),
@@ -38,13 +22,7 @@ const registerSchema = z.object({
   birthDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
     message: "Fecha de nacimiento inválida",
   }),
-  curp: z.string().refine(validateCURP, {
-    message: "CURP inválida",
-  }),
-  address: z.string().min(10, { message: "La dirección debe tener al menos 10 caracteres" }),
-  phone: z.string().refine(validatePhone, {
-    message: "Número de teléfono inválido",
-  }),
+  phone: z.string().min(10, { message: "Número de teléfono inválido" }),
 })
 
 type RegisterFormValues = z.infer<typeof registerSchema>
@@ -53,6 +31,7 @@ export default function RegisterPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const supabase = createClientComponentClient()
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -61,8 +40,6 @@ export default function RegisterPage() {
       email: "",
       password: "",
       birthDate: "",
-      curp: "",
-      address: "",
       phone: "",
     },
   })
@@ -72,6 +49,7 @@ export default function RegisterPage() {
     setError(null)
 
     try {
+      // Enviar datos al endpoint de registro
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -86,11 +64,22 @@ export default function RegisterPage() {
         throw new Error(result.error || "Error al registrar usuario")
       }
 
-      router.push("/auth/login?message=Registro exitoso. Por favor verifica tu correo electrónico.")
+      // Iniciar sesión automáticamente después del registro
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      })
+
+      if (signInError) {
+        // Si hay error al iniciar sesión, redirigir a login con mensaje
+        router.push("/auth/login?message=Registro exitoso. Por favor verifica tu correo electrónico e inicia sesión.")
+      } else {
+        // Si el inicio de sesión es exitoso, redirigir al perfil
+        router.push("/profile")
+      }
     } catch (error) {
       console.error("Error de registro:", error)
       setError(error instanceof Error ? error.message : "Error al registrar usuario")
-    } finally {
       setIsSubmitting(false)
     }
   }
@@ -126,6 +115,7 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="email"
@@ -139,6 +129,7 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="password"
@@ -153,6 +144,7 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="birthDate"
@@ -166,32 +158,7 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="curp"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>CURP</FormLabel>
-                    <FormControl>
-                      <Input placeholder="ABCD123456HDFXYZ01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Dirección</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Calle, número, colonia, ciudad, estado, CP" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
               <FormField
                 control={form.control}
                 name="phone"
@@ -205,6 +172,7 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
+
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Registrando..." : "Registrarse"}
               </Button>

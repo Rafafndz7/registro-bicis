@@ -5,10 +5,10 @@ import { NextResponse } from "next/server"
 export async function POST(request: Request) {
   const requestUrl = new URL(request.url)
   const formData = await request.json()
-  const { email, password, fullName, birthDate, curp, address, phone } = formData
+  const { email, password, fullName, birthDate, phone } = formData
 
   // Validar datos
-  if (!email || !password || !fullName || !birthDate || !curp || !address || !phone) {
+  if (!email || !password || !fullName || !birthDate || !phone) {
     return NextResponse.json({ error: "Todos los campos son obligatorios" }, { status: 400 })
   }
 
@@ -29,17 +29,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: authError.message }, { status: 400 })
     }
 
-    // Insertar perfil
+    // Insertar perfil simplificado
     if (authData?.user?.id) {
       const { error: profileError } = await supabase.from("profiles").insert({
         id: authData.user.id,
         full_name: fullName,
         birth_date: birthDate,
         email,
-        curp,
-        address,
         phone,
         role: "user",
+        // Valores por defecto para curp y address
+        curp: "",
+        address: "",
       })
 
       if (profileError) {
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: true,
-        message: "Usuario registrado correctamente. Por favor verifica tu correo electrónico.",
+        message: "Usuario registrado correctamente.",
       },
       { status: 201 },
     )

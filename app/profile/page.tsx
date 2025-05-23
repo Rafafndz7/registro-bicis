@@ -124,10 +124,12 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-            <div>
-              <h3 className="mb-2 text-sm font-medium text-muted-foreground">CURP</h3>
-              <p className="text-lg font-medium">{profile.curp}</p>
-            </div>
+            {profile.curp && (
+              <div>
+                <h3 className="mb-2 text-sm font-medium text-muted-foreground">CURP</h3>
+                <p className="text-lg font-medium">{profile.curp}</p>
+              </div>
+            )}
             <div>
               <h3 className="mb-2 text-sm font-medium text-muted-foreground">Fecha de nacimiento</h3>
               <p className="text-lg font-medium">{formatDate(profile.birth_date)}</p>
@@ -136,16 +138,14 @@ export default function ProfilePage() {
               <h3 className="mb-2 text-sm font-medium text-muted-foreground">Teléfono</h3>
               <p className="text-lg font-medium">{profile.phone}</p>
             </div>
-            <div>
-              <h3 className="mb-2 text-sm font-medium text-muted-foreground">Rol</h3>
-              <p className="text-lg font-medium capitalize">{profile.role}</p>
-            </div>
           </div>
 
-          <div>
-            <h3 className="mb-2 text-sm font-medium text-muted-foreground">Dirección</h3>
-            <p className="text-lg font-medium">{profile.address}</p>
-          </div>
+          {profile.address && (
+            <div>
+              <h3 className="mb-2 text-sm font-medium text-muted-foreground">Dirección</h3>
+              <p className="text-lg font-medium">{profile.address}</p>
+            </div>
+          )}
 
           <div className="rounded-lg bg-muted p-4">
             <div className="flex items-center justify-between">

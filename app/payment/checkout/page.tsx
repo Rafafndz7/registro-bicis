@@ -10,7 +10,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle2, AlertCircle, CreditCard } from "lucide-react"
 import Link from "next/link"
-import { formatCurrency } from "@/lib/utils"
 
 interface BicyclePayment {
   id: string
@@ -235,9 +234,9 @@ export default function CheckoutPage() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-medium">Total a pagar</h3>
-                <p className="text-sm text-muted-foreground">Incluye IVA y todos los cargos</p>
+                <p className="text-sm text-muted-foreground">Registro anual - Incluye IVA y todos los cargos</p>
               </div>
-              <span className="text-2xl font-bold">{formatCurrency(payment.amount)}</span>
+              <span className="text-2xl font-bold">$250.00 MXN</span>
             </div>
           </div>
 

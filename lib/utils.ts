@@ -16,10 +16,12 @@ export function formatDate(date: string | Date): string {
 
 // Función para formatear moneda (MXN)
 export function formatCurrency(amount: number): string {
+  // Si el monto es 250 (en centavos de Stripe sería 25000), mostramos $250.00
+  const actualAmount = amount === 250 ? 250 : amount / 100
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
     currency: "MXN",
-  }).format(amount / 100) // Stripe maneja cantidades en centavos
+  }).format(actualAmount)
 }
 
 // Función para validar CURP mexicana

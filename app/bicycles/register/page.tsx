@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useAuth } from "@/components/auth-provider"
@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle, Upload, X, ImageIcon } from "lucide-react"
-import { useEffect } from "react"
+import { validateCURP } from "@/lib/utils"
 
 // Esquema de validación
 const bicycleSchema = z.object({
@@ -25,6 +25,10 @@ const bicycleSchema = z.object({
   model: z.string().min(2, { message: "El modelo es requerido" }),
   color: z.string().min(2, { message: "El color es requerido" }),
   characteristics: z.string().optional(),
+  curp: z.string().refine((value) => value === "" || validateCURP(value), {
+    message: "CURP inválida",
+  }),
+  address: z.string().min(10, { message: "La dirección debe tener al menos 10 caracteres" }).optional(),
 })
 
 type BicycleFormValues = z.infer<typeof bicycleSchema>
@@ -38,12 +42,35 @@ export default function RegisterBicyclePage() {
   const [images, setImages] = useState<File[]>([])
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [uploadProgress, setUploadProgress] = useState<number>(0)
+  const [profile, setProfile] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) {
       router.push("/auth/login")
+      return
     }
-  }, [user, router])
+
+    // Cargar perfil del usuario para pre-llenar campos si ya existen
+    const fetchProfile = async () => {
+      try {
+        const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+
+        if (error) throw error
+        setProfile(data)
+
+        // Pre-llenar los campos si ya existen datos
+        form.setValue("curp", data.curp || "")
+        form.setValue("address", data.address || "")
+      } catch (error) {
+        console.error("Error al cargar perfil:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProfile()
+  }, [user, router, supabase])
 
   const form = useForm<BicycleFormValues>({
     resolver: zodResolver(bicycleSchema),
@@ -53,6 +80,8 @@ export default function RegisterBicyclePage() {
       model: "",
       color: "",
       characteristics: "",
+      curp: "",
+      address: "",
     },
   })
 
@@ -120,6 +149,17 @@ export default function RegisterBicyclePage() {
     setUploadProgress(0)
 
     try {
+      // Actualizar perfil con CURP y dirección si se proporcionaron
+      if (data.curp || data.address) {
+        const updateData: any = {}
+        if (data.curp) updateData.curp = data.curp
+        if (data.address) updateData.address = data.address
+
+        const { error: updateError } = await supabase.from("profiles").update(updateData).eq("id", user.id)
+
+        if (updateError) throw new Error("Error al actualizar perfil: " + updateError.message)
+      }
+
       // 1. Registrar la bicicleta
       const response = await fetch("/api/bicycles/register", {
         method: "POST",
@@ -152,6 +192,24 @@ export default function RegisterBicyclePage() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="container py-10">
+        <Card className="mx-auto max-w-3xl">
+          <CardHeader>
+            <CardTitle>Registrar Bicicleta</CardTitle>
+            <CardDescription>Cargando...</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-10">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="container py-10">
       <Card className="mx-auto max-w-3xl">
@@ -170,32 +228,64 @@ export default function RegisterBicyclePage() {
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="serialNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Número de serie</FormLabel>
-                    <FormControl>
-                      <Input placeholder="ABC123456789" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      El número de serie se encuentra generalmente debajo del pedalier o en el tubo del asiento
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-4 rounded-lg border p-4">
+                <h3 className="text-lg font-medium">Información de la bicicleta</h3>
 
-              <div className="grid gap-4 md:grid-cols-2">
                 <FormField
                   control={form.control}
-                  name="brand"
+                  name="serialNumber"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Marca</FormLabel>
+                      <FormLabel>Número de serie</FormLabel>
                       <FormControl>
-                        <Input placeholder="Trek, Specialized, Giant, etc." {...field} />
+                        <Input placeholder="ABC123456789" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        El número de serie se encuentra generalmente debajo del pedalier o en el tubo del asiento
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="brand"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Marca</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Trek, Specialized, Giant, etc." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="model"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Modelo</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Marlin 5, Allez, Talon, etc." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="color"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Color</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Rojo, Azul, Negro, etc." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -204,12 +294,51 @@ export default function RegisterBicyclePage() {
 
                 <FormField
                   control={form.control}
-                  name="model"
+                  name="characteristics"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Modelo</FormLabel>
+                      <FormLabel>Características adicionales</FormLabel>
                       <FormControl>
-                        <Input placeholder="Marlin 5, Allez, Talon, etc." {...field} />
+                        <Textarea
+                          placeholder="Describe características distintivas de tu bicicleta (opcional)"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Incluye detalles como calcomanías, accesorios permanentes, modificaciones, etc.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="space-y-4 rounded-lg border p-4">
+                <h3 className="text-lg font-medium">Información personal</h3>
+
+                <FormField
+                  control={form.control}
+                  name="curp"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CURP</FormLabel>
+                      <FormControl>
+                        <Input placeholder="ABCD123456HDFXYZ01" {...field} />
+                      </FormControl>
+                      <FormDescription>Clave Única de Registro de Población</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Dirección</FormLabel>
+                      <FormControl>
+                        <Textarea placeholder="Calle, número, colonia, ciudad, estado, CP" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -217,42 +346,8 @@ export default function RegisterBicyclePage() {
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="color"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Color</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Rojo, Azul, Negro, etc." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="characteristics"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Características adicionales</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Describe características distintivas de tu bicicleta (opcional)"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Incluye detalles como calcomanías, accesorios permanentes, modificaciones, etc.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div>
-                <FormLabel>Imágenes de la bicicleta (máximo 4)</FormLabel>
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Imágenes de la bicicleta (máximo 4)</h3>
                 <div className="mt-2 grid grid-cols-2 gap-4 sm:grid-cols-4">
                   {imageUrls.map((url, index) => (
                     <div key={index} className="relative aspect-square rounded-md border">
@@ -320,7 +415,7 @@ export default function RegisterBicyclePage() {
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            El registro tiene un costo de $250 MXN que deberás pagar al finalizar
+            El registro anual tiene un costo de $250 MXN que deberás pagar al finalizar
           </p>
         </CardFooter>
       </Card>

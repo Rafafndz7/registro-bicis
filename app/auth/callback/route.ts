@@ -12,6 +12,6 @@ export async function GET(request: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  // URL to redirect to after sign in process completes
+  // Redirección inmediata al perfil después de la autenticación
   return NextResponse.redirect(new URL("/profile", request.url))
 }

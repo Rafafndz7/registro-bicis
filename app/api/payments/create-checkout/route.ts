@@ -74,10 +74,10 @@ export async function POST(request: Request) {
             price_data: {
               currency: "mxn",
               product_data: {
-                name: `Registro de Bicicleta - ${payment.bicycles.brand} ${payment.bicycles.model}`,
-                description: `Número de serie: ${payment.bicycles.serial_number}`,
+                name: `Registro Anual de Bicicleta - ${payment.bicycles.brand} ${payment.bicycles.model}`,
+                description: `Número de serie: ${payment.bicycles.serial_number} - Válido por 1 año`,
               },
-              unit_amount: payment.amount,
+              unit_amount: 25000, // $250 MXN en centavos para Stripe
             },
             quantity: 1,
           },

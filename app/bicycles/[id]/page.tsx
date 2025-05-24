@@ -9,10 +9,30 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { formatDate } from "@/lib/utils"
-import { BikeIcon as BicycleIcon, AlertCircle, ChevronLeft, ImageIcon, FileDown, QrCode } from "lucide-react"
+import {
+  BikeIcon as BicycleIcon,
+  AlertCircle,
+  ChevronLeft,
+  ImageIcon,
+  FileDown,
+  QrCode,
+  Edit,
+  Trash2,
+} from "lucide-react"
 import Link from "next/link"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface Bicycle {
   id: string
@@ -40,6 +60,7 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [downloadingCertificate, setDownloadingCertificate] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -105,6 +126,32 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
     }
   }
 
+  const handleDelete = async () => {
+    if (!bicycle) return
+
+    try {
+      setDeleting(true)
+
+      const response = await fetch(`/api/bicycles/${bicycle.id}`, {
+        method: "DELETE",
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al eliminar bicicleta")
+      }
+
+      // Redirigir a la lista de bicicletas
+      router.push("/bicycles")
+    } catch (error) {
+      console.error("Error al eliminar bicicleta:", error)
+      alert("Error al eliminar bicicleta: " + (error as Error).message)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const downloadCertificate = async () => {
     if (!bicycle || !bicycle.payment_status) return
 
@@ -151,7 +198,7 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
         <div className="mb-6">
           <Skeleton className="h-8 w-40" />
         </div>
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-8 lg:grid-cols-2">
           <Skeleton className="aspect-square rounded-lg" />
           <div className="space-y-6">
             <Skeleton className="h-10 w-3/4" />
@@ -300,21 +347,57 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
             )}
 
             {bicycle.payment_status && (
-              <Button onClick={downloadCertificate} className="w-full" disabled={downloadingCertificate}>
-                {downloadingCertificate ? (
-                  <>Generando certificado...</>
-                ) : (
-                  <>
-                    <FileDown className="mr-2 h-4 w-4" /> Descargar certificado
-                  </>
-                )}
-              </Button>
+              <>
+                <Button onClick={downloadCertificate} className="w-full" disabled={downloadingCertificate}>
+                  {downloadingCertificate ? (
+                    <>Generando certificado...</>
+                  ) : (
+                    <>
+                      <FileDown className="mr-2 h-4 w-4" /> Descargar certificado
+                    </>
+                  )}
+                </Button>
+
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href={`/bicycles/${bicycle.id}/qr`}>
+                    <QrCode className="mr-2 h-4 w-4" /> Ver código QR
+                  </Link>
+                </Button>
+              </>
             )}
 
-            {bicycle.payment_status && (
-              <Button variant="outline" className="w-full">
-                <QrCode className="mr-2 h-4 w-4" /> Ver código QR
-              </Button>
+            {/* Botones de editar y eliminar solo para bicicletas no pagadas */}
+            {!bicycle.payment_status && (
+              <div className="flex space-x-2 pt-2">
+                <Button variant="outline" className="flex-1" asChild>
+                  <Link href={`/bicycles/${bicycle.id}/edit`}>
+                    <Edit className="mr-2 h-4 w-4" /> Editar
+                  </Link>
+                </Button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="flex-1" disabled={deleting}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción no se puede deshacer. Se eliminará permanentemente la bicicleta y todos sus datos
+                        asociados.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} disabled={deleting}>
+                        {deleting ? "Eliminando..." : "Eliminar"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             )}
           </div>
         </div>

@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, Upload, X, ImageIcon } from "lucide-react"
+import { AlertCircle, Upload, X, ImageIcon, Info } from "lucide-react"
 import { validateCURP } from "@/lib/utils"
 
 // Esquema de validación
@@ -44,6 +44,7 @@ export default function RegisterBicyclePage() {
   const [uploadProgress, setUploadProgress] = useState<number>(0)
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [bicycleCount, setBicycleCount] = useState(0)
 
   useEffect(() => {
     if (!user) {
@@ -51,25 +52,39 @@ export default function RegisterBicyclePage() {
       return
     }
 
-    // Cargar perfil del usuario para pre-llenar campos si ya existen
-    const fetchProfile = async () => {
+    // Cargar perfil del usuario y contar bicicletas
+    const fetchUserData = async () => {
       try {
-        const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+        // Cargar perfil
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single()
 
-        if (error) throw error
-        setProfile(data)
+        if (profileError) throw profileError
+        setProfile(profileData)
+
+        // Contar bicicletas del usuario
+        const { count, error: countError } = await supabase
+          .from("bicycles")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+
+        if (countError) throw countError
+        setBicycleCount(count || 0)
 
         // Pre-llenar los campos si ya existen datos
-        form.setValue("curp", data.curp || "")
-        form.setValue("address", data.address || "")
+        form.setValue("curp", profileData.curp || "")
+        form.setValue("address", profileData.address || "")
       } catch (error) {
-        console.error("Error al cargar perfil:", error)
+        console.error("Error al cargar datos del usuario:", error)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchProfile()
+    fetchUserData()
   }, [user, router, supabase])
 
   const form = useForm<BicycleFormValues>({
@@ -84,6 +99,35 @@ export default function RegisterBicyclePage() {
       address: "",
     },
   })
+
+  // Si el usuario ya tiene 2 bicicletas, mostrar mensaje de límite
+  if (!loading && bicycleCount >= 2) {
+    return (
+      <div className="container py-10">
+        <Card className="mx-auto max-w-3xl">
+          <CardHeader>
+            <CardTitle>Límite de registros alcanzado</CardTitle>
+            <CardDescription>Has alcanzado el límite máximo de bicicletas registradas</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertTitle>Límite máximo</AlertTitle>
+              <AlertDescription>
+                Cada usuario puede registrar un máximo de 2 bicicletas en el sistema nacional. Actualmente tienes{" "}
+                {bicycleCount} bicicleta{bicycleCount > 1 ? "s" : ""} registrada{bicycleCount > 1 ? "s" : ""}.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={() => router.push("/bicycles")} className="w-full">
+              Ver mis bicicletas
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    )
+  }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -215,7 +259,11 @@ export default function RegisterBicyclePage() {
       <Card className="mx-auto max-w-3xl">
         <CardHeader>
           <CardTitle>Registrar Bicicleta</CardTitle>
-          <CardDescription>Ingresa los datos de tu bicicleta para registrarla en el sistema nacional</CardDescription>
+          <CardDescription>
+            Ingresa los datos de tu bicicleta para registrarla en el sistema nacional
+            <br />
+            <span className="text-sm text-muted-foreground">Tienes {bicycleCount} de 2 bicicletas registradas</span>
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {error && (
@@ -225,6 +273,14 @@ export default function RegisterBicyclePage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
+
+          <Alert className="mb-6">
+            <Info className="h-4 w-4" />
+            <AlertTitle>Límite de registros</AlertTitle>
+            <AlertDescription>
+              Cada usuario puede registrar un máximo de 2 bicicletas en el sistema nacional.
+            </AlertDescription>
+          </Alert>
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

@@ -96,6 +96,9 @@ export default function CheckoutPage() {
     if (!payment) return
 
     try {
+      // Guardar el bicycleId en localStorage para recuperarlo en la página de éxito
+      localStorage.setItem("currentCheckoutBicycleId", payment.bicycles.id)
+
       const response = await fetch("/api/payments/create-checkout", {
         method: "POST",
         headers: {
@@ -253,11 +256,7 @@ export default function CheckoutPage() {
             Pagar con tarjeta
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            Al completar el pago, aceptas los{" "}
-            <Link href="/terms" className="text-bike-primary hover:underline">
-              términos y condiciones
-            </Link>{" "}
-            del servicio.
+            Al completar el pago, aceptas nuestros términos y condiciones del servicio.
           </p>
         </CardFooter>
       </Card>

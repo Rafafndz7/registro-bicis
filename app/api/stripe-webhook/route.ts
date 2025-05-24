@@ -16,6 +16,7 @@ export async function POST(request: Request) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch (error) {
+    console.error("Error al verificar firma del webhook:", error)
     return NextResponse.json({ error: "Webhook error", details: error }, { status: 400 })
   }
 
@@ -29,37 +30,50 @@ export async function POST(request: Request) {
     if (bicycleId && paymentId && userId) {
       const supabase = createRouteHandlerClient({ cookies })
 
-      // Actualizar el estado del pago
-      const { error: paymentError } = await supabase
-        .from("payments")
-        .update({
-          payment_status: "completed",
-          stripe_payment_id: session.id,
-          payment_date: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", paymentId)
-        .eq("user_id", userId)
+      console.log(`Procesando pago completado: bicycleId=${bicycleId}, paymentId=${paymentId}, userId=${userId}`)
 
-      if (paymentError) {
-        console.error("Error al actualizar pago:", paymentError)
-        return NextResponse.json({ error: "Error al actualizar pago", details: paymentError }, { status: 500 })
+      try {
+        // Iniciar transacción manual
+        // 1. Actualizar el estado del pago
+        const { error: paymentError } = await supabase
+          .from("payments")
+          .update({
+            payment_status: "completed",
+            stripe_payment_id: session.id,
+            payment_date: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", paymentId)
+          .eq("user_id", userId)
+
+        if (paymentError) {
+          console.error("Error al actualizar pago:", paymentError)
+          throw paymentError
+        }
+
+        // 2. Actualizar el estado de la bicicleta
+        const { error: bicycleError } = await supabase
+          .from("bicycles")
+          .update({
+            payment_status: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", bicycleId)
+          .eq("user_id", userId)
+
+        if (bicycleError) {
+          console.error("Error al actualizar bicicleta:", bicycleError)
+          throw bicycleError
+        }
+
+        console.log(`Pago procesado exitosamente para bicicleta ${bicycleId}`)
+      } catch (error) {
+        console.error("Error en transacción de webhook:", error)
+        return NextResponse.json({ error: "Error al procesar webhook", details: error }, { status: 500 })
       }
-
-      // Actualizar el estado de la bicicleta
-      const { error: bicycleError } = await supabase
-        .from("bicycles")
-        .update({
-          payment_status: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", bicycleId)
-        .eq("user_id", userId)
-
-      if (bicycleError) {
-        console.error("Error al actualizar bicicleta:", bicycleError)
-        return NextResponse.json({ error: "Error al actualizar bicicleta", details: bicycleError }, { status: 500 })
-      }
+    } else {
+      console.error("Metadatos incompletos en la sesión de Stripe:", session.metadata)
+      return NextResponse.json({ error: "Metadatos incompletos" }, { status: 400 })
     }
   }
 

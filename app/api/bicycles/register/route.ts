@@ -23,6 +23,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Faltan datos obligatorios de la bicicleta" }, { status: 400 })
     }
 
+    // Verificar límite de 2 bicicletas por usuario
+    const { count: bicycleCount, error: countError } = await supabase
+      .from("bicycles")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+
+    if (countError) throw countError
+
+    if (bicycleCount && bicycleCount >= 2) {
+      return NextResponse.json(
+        { error: "Has alcanzado el límite máximo de 2 bicicletas registradas por usuario" },
+        { status: 400 },
+      )
+    }
+
     // Verificar que no exista una bicicleta con el mismo número de serie
     const { data: existingBicycle } = await supabase
       .from("bicycles")
@@ -71,7 +86,7 @@ export async function POST(request: Request) {
     const { error: paymentError } = await supabase.from("payments").insert({
       user_id: userId,
       bicycle_id: bicycle.id,
-      amount: 250, // Monto fijo para el registro (en centavos)
+      amount: 25000, // $250 MXN en centavos para Stripe
       payment_status: "pending",
     })
 

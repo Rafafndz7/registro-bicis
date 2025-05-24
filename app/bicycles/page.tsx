@@ -8,10 +8,21 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
-import { formatDate } from "@/lib/utils"
-import { BikeIcon as BicycleIcon, Plus, AlertCircle, FileDown } from "lucide-react"
-import Link from "next/link"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { formatDate } from "@/lib/utils"
+import { BikeIcon as BicycleIcon, Plus, AlertCircle, FileDown, RefreshCw, Edit, Trash2 } from "lucide-react"
+import Link from "next/link"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface Bicycle {
   id: string
@@ -31,6 +42,7 @@ export default function BicyclesPage() {
   const [bicycles, setBicycles] = useState<Bicycle[]>([])
   const [loading, setLoading] = useState(true)
   const [downloadingCertificate, setDownloadingCertificate] = useState<string | null>(null)
+  const [updatingPayment, setUpdatingPayment] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -38,26 +50,26 @@ export default function BicyclesPage() {
       return
     }
 
-    const fetchBicycles = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("bicycles")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("registration_date", { ascending: false })
-
-        if (error) throw error
-
-        setBicycles(data || [])
-      } catch (error) {
-        console.error("Error al cargar bicicletas:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchBicycles()
   }, [user, router, supabase])
+
+  const fetchBicycles = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("bicycles")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("registration_date", { ascending: false })
+
+      if (error) throw error
+
+      setBicycles(data || [])
+    } catch (error) {
+      console.error("Error al cargar bicicletas:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handlePayment = async (bicycleId: string) => {
     try {
@@ -76,6 +88,34 @@ export default function BicyclesPage() {
       }
     } catch (error) {
       console.error("Error al crear sesión de pago:", error)
+    }
+  }
+
+  const updatePaymentStatus = async (bicycleId: string) => {
+    try {
+      setUpdatingPayment(bicycleId)
+
+      const response = await fetch("/api/payments/update-status", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ bicycleId }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Error al actualizar estado de pago")
+      }
+
+      // Recargar las bicicletas para mostrar el estado actualizado
+      fetchBicycles()
+      alert("Estado de pago actualizado correctamente")
+    } catch (error) {
+      console.error("Error al actualizar estado de pago:", error)
+      alert("Error al actualizar estado de pago: " + (error as Error).message)
+    } finally {
+      setUpdatingPayment(null)
     }
   }
 
@@ -119,6 +159,27 @@ export default function BicyclesPage() {
     }
   }
 
+  const handleDeleteBicycle = async (bicycleId: string) => {
+    try {
+      const response = await fetch(`/api/bicycles/${bicycleId}`, {
+        method: "DELETE",
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al eliminar bicicleta")
+      }
+
+      // Recargar la lista de bicicletas
+      fetchBicycles()
+      alert("Bicicleta eliminada correctamente")
+    } catch (error) {
+      console.error("Error al eliminar bicicleta:", error)
+      alert("Error al eliminar bicicleta: " + (error as Error).message)
+    }
+  }
+
   if (loading) {
     return (
       <div className="container py-10">
@@ -155,11 +216,17 @@ export default function BicyclesPage() {
     <div className="container py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Mis Bicicletas</h1>
-        <Link href="/bicycles/register">
-          <Button className="bg-bike-primary hover:bg-bike-primary/90">
-            <Plus className="mr-2 h-4 w-4" /> Registrar bicicleta
+        <div className="flex space-x-2">
+          <Button onClick={fetchBicycles} variant="outline" size="sm">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Actualizar
           </Button>
-        </Link>
+          <Link href="/bicycles/register">
+            <Button className="bg-bike-primary hover:bg-bike-primary/90">
+              <Plus className="mr-2 h-4 w-4" /> Registrar bicicleta
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {bicycles.length === 0 ? (
@@ -228,6 +295,42 @@ export default function BicyclesPage() {
                     </Button>
                   </Link>
 
+                  {/* Botones de editar y eliminar para bicicletas no pagadas */}
+                  {!bicycle.payment_status && (
+                    <div className="flex space-x-2">
+                      <Link href={`/bicycles/${bicycle.id}/edit`} className="flex-1">
+                        <Button variant="outline" size="sm" className="w-full">
+                          <Edit className="mr-2 h-4 w-4" /> Editar
+                        </Button>
+                      </Link>
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm" className="flex-1">
+                            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>¿Eliminar bicicleta?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta acción no se puede deshacer. Se eliminará permanentemente la bicicleta.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteBicycle(bicycle.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Eliminar
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  )}
+
                   {bicycle.payment_status ? (
                     <Button
                       onClick={() => downloadCertificate(bicycle)}
@@ -243,9 +346,24 @@ export default function BicyclesPage() {
                       )}
                     </Button>
                   ) : (
-                    <Button className="w-full" onClick={() => handlePayment(bicycle.id)}>
-                      Completar pago
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button className="flex-1" onClick={() => handlePayment(bicycle.id)}>
+                        Completar pago
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updatePaymentStatus(bicycle.id)}
+                        disabled={updatingPayment === bicycle.id}
+                        title="Actualizar estado de pago manualmente"
+                      >
+                        {updatingPayment === bicycle.id ? (
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardFooter>

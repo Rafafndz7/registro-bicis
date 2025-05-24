@@ -20,27 +20,59 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Se requiere el ID de la bicicleta" }, { status: 400 })
     }
 
-    // Verificar que la bicicleta pertenezca al usuario y esté pendiente de pago
-    const { data: payment, error: paymentError } = await supabase
-      .from("payments")
-      .select(`
-        id,
-        amount,
-        bicycles (
-          id,
-          serial_number,
-          brand,
-          model
-        )
-      `)
-      .eq("bicycle_id", bicycleId)
+    // Verificar que la bicicleta pertenezca al usuario
+    const { data: bicycle, error: bicycleError } = await supabase
+      .from("bicycles")
+      .select("id, serial_number, brand, model, payment_status")
+      .eq("id", bicycleId)
       .eq("user_id", session.user.id)
-      .eq("payment_status", "pending")
       .single()
 
-    if (paymentError || !payment) {
-      console.error("Error al obtener el pago:", paymentError)
-      return NextResponse.json({ error: "Pago no encontrado o ya procesado" }, { status: 404 })
+    if (bicycleError || !bicycle) {
+      return NextResponse.json({ error: "Bicicleta no encontrada" }, { status: 404 })
+    }
+
+    // Si la bicicleta ya está pagada, no permitir otro pago
+    if (bicycle.payment_status) {
+      return NextResponse.json({ error: "Esta bicicleta ya está registrada y pagada" }, { status: 400 })
+    }
+
+    // Buscar pago pendiente existente o crear uno nuevo
+    let payment
+    const { data: existingPayment, error: paymentSearchError } = await supabase
+      .from("payments")
+      .select("id, amount, payment_status")
+      .eq("bicycle_id", bicycleId)
+      .eq("user_id", session.user.id)
+      .single()
+
+    if (paymentSearchError && paymentSearchError.code !== "PGRST116") {
+      // Error diferente a "no encontrado"
+      throw paymentSearchError
+    }
+
+    if (existingPayment) {
+      // Si ya existe un pago pendiente, usarlo
+      if (existingPayment.payment_status === "pending") {
+        payment = existingPayment
+      } else if (existingPayment.payment_status === "completed") {
+        return NextResponse.json({ error: "Esta bicicleta ya está pagada" }, { status: 400 })
+      }
+    } else {
+      // Crear nuevo registro de pago
+      const { data: newPayment, error: newPaymentError } = await supabase
+        .from("payments")
+        .insert({
+          user_id: session.user.id,
+          bicycle_id: bicycleId,
+          amount: 25000, // $250 MXN en centavos para Stripe
+          payment_status: "pending",
+        })
+        .select()
+        .single()
+
+      if (newPaymentError) throw newPaymentError
+      payment = newPayment
     }
 
     // Inicializar Stripe
@@ -74,8 +106,8 @@ export async function POST(request: Request) {
             price_data: {
               currency: "mxn",
               product_data: {
-                name: `Registro Anual de Bicicleta - ${payment.bicycles.brand} ${payment.bicycles.model}`,
-                description: `Número de serie: ${payment.bicycles.serial_number} - Válido por 1 año`,
+                name: `Registro Anual de Bicicleta - ${bicycle.brand} ${bicycle.model}`,
+                description: `Número de serie: ${bicycle.serial_number} - Válido por 1 año`,
               },
               unit_amount: 25000, // $250 MXN en centavos para Stripe
             },

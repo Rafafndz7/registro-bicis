@@ -25,7 +25,7 @@ interface BicycleSearchResult {
   profiles: {
     full_name: string
     phone: string
-  }
+  } | null
 }
 
 export default function SearchPage() {
@@ -177,10 +177,10 @@ export default function SearchPage() {
 
                   <div className="mt-4 border-t pt-4">
                     <h4 className="mb-2 text-sm font-semibold">Información del propietario</h4>
-                    <p className="font-medium">{searchResult.profiles.full_name}</p>
+                    <p className="font-medium">{searchResult.profiles?.full_name || "Usuario no disponible"}</p>
                     <div className="mt-2 flex items-center text-sm text-muted-foreground">
                       <Phone className="mr-1 h-4 w-4" />
-                      <span>{searchResult.profiles.phone}</span>
+                      <span>{searchResult.profiles?.phone || "Teléfono no disponible"}</span>
                     </div>
                   </div>
                 </div>

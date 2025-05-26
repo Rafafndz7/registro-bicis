@@ -52,6 +52,7 @@ export interface Database {
           characteristics: string | null
           registration_date: string
           payment_status: boolean
+          theft_status: string
           created_at: string
           updated_at: string
         }
@@ -65,6 +66,7 @@ export interface Database {
           characteristics?: string | null
           registration_date?: string
           payment_status?: boolean
+          theft_status?: string
           created_at?: string
           updated_at?: string
         }
@@ -78,6 +80,7 @@ export interface Database {
           characteristics?: string | null
           registration_date?: string
           payment_status?: boolean
+          theft_status?: string
           created_at?: string
           updated_at?: string
         }
@@ -110,6 +113,8 @@ export interface Database {
           stripe_payment_id: string | null
           amount: number
           payment_status: string
+          payment_type: string
+          subscription_id: string | null
           payment_date: string | null
           created_at: string
           updated_at: string
@@ -121,6 +126,8 @@ export interface Database {
           stripe_payment_id?: string | null
           amount: number
           payment_status?: string
+          payment_type?: string
+          subscription_id?: string | null
           payment_date?: string | null
           created_at?: string
           updated_at?: string
@@ -132,7 +139,82 @@ export interface Database {
           stripe_payment_id?: string | null
           amount?: number
           payment_status?: string
+          payment_type?: string
+          subscription_id?: string | null
           payment_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          status: string
+          current_period_start: string | null
+          current_period_end: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          status?: string
+          current_period_start?: string | null
+          current_period_end?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          status?: string
+          current_period_start?: string | null
+          current_period_end?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      theft_reports: {
+        Row: {
+          id: string
+          bicycle_id: string
+          user_id: string
+          report_date: string
+          location: string | null
+          description: string | null
+          police_report_number: string | null
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          bicycle_id: string
+          user_id: string
+          report_date?: string
+          location?: string | null
+          description?: string | null
+          police_report_number?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          bicycle_id?: string
+          user_id?: string
+          report_date?: string
+          location?: string | null
+          description?: string | null
+          police_report_number?: string | null
+          status?: string
           created_at?: string
           updated_at?: string
         }

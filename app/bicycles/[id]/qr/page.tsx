@@ -80,8 +80,12 @@ export default function BicycleQRPage({ params }: { params: { id: string } }) {
             profiles: data.profiles,
           }
           setBicycle(mappedData)
-          // Establecer la URL de verificación
-          setVerificationUrl(`${window.location.origin}/verify/${data.id}`)
+
+          // Establecer la URL de verificación usando la variable de entorno
+          const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
+            ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+            : window.location.origin
+          setVerificationUrl(`${baseUrl}/verify/${data.id}`)
         }
       } catch (error) {
         console.error("Error al cargar detalles de la bicicleta:", error)
@@ -151,7 +155,8 @@ export default function BicycleQRPage({ params }: { params: { id: string } }) {
       ctx.fillStyle = "#1e88e5"
       ctx.fillText("Escanea para verificar en:", canvas.width / 2, qrY + qrSize + 110)
       ctx.font = "10px Arial"
-      ctx.fillText(`registronacionaldebicis.com/verify/${bicycle.id}`, canvas.width / 2, qrY + qrSize + 130)
+      const domain = process.env.NEXT_PUBLIC_VERCEL_URL || "localhost:3000"
+      ctx.fillText(`${domain}/verify/${bicycle.id}`, canvas.width / 2, qrY + qrSize + 130)
 
       // Footer
       ctx.fillStyle = "#666"

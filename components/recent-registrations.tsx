@@ -1,101 +1,80 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useState, useEffect } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { supabase } from "@/lib/supabase"
+import { formatDate } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { formatDate } from "@/lib/utils"
-import { BikeIcon as Bicycle } from "lucide-react"
-import { RNBLogo } from "@/components/rnb-logo"
-import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { QrCode } from "lucide-react"
 
-interface BicycleRegistration {
+interface Bicycle {
   id: string
-  serial_number: string
   brand: string
   model: string
   color: string
-  registration_date: string
-  profiles: {
-    full_name: string
-  } | null
-  bicycle_images: {
-    image_url: string
-  }[]
+  serial_number: string
+  created_at: string
+  image_url: string
+  user_id: string
+  status: string
 }
 
 export function RecentRegistrations() {
-  const [bicycles, setBicycles] = useState<BicycleRegistration[]>([])
+  const [bicycles, setBicycles] = useState<Bicycle[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClientComponentClient()
 
   useEffect(() => {
-    const fetchRecentBicycles = async () => {
+    async function fetchRecentBicycles() {
       try {
+        setLoading(true)
+
+        // Obtener bicicletas con pagos completados
         const { data, error } = await supabase
           .from("bicycles")
-          .select(
-            `
-            id,
-            serial_number,
-            brand,
-            model,
-            color,
-            registration_date,
-            profiles (
-              full_name
-            ),
-            bicycle_images (
-              image_url
-            )
-          `,
-          )
-          .eq("payment_status", true)
-          .order("registration_date", { ascending: false })
+          .select(`
+            id, 
+            brand, 
+            model, 
+            color, 
+            serial_number, 
+            created_at, 
+            image_url,
+            user_id,
+            status
+          `)
+          .eq("payment_status", "completed")
+          .order("created_at", { ascending: false })
           .limit(6)
 
-        if (error) throw error
+        if (error) {
+          console.error("Error fetching bicycles:", error)
+          return
+        }
 
-        // Mapear los datos para asegurar el tipo correcto
-        const mappedData: BicycleRegistration[] = (data || []).map((item: any) => ({
-          id: item.id,
-          serial_number: item.serial_number,
-          brand: item.brand,
-          model: item.model,
-          color: item.color,
-          registration_date: item.registration_date,
-          profiles: item.profiles,
-          bicycle_images: item.bicycle_images || [],
-        }))
-
-        setBicycles(mappedData)
+        setBicycles(data || [])
       } catch (error) {
-        console.error("Error al cargar bicicletas recientes:", error)
-        setBicycles([]) // Establecer array vacío en caso de error
+        console.error("Error in fetchRecentBicycles:", error)
+        setBicycles([])
       } finally {
         setLoading(false)
       }
     }
 
     fetchRecentBicycles()
-  }, [supabase])
+  }, [])
 
   if (loading) {
     return (
-      <div className="grid w-full gap-4 sm:grid-cols-2 md:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i} className="overflow-hidden">
-            <CardContent className="p-0">
-              <Skeleton className="aspect-video w-full" />
-              <div className="p-4">
-                <Skeleton className="mb-2 h-6 w-3/4" />
-                <Skeleton className="mb-4 h-4 w-1/2" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-2/3" />
-                </div>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(6)].map((_, i) => (
+          <Card key={i} className="overflow-hidden border border-gray-200 h-[280px] animate-pulse">
+            <div className="h-40 bg-gray-200"></div>
+            <CardContent className="p-4">
+              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
             </CardContent>
           </Card>
         ))}
@@ -103,69 +82,62 @@ export function RecentRegistrations() {
     )
   }
 
+  if (bicycles.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-gray-500 mb-4">No hay bicicletas registradas recientemente.</p>
+        <Link href="/auth/register">
+          <Button>Registra tu bicicleta</Button>
+        </Link>
+      </div>
+    )
+  }
+
   return (
-    <div className="grid w-full gap-4 sm:grid-cols-2 md:grid-cols-3">
-      {bicycles.length === 0 ? (
-        <div className="col-span-full text-center">
-          <RNBLogo size={60} className="mx-auto mb-4 opacity-50" />
-          <p className="text-muted-foreground">No hay bicicletas registradas aún</p>
-        </div>
-      ) : (
-        bicycles.map((bicycle) => (
-          <Link href={`/search?serial=${bicycle.serial_number}`} key={bicycle.id}>
-            <Card className="overflow-hidden transition-all hover:shadow-md hover:scale-105">
-              <CardContent className="p-0">
-                {/* Imagen de la bicicleta */}
-                <div className="relative aspect-video overflow-hidden bg-gradient-to-r from-bike-primary/10 to-bike-primary/5">
-                  {bicycle.bicycle_images && bicycle.bicycle_images.length > 0 ? (
-                    <img
-                      src={bicycle.bicycle_images[0].image_url || "/placeholder.svg"}
-                      alt={`${bicycle.brand} ${bicycle.model}`}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center">
-                      <Bicycle className="h-16 w-16 text-bike-primary opacity-20" />
-                    </div>
-                  )}
-
-                  {/* Logo RNB en la esquina */}
-                  <div className="absolute top-2 left-2">
-                    <RNBLogo size={30} />
-                  </div>
-
-                  <div className="absolute top-2 right-2">
-                    <Badge
-                      variant="outline"
-                      className="bg-white/90 backdrop-blur-sm border-bike-primary text-bike-primary"
-                    >
-                      Registrada
-                    </Badge>
-                  </div>
-                </div>
-
-                {/* Información de la bicicleta */}
-                <div className="p-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <h3 className="font-semibold text-bike-primary">
-                      {bicycle.brand} {bicycle.model}
-                    </h3>
-                  </div>
-                  <p className="mb-2 text-sm text-muted-foreground">
-                    Serie: {bicycle.serial_number.substring(0, 4)}...
-                    {bicycle.serial_number.substring(bicycle.serial_number.length - 4)}
-                  </p>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Propietario: {bicycle.profiles?.full_name?.split(" ")[0] || "Usuario"}</span>
-                    <span>{formatDate(bicycle.registration_date)}</span>
-                  </div>
-                  <div className="mt-2 text-xs text-bike-primary font-medium">✓ Verificado por RNB</div>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))
-      )}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {bicycles.map((bicycle) => (
+        <Card key={bicycle.id} className="overflow-hidden border border-gray-200 hover:shadow-lg transition-shadow">
+          <div className="relative h-40 bg-gray-100">
+            {bicycle.image_url ? (
+              <Image
+                src={bicycle.image_url || "/placeholder.svg"}
+                alt={`${bicycle.brand} ${bicycle.model}`}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full bg-gray-100 text-gray-400">
+                <span>Sin imagen</span>
+              </div>
+            )}
+            {bicycle.status === "stolen" && (
+              <Badge variant="destructive" className="absolute top-2 right-2">
+                Reportada como robada
+              </Badge>
+            )}
+          </div>
+          <CardContent className="p-4">
+            <div className="flex justify-between items-start mb-2">
+              <div>
+                <h3 className="font-semibold text-lg">{bicycle.brand}</h3>
+                <p className="text-sm text-gray-600">{bicycle.model}</p>
+              </div>
+              <Badge variant="outline" className="bg-gray-100">
+                {bicycle.color}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center mt-4">
+              <div className="text-xs text-gray-500">Registrada: {formatDate(bicycle.created_at)}</div>
+              <Link href={`/verify/${bicycle.id}`}>
+                <Button size="sm" variant="ghost" className="flex items-center gap-1">
+                  <QrCode className="h-3 w-3" />
+                  <span>Verificar</span>
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   )
 }

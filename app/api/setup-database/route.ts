@@ -1,98 +1,77 @@
-import { createClient } from "@supabase/supabase-js"
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { cookies } from "next/headers"
+import { NextResponse } from "next/server"
 
-// Esta ruta se usará solo una vez para configurar la base de datos
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabase = createRouteHandlerClient({ cookies })
 
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return new Response(JSON.stringify({ error: "Faltan credenciales de Supabase" }), { status: 500 })
+    // Verificar autenticación
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session) {
+      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    // Usar la clave de servicio para tener permisos completos
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    // Verificar si el usuario es administrador
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single()
 
-    // 1. Crear tabla de usuarios (profiles)
-    const { error: profilesError } = await supabase.rpc("create_table_if_not_exists", {
-      table_name: "profiles",
-      definition: `
-        id UUID PRIMARY KEY REFERENCES auth.users(id),
-        full_name TEXT NOT NULL,
-        birth_date DATE NOT NULL,
-        email TEXT NOT NULL UNIQUE,
-        curp TEXT NOT NULL UNIQUE,
-        address TEXT NOT NULL,
-        phone TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'user',
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-      `,
+    if (profileError || profile?.role !== "admin") {
+      return NextResponse.json({ error: "Acceso denegado" }, { status: 403 })
+    }
+
+    // Verificar si existe la tabla de suscripciones
+    const { data: tableExists, error: tableError } = await supabase.rpc("check_table_exists", {
+      table_name: "subscriptions",
     })
 
-    if (profilesError) throw profilesError
+    if (tableError) {
+      return NextResponse.json({ error: "Error al verificar tabla", details: tableError }, { status: 500 })
+    }
 
-    // 2. Crear tabla de bicicletas
-    const { error: bicyclesError } = await supabase.rpc("create_table_if_not_exists", {
-      table_name: "bicycles",
-      definition: `
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        user_id UUID NOT NULL REFERENCES profiles(id),
-        serial_number TEXT NOT NULL UNIQUE,
-        brand TEXT NOT NULL,
-        model TEXT NOT NULL,
-        color TEXT NOT NULL,
-        characteristics TEXT,
-        registration_date TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-        payment_status BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-      `,
+    // Si la tabla no existe, crearla
+    if (!tableExists) {
+      const { error: createError } = await supabase.rpc("create_subscriptions_table")
+
+      if (createError) {
+        return NextResponse.json({ error: "Error al crear tabla", details: createError }, { status: 500 })
+      }
+    }
+
+    // Verificar políticas RLS
+    const { data: policies, error: policiesError } = await supabase.rpc("get_table_policies", {
+      table_name: "subscriptions",
     })
 
-    if (bicyclesError) throw bicyclesError
+    if (policiesError) {
+      return NextResponse.json({ error: "Error al verificar políticas", details: policiesError }, { status: 500 })
+    }
 
-    // 3. Crear tabla de imágenes
-    const { error: imagesError } = await supabase.rpc("create_table_if_not_exists", {
-      table_name: "bicycle_images",
-      definition: `
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        bicycle_id UUID NOT NULL REFERENCES bicycles(id),
-        image_url TEXT NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-      `,
-    })
+    // Crear políticas si no existen
+    if (!policies || policies.length === 0) {
+      const { error: policyError } = await supabase.rpc("create_subscription_policies")
 
-    if (imagesError) throw imagesError
+      if (policyError) {
+        return NextResponse.json({ error: "Error al crear políticas", details: policyError }, { status: 500 })
+      }
+    }
 
-    // 4. Crear tabla de pagos
-    const { error: paymentsError } = await supabase.rpc("create_table_if_not_exists", {
-      table_name: "payments",
-      definition: `
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-        user_id UUID NOT NULL REFERENCES profiles(id),
-        bicycle_id UUID NOT NULL REFERENCES bicycles(id),
-        stripe_payment_id TEXT,
-        amount INTEGER NOT NULL,
-        payment_status TEXT NOT NULL DEFAULT 'pending',
-        payment_date TIMESTAMP WITH TIME ZONE,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-      `,
-    })
-
-    if (paymentsError) throw paymentsError
-
-    // 5. Crear políticas de seguridad RLS (Row Level Security)
-    // Aquí se configurarían las políticas de seguridad para cada tabla
-
-    return new Response(JSON.stringify({ success: true, message: "Base de datos configurada correctamente" }), {
-      status: 200,
+    return NextResponse.json({
+      success: true,
+      message: "Base de datos configurada correctamente",
+      details: {
+        tableExists,
+        policies,
+      },
     })
   } catch (error) {
-    console.error("Error al configurar la base de datos:", error)
-    return new Response(JSON.stringify({ error: "Error al configurar la base de datos", details: error }), {
-      status: 500,
-    })
+    console.error("Error al configurar base de datos:", error)
+    return NextResponse.json({ error: "Error al configurar base de datos", details: error }, { status: 500 })
   }
 }

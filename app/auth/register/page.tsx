@@ -75,7 +75,7 @@ export default function RegisterPage() {
         router.push("/auth/login?message=Registro exitoso. Por favor verifica tu correo electrónico e inicia sesión.")
       } else {
         // Si el inicio de sesión es exitoso, redirigir al perfil
-        router.push("/profile")
+        router.push("/profile") // Esto ya está correcto
       }
     } catch (error) {
       console.error("Error de registro:", error)

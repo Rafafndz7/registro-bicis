@@ -2,14 +2,16 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { formatDate } from "@/lib/utils"
-import { CreditCard, Shield, CheckCircle, XCircle, Clock } from "lucide-react"
+import { CreditCard, Shield, CheckCircle, XCircle, Clock, AlertTriangle, ArrowLeft } from "lucide-react"
 
 interface Subscription {
   id: string
@@ -17,6 +19,7 @@ interface Subscription {
   current_period_start: string | null
   current_period_end: string | null
   stripe_subscription_id: string | null
+  stripe_customer_id: string | null
 }
 
 export default function SubscriptionPage() {
@@ -26,6 +29,8 @@ export default function SubscriptionPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
+  const [canceling, setCanceling] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -35,6 +40,8 @@ export default function SubscriptionPage() {
 
     const fetchSubscription = async () => {
       try {
+        console.log("Buscando suscripción para usuario:", user.id)
+
         const { data, error } = await supabase
           .from("subscriptions")
           .select("*")
@@ -44,12 +51,15 @@ export default function SubscriptionPage() {
           .single()
 
         if (error && error.code !== "PGRST116") {
+          console.error("Error al cargar suscripción:", error)
           throw error
         }
 
+        console.log("Suscripción encontrada:", data)
         setSubscription(data)
       } catch (error) {
         console.error("Error al cargar suscripción:", error)
+        setError("Error al cargar información de suscripción")
       } finally {
         setLoading(false)
       }
@@ -61,6 +71,9 @@ export default function SubscriptionPage() {
   const handleCreateSubscription = async () => {
     try {
       setCreating(true)
+      setError(null)
+
+      console.log("Creando suscripción...")
 
       const response = await fetch("/api/subscriptions/create", {
         method: "POST",
@@ -69,20 +82,61 @@ export default function SubscriptionPage() {
         },
       })
 
-      const { url, error } = await response.json()
+      const result = await response.json()
+      console.log("Respuesta de creación:", result)
 
-      if (error) {
-        throw new Error(error)
+      if (result.error) {
+        throw new Error(result.error)
       }
 
-      if (url) {
-        window.location.href = url
+      if (result.url) {
+        console.log("Redirigiendo a Stripe:", result.url)
+        window.location.href = result.url
+      } else {
+        throw new Error("No se recibió URL de pago")
       }
     } catch (error) {
       console.error("Error al crear suscripción:", error)
-      alert("Error al crear suscripción: " + (error as Error).message)
+      setError("Error al crear suscripción: " + (error as Error).message)
     } finally {
       setCreating(false)
+    }
+  }
+
+  const handleCancelSubscription = async () => {
+    if (!subscription?.stripe_subscription_id) return
+
+    try {
+      setCanceling(true)
+      setError(null)
+
+      console.log("Cancelando suscripción:", subscription.stripe_subscription_id)
+
+      const response = await fetch("/api/subscriptions/cancel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          subscriptionId: subscription.stripe_subscription_id,
+        }),
+      })
+
+      const result = await response.json()
+      console.log("Respuesta de cancelación:", result)
+
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      // Actualizar el estado local
+      setSubscription((prev) => (prev ? { ...prev, status: "canceled" } : null))
+      alert("Suscripción cancelada exitosamente")
+    } catch (error) {
+      console.error("Error al cancelar suscripción:", error)
+      setError("Error al cancelar suscripción: " + (error as Error).message)
+    } finally {
+      setCanceling(false)
     }
   }
 
@@ -113,7 +167,7 @@ export default function SubscriptionPage() {
 
   if (loading) {
     return (
-      <div className="container py-10">
+      <div className="container py-10 max-w-4xl mx-auto">
         <Card className="mx-auto max-w-2xl">
           <CardHeader>
             <Skeleton className="h-8 w-64" />
@@ -128,12 +182,28 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="container py-10">
-      <div className="mx-auto max-w-4xl space-y-8">
+    <div className="container py-10 max-w-4xl mx-auto">
+      <div className="mb-6">
+        <Link href="/profile">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver al perfil
+          </Button>
+        </Link>
+      </div>
+
+      <div className="space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold">Suscripción</h1>
           <p className="text-muted-foreground">Gestiona tu suscripción al Registro Nacional de Bicicletas</p>
         </div>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         {subscription && subscription.status === "active" ? (
           <Card>
@@ -176,6 +246,15 @@ export default function SubscriptionPage() {
                   <li>✓ Soporte prioritario</li>
                 </ul>
               </div>
+
+              <div className="pt-4 border-t">
+                <Button variant="destructive" onClick={handleCancelSubscription} disabled={canceling} size="sm">
+                  {canceling ? "Cancelando..." : "Cancelar suscripción"}
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Puedes cancelar en cualquier momento. El acceso continuará hasta el final del período actual.
+                </p>
+              </div>
             </CardContent>
           </Card>
         ) : (
@@ -189,7 +268,7 @@ export default function SubscriptionPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="text-center">
-                <div className="text-4xl font-bold">$50 MXN</div>
+                <div className="text-4xl font-bold">$40 MXN</div>
                 <div className="text-muted-foreground">por mes</div>
               </div>
 
@@ -239,7 +318,11 @@ export default function SubscriptionPage() {
             </CardContent>
             <CardFooter>
               <Button onClick={handleCreateSubscription} disabled={creating} className="w-full" size="lg">
-                {creating ? "Procesando..." : "Suscribirse ahora"}
+                {creating
+                  ? "Procesando..."
+                  : subscription?.status === "canceled"
+                    ? "Reactivar suscripción"
+                    : "Suscribirse ahora"}
               </Button>
             </CardFooter>
           </Card>
@@ -251,8 +334,8 @@ export default function SubscriptionPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Al suscribirte, autorizas el cargo automático mensual de $50 MXN a tu tarjeta de crédito o débito. Puedes
-              cancelar tu suscripción en cualquier momento desde tu panel de usuario.
+              Al suscribirte, autorizas el cargo automático mensual de $40 MXN a tu tarjeta de crédito o débito. Puedes
+              cancelar tu suscripción en cualquier momento desde esta página.
             </p>
             <div className="rounded-lg bg-blue-50 p-4">
               <h3 className="font-medium text-blue-800">Ventajas de la domiciliación:</h3>
@@ -265,6 +348,20 @@ export default function SubscriptionPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Debug info en desarrollo */}
+        {process.env.NODE_ENV === "development" && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Debug Info</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto">
+                {JSON.stringify({ subscription, user: user?.id }, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

@@ -65,7 +65,7 @@ export async function POST(request: Request) {
         .insert({
           user_id: session.user.id,
           bicycle_id: bicycleId,
-          amount: 25000, // $250 MXN en centavos para Stripe
+          amount: 4000, // $40 MXN en centavos para Stripe
           payment_status: "pending",
         })
         .select()
@@ -106,10 +106,10 @@ export async function POST(request: Request) {
             price_data: {
               currency: "mxn",
               product_data: {
-                name: `Registro Anual de Bicicleta - ${bicycle.brand} ${bicycle.model}`,
-                description: `Número de serie: ${bicycle.serial_number} - Válido por 1 año`,
+                name: `Suscripción Mensual RNB - ${bicycle.brand} ${bicycle.model}`,
+                description: `Número de serie: ${bicycle.serial_number} - Suscripción mensual $40 MXN`,
               },
-              unit_amount: 25000, // $250 MXN en centavos para Stripe
+              unit_amount: 4000, // $40 MXN en centavos para Stripe
             },
             quantity: 1,
           },

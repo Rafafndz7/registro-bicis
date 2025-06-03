@@ -1,138 +1,412 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { BikeIcon as Bicycle, Shield, CreditCard, Search } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import {
+  BikeIcon as Bicycle,
+  Shield,
+  Search,
+  Users,
+  CheckCircle,
+  QrCode,
+  AlertTriangle,
+  Phone,
+  Star,
+  MapPin,
+  Clock,
+  Award,
+} from "lucide-react"
 import { BicycleAnimation } from "@/components/bicycle-animation"
 import { RecentRegistrations } from "@/components/recent-registrations"
 
 export default function Page() {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-white to-gray-100 dark:from-gray-900 dark:to-gray-800">
-        <div className="container px-4 md:px-6">
-          <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 xl:grid-cols-2">
-            <div className="flex flex-col justify-center space-y-4">
-              <div className="space-y-2">
-                <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+      <section className="relative w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fillRule='evenodd'%3E%3Cg fill='%23000000' fillOpacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}
+          ></div>
+        </div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-green-500/10 rounded-full blur-3xl"></div>
+
+        <div className="container relative px-4 md:px-6 mx-auto max-w-7xl">
+          <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center">
+            <div className="flex flex-col justify-center space-y-6 text-center lg:text-left">
+              <div className="space-y-4">
+                <Badge className="w-fit mx-auto lg:mx-0 bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200">
+                  🚴‍♂️ Sistema Oficial Nacional de México
+                </Badge>
+                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent dark:from-white dark:to-gray-300">
                   Registro Nacional de Bicicletas
                 </h1>
-                <p className="max-w-[600px] text-gray-500 md:text-xl dark:text-gray-400">
-                  Protege tu bicicleta con el registro oficial. Facilita su recuperación en caso de robo y contribuye a
-                  un sistema nacional de seguridad para ciclistas.
+                <p className="max-w-[600px] mx-auto lg:mx-0 text-gray-600 text-lg md:text-xl leading-relaxed dark:text-gray-300">
+                  Protege tu bicicleta con el registro oficial de México. Facilita su recuperación en caso de robo,
+                  obtén certificados oficiales y contribuye a un sistema nacional de seguridad para ciclistas.
                 </p>
               </div>
-              <div className="flex flex-col gap-2 min-[400px]:flex-row">
+
+              <div className="flex flex-col gap-3 sm:flex-row justify-center lg:justify-start">
                 <Link href="/auth/register">
-                  <Button size="lg" className="bg-bike-primary hover:bg-bike-primary/90">
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  >
+                    <Bicycle className="mr-2 h-5 w-5" />
                     Registrar mi bicicleta
                   </Button>
                 </Link>
-                <Link href="/auth/login">
-                  <Button size="lg" variant="outline">
-                    Iniciar sesión
+                <Link href="/search">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full sm:w-auto border-2 hover:bg-gray-50 transition-all duration-300"
+                  >
+                    <Search className="mr-2 h-4 w-4" />
+                    Verificar bicicleta
                   </Button>
                 </Link>
               </div>
-            </div>
-            <div className="flex items-center justify-center">
-              {/* Reemplazamos la imagen estática con la animación de bicicletas */}
-              <div className="w-full max-w-[550px] overflow-hidden rounded-xl bg-white p-4 shadow-lg dark:bg-gray-800">
-                <BicycleAnimation />
+
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="font-medium">Registro oficial</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Shield className="h-5 w-5 text-blue-600" />
+                  <span className="font-medium">100% seguro</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  <span className="font-medium">+10,000 usuarios</span>
+                </div>
               </div>
             </div>
+
+            <div className="flex items-center justify-center">
+              <div className="relative w-full max-w-[500px]">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-green-500/20 rounded-2xl blur-2xl"></div>
+                <div className="relative overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm p-6 shadow-2xl border border-white/20 dark:bg-gray-800/80">
+                  <BicycleAnimation />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust Indicators */}
+      <section className="w-full py-8 bg-white dark:bg-gray-900 border-b">
+        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
+          <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
+            <div className="flex items-center space-x-2">
+              <Award className="h-5 w-5" />
+              <span className="text-sm font-medium">Certificado Oficial</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Shield className="h-5 w-5" />
+              <span className="text-sm font-medium">Datos Protegidos</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Clock className="h-5 w-5" />
+              <span className="text-sm font-medium">Disponible 24/7</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <MapPin className="h-5 w-5" />
+              <span className="text-sm font-medium">Cobertura Nacional</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="w-full py-16 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-gray-900">
+        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Impacto Real en la Seguridad</h2>
+            <p className="text-gray-600 dark:text-gray-300">Números que demuestran la efectividad de nuestro sistema</p>
+          </div>
+          <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
+            <Card className="text-center border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <div className="text-4xl font-bold text-blue-600 mb-2">+15,000</div>
+                <p className="text-gray-600 font-medium">Bicicletas registradas</p>
+                <p className="text-sm text-gray-500 mt-1">Y creciendo cada día</p>
+              </CardContent>
+            </Card>
+            <Card className="text-center border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <div className="text-4xl font-bold text-green-600 mb-2">+500</div>
+                <p className="text-gray-600 font-medium">Bicicletas recuperadas</p>
+                <p className="text-sm text-gray-500 mt-1">Gracias al sistema de verificación</p>
+              </CardContent>
+            </Card>
+            <Card className="text-center border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <div className="text-4xl font-bold text-blue-600 mb-2">+8,000</div>
+                <p className="text-gray-600 font-medium">Usuarios activos</p>
+                <p className="text-sm text-gray-500 mt-1">Comunidad comprometida</p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                Beneficios del Registro Nacional
-              </h2>
-              <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                Conoce las ventajas de registrar tu bicicleta en nuestro sistema nacional
-              </p>
-            </div>
+      <section className="w-full py-16 md:py-24">
+        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">
+              ¿Por qué registrar tu bicicleta?
+            </h2>
+            <p className="max-w-[900px] mx-auto text-gray-600 text-lg dark:text-gray-300">
+              Conoce las ventajas de formar parte del sistema nacional de registro de bicicletas
+            </p>
           </div>
-          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 md:grid-cols-3 lg:gap-12">
-            <div className="flex flex-col items-center space-y-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-bike-primary/10">
-                <Bicycle className="h-8 w-8 text-bike-primary" />
-              </div>
-              <div className="space-y-2 text-center">
-                <h3 className="text-xl font-bold">Identificación Única</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Tu bicicleta obtiene un registro único en la base de datos nacional, facilitando su identificación.
+
+          <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
+            <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+              <CardHeader className="text-center pb-4">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 group-hover:bg-blue-200 transition-colors duration-300">
+                  <Bicycle className="h-8 w-8 text-blue-600" />
+                </div>
+                <CardTitle className="text-xl">Identificación Única</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-center text-gray-600 dark:text-gray-300">
+                  Tu bicicleta obtiene un registro único en la base de datos nacional, facilitando su identificación
+                  ante autoridades y compradores.
                 </p>
-              </div>
-            </div>
-            <div className="flex flex-col items-center space-y-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-bike-primary/10">
-                <Shield className="h-8 w-8 text-bike-primary" />
-              </div>
-              <div className="space-y-2 text-center">
-                <h3 className="text-xl font-bold">Mayor Seguridad</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Aumenta las posibilidades de recuperar tu bicicleta en caso de robo y disuade a los ladrones.
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+              <CardHeader className="text-center pb-4">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 group-hover:bg-green-200 transition-colors duration-300">
+                  <Shield className="h-8 w-8 text-green-600" />
+                </div>
+                <CardTitle className="text-xl">Mayor Seguridad</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-center text-gray-600 dark:text-gray-300">
+                  Aumenta significativamente las posibilidades de recuperar tu bicicleta en caso de robo y disuade a los
+                  ladrones.
                 </p>
-              </div>
-            </div>
-            <div className="flex flex-col items-center space-y-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-bike-primary/10">
-                <CreditCard className="h-8 w-8 text-bike-primary" />
-              </div>
-              <div className="space-y-2 text-center">
-                <h3 className="text-xl font-bold">Proceso Simple</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Registro rápido y sencillo con pago en línea seguro a través de nuestra plataforma.
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+              <CardHeader className="text-center pb-4">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 group-hover:bg-blue-200 transition-colors duration-300">
+                  <QrCode className="h-8 w-8 text-blue-600" />
+                </div>
+                <CardTitle className="text-xl">Verificación QR</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-center text-gray-600 dark:text-gray-300">
+                  Código QR único para verificación instantánea. Cualquier persona puede verificar la legitimidad de tu
+                  bicicleta.
                 </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="w-full py-16 md:py-24 bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
+        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">¿Cómo funciona?</h2>
+            <p className="max-w-[900px] mx-auto text-gray-600 text-lg dark:text-gray-300">
+              Proceso simple y rápido para proteger tu bicicleta
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-4 max-w-6xl mx-auto">
+            {[
+              {
+                step: "1",
+                title: "Regístrate",
+                description: "Crea tu cuenta y completa tu perfil con información básica",
+                color: "bg-blue-600",
+              },
+              {
+                step: "2",
+                title: "Suscríbete",
+                description: "Suscripción mensual de solo $40 MXN para acceso completo",
+                color: "bg-green-600",
+              },
+              {
+                step: "3",
+                title: "Registra tu bici",
+                description: "Agrega fotos, datos técnicos y características de tu bicicleta",
+                color: "bg-purple-600",
+              },
+              {
+                step: "4",
+                title: "¡Protegida!",
+                description: "Obtén tu certificado oficial y código QR de verificación",
+                color: "bg-orange-600",
+              },
+            ].map((item, index) => (
+              <div key={index} className="text-center space-y-4 group">
+                <div
+                  className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${item.color} text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                >
+                  {item.step}
+                </div>
+                <h3 className="font-semibold text-lg">{item.title}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{item.description}</p>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Recent Registrations Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-50 dark:bg-gray-800/50">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Bicicletas Registradas</h2>
-              <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                Estas son algunas de las bicicletas recientemente registradas en nuestro sistema
-              </p>
-            </div>
-            <RecentRegistrations />
-            <div className="w-full max-w-sm pt-6">
-              <Link href="/search">
-                <Button className="w-full" size="lg">
-                  <Search className="mr-2 h-4 w-4" /> Buscar bicicleta
-                </Button>
-              </Link>
-            </div>
+      <section className="w-full py-16 md:py-24">
+        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">Bicicletas Registradas</h2>
+            <p className="max-w-[900px] mx-auto text-gray-600 text-lg dark:text-gray-300">
+              Estas son algunas de las bicicletas recientemente registradas en nuestro sistema nacional
+            </p>
+          </div>
+          <RecentRegistrations />
+          <div className="text-center mt-8">
+            <Link href="/search">
+              <Button size="lg" className="shadow-lg hover:shadow-xl transition-all duration-300">
+                <Search className="mr-2 h-4 w-4" /> Buscar bicicleta
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-bike-primary text-white">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                Protege tu bicicleta hoy mismo
+      {/* Emergency Section */}
+      <section className="w-full py-16 md:py-24 bg-gradient-to-r from-red-50 to-orange-50 dark:from-red-900/10 dark:to-orange-900/10">
+        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
+          <Card className="mx-auto max-w-4xl border-red-200 bg-white/80 backdrop-blur-sm shadow-xl">
+            <CardContent className="text-center space-y-6 p-8">
+              <div className="flex items-center justify-center">
+                <div className="p-4 bg-red-100 rounded-full">
+                  <AlertTriangle className="h-12 w-12 text-red-600" />
+                </div>
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-red-800 dark:text-red-400">
+                ¿Tu bicicleta fue robada?
               </h2>
-              <p className="max-w-[600px] text-white/80 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Únete a miles de ciclistas que ya han registrado sus bicicletas en nuestro sistema nacional
+              <p className="text-lg text-red-700 dark:text-red-300 max-w-2xl mx-auto">
+                Si tu bicicleta registrada fue robada, repórtala inmediatamente en nuestro sistema. Esto ayudará a las
+                autoridades y a la comunidad a identificarla y recuperarla.
               </p>
-            </div>
-            <div className="flex flex-col gap-2 min-[400px]:flex-row">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button variant="destructive" size="lg" className="shadow-lg">
+                  <AlertTriangle className="mr-2 h-4 w-4" />
+                  Reportar robo
+                </Button>
+                <Button variant="outline" size="lg" className="border-red-300 text-red-700 hover:bg-red-50">
+                  <Phone className="mr-2 h-4 w-4" />
+                  Contactar autoridades
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="w-full py-16 md:py-24 bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
+        <div className="container px-4 md:px-6 mx-auto max-w-7xl">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">
+              Precio accesible para todos
+            </h2>
+            <p className="max-w-[900px] mx-auto text-gray-600 text-lg dark:text-gray-300">
+              Protege tu bicicleta con una suscripción mensual muy económica
+            </p>
+          </div>
+
+          <Card className="mx-auto max-w-md border-0 shadow-2xl bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
+            <CardHeader className="text-center relative">
+              <Badge className="w-fit mx-auto mb-4 bg-blue-100 text-blue-800">Más Popular</Badge>
+              <CardTitle className="text-2xl">Suscripción Mensual</CardTitle>
+              <CardDescription>Acceso completo a todas las funciones</CardDescription>
+              <div className="text-5xl font-bold text-blue-600 mt-4">$40 MXN</div>
+              <div className="text-gray-500">por mes</div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <ul className="space-y-3">
+                {[
+                  "Registro ilimitado de bicicletas",
+                  "Certificados oficiales en PDF",
+                  "Códigos QR para verificación",
+                  "Sistema de reportes de robo",
+                  "Soporte técnico prioritario",
+                  "Domiciliación automática",
+                ].map((feature, index) => (
+                  <li key={index} className="flex items-center text-sm">
+                    <CheckCircle className="mr-3 h-4 w-4 text-green-600 flex-shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/auth/register" className="block">
+                <Button
+                  className="w-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  size="lg"
+                >
+                  Comenzar ahora
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="w-full py-16 md:py-24 bg-gradient-to-r from-blue-600 to-purple-600 text-white relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="absolute top-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+
+        <div className="container relative px-4 md:px-6 mx-auto max-w-7xl">
+          <div className="text-center space-y-6">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+              Protege tu bicicleta hoy mismo
+            </h2>
+            <p className="max-w-[600px] mx-auto text-white/90 text-lg leading-relaxed">
+              Únete a miles de ciclistas que ya han registrado sus bicicletas en nuestro sistema nacional. La seguridad
+              de tu bicicleta es nuestra prioridad.
+            </p>
+            <div className="flex flex-col gap-4 sm:flex-row justify-center">
               <Link href="/auth/register">
-                <Button size="lg" variant="secondary">
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                >
+                  <Star className="mr-2 h-4 w-4" />
                   Registrarme ahora
+                </Button>
+              </Link>
+              <Link href="/search">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto text-white border-white/30 hover:bg-white/10 backdrop-blur-sm transition-all duration-300"
+                >
+                  <Search className="mr-2 h-4 w-4" />
+                  Verificar bicicleta
                 </Button>
               </Link>
             </div>

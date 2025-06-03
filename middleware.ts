@@ -6,49 +6,44 @@ export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
   const supabase = createMiddlewareClient({ req, res })
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  // Rutas que requieren autenticación
+  const protectedRoutes = ["/profile", "/bicycles"]
 
-  // Rutas protegidas que requieren autenticación
-  const protectedRoutes = ["/profile", "/bicycles", "/payment", "/admin"]
+  // Rutas de autenticación
+  const authRoutes = ["/auth/login", "/auth/register"]
 
-  // Rutas solo para administradores
-  const adminRoutes = ["/admin"]
+  const { pathname } = req.nextUrl
 
-  const path = req.nextUrl.pathname
+  try {
+    // Verificar sesión del usuario
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession()
 
-  // Verificar si la ruta actual está protegida
-  const isProtectedRoute = protectedRoutes.some((route) => path.startsWith(route))
-  const isAdminRoute = adminRoutes.some((route) => path.startsWith(route))
+    console.log("Middleware - Ruta:", pathname, "Sesión:", !!session, "Error:", error)
 
-  // Si es una ruta protegida y no hay sesión, redirigir a login
-  if (isProtectedRoute && !session) {
-    const redirectUrl = new URL("/auth/login", req.url)
-    redirectUrl.searchParams.set("redirect", path)
-    return NextResponse.redirect(redirectUrl)
-  }
-
-  // Si es una ruta de admin, verificar el rol
-  if (isAdminRoute && session) {
-    // Obtener el rol del usuario
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single()
-
-    // Si no es admin, redirigir a la página principal
-    if (!profile || profile.role !== "admin") {
-      return NextResponse.redirect(new URL("/", req.url))
+    // Si está en una ruta protegida y no tiene sesión, redirigir a login
+    if (protectedRoutes.some((route) => pathname.startsWith(route)) && !session) {
+      console.log("Redirigiendo a login desde ruta protegida:", pathname)
+      const redirectUrl = new URL("/auth/login", req.url)
+      redirectUrl.searchParams.set("redirectTo", pathname)
+      return NextResponse.redirect(redirectUrl)
     }
-  }
 
-  // Si hay sesión y el usuario intenta acceder a páginas de auth, redirigir a profile
-  if (session && (path.startsWith("/auth/login") || path.startsWith("/auth/register"))) {
-    return NextResponse.redirect(new URL("/profile", req.url))
-  }
+    // Si está en una ruta de auth y ya tiene sesión, redirigir al perfil
+    if (authRoutes.some((route) => pathname.startsWith(route)) && session) {
+      console.log("Redirigiendo a perfil desde ruta de auth:", pathname)
+      return NextResponse.redirect(new URL("/profile", req.url))
+    }
 
-  return res
+    return res
+  } catch (error) {
+    console.error("Error en middleware:", error)
+    return res
+  }
 }
 
-// Configurar las rutas que deben pasar por el middleware
 export const config = {
-  matcher: ["/profile/:path*", "/bicycles/:path*", "/payment/:path*", "/admin/:path*", "/auth/login", "/auth/register"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 }

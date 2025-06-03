@@ -13,69 +13,159 @@ export async function POST(request: Request) {
     apiVersion: "2023-10-16",
   })
 
+  console.log("🔔 Webhook recibido de Stripe")
+
   try {
     event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
+    console.log("✅ Webhook verificado:", event.type)
   } catch (error) {
-    console.error("Error al verificar firma del webhook:", error)
+    console.error("❌ Error al verificar firma del webhook:", error)
     return NextResponse.json({ error: "Webhook error", details: error }, { status: 400 })
   }
 
-  // Manejar el evento de pago completado
-  if (event.type === "checkout.session.completed") {
-    const session = event.data.object as Stripe.Checkout.Session
+  const supabase = createRouteHandlerClient({ cookies })
 
-    // Extraer metadatos
-    const { bicycleId, paymentId, userId } = session.metadata || {}
+  try {
+    switch (event.type) {
+      case "checkout.session.completed":
+        const session = event.data.object as Stripe.Checkout.Session
+        console.log("💳 Checkout completado:", session.id)
 
-    if (bicycleId && paymentId && userId) {
-      const supabase = createRouteHandlerClient({ cookies })
+        if (session.mode === "subscription") {
+          // Manejar suscripción
+          const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
+          console.log("📋 Procesando suscripción:", subscription.id)
 
-      console.log(`Procesando pago completado: bicycleId=${bicycleId}, paymentId=${paymentId}, userId=${userId}`)
-
-      try {
-        // Iniciar transacción manual
-        // 1. Actualizar el estado del pago
-        const { error: paymentError } = await supabase
-          .from("payments")
-          .update({
-            payment_status: "completed",
-            stripe_payment_id: session.id,
-            payment_date: new Date().toISOString(),
+          const { error: subError } = await supabase.from("subscriptions").upsert({
+            user_id: session.metadata?.userId!,
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id: subscription.id,
+            status: subscription.status,
+            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
             updated_at: new Date().toISOString(),
           })
-          .eq("id", paymentId)
-          .eq("user_id", userId)
 
-        if (paymentError) {
-          console.error("Error al actualizar pago:", paymentError)
-          throw paymentError
+          if (subError) {
+            console.error("❌ Error al crear/actualizar suscripción:", subError)
+            throw subError
+          }
+
+          console.log("✅ Suscripción guardada en BD")
+        } else {
+          // Manejar pago único (bicicletas)
+          const { bicycleId, paymentId, userId } = session.metadata || {}
+          console.log("🚲 Procesando pago de bicicleta:", { bicycleId, paymentId, userId })
+
+          if (bicycleId && paymentId && userId) {
+            // Actualizar el estado del pago
+            const { error: paymentError } = await supabase
+              .from("payments")
+              .update({
+                payment_status: "completed",
+                stripe_payment_id: session.id,
+                payment_date: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", paymentId)
+              .eq("user_id", userId)
+
+            if (paymentError) {
+              console.error("❌ Error al actualizar pago:", paymentError)
+              throw paymentError
+            }
+
+            // Actualizar el estado de la bicicleta
+            const { error: bicycleError } = await supabase
+              .from("bicycles")
+              .update({
+                payment_status: true,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", bicycleId)
+              .eq("user_id", userId)
+
+            if (bicycleError) {
+              console.error("❌ Error al actualizar bicicleta:", bicycleError)
+              throw bicycleError
+            }
+
+            console.log("✅ Pago de bicicleta procesado")
+          }
         }
+        break
 
-        // 2. Actualizar el estado de la bicicleta
-        const { error: bicycleError } = await supabase
-          .from("bicycles")
+      case "customer.subscription.updated":
+        const updatedSub = event.data.object as Stripe.Subscription
+        console.log("🔄 Suscripción actualizada:", updatedSub.id)
+
+        const { error: updateError } = await supabase
+          .from("subscriptions")
           .update({
-            payment_status: true,
+            status: updatedSub.status,
+            current_period_start: new Date(updatedSub.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(updatedSub.current_period_end * 1000).toISOString(),
             updated_at: new Date().toISOString(),
           })
-          .eq("id", bicycleId)
-          .eq("user_id", userId)
+          .eq("stripe_subscription_id", updatedSub.id)
 
-        if (bicycleError) {
-          console.error("Error al actualizar bicicleta:", bicycleError)
-          throw bicycleError
+        if (updateError) {
+          console.error("❌ Error al actualizar suscripción:", updateError)
+          throw updateError
         }
 
-        console.log(`Pago procesado exitosamente para bicicleta ${bicycleId}`)
-      } catch (error) {
-        console.error("Error en transacción de webhook:", error)
-        return NextResponse.json({ error: "Error al procesar webhook", details: error }, { status: 500 })
-      }
-    } else {
-      console.error("Metadatos incompletos en la sesión de Stripe:", session.metadata)
-      return NextResponse.json({ error: "Metadatos incompletos" }, { status: 400 })
+        console.log("✅ Suscripción actualizada en BD")
+        break
+
+      case "customer.subscription.deleted":
+        const deletedSub = event.data.object as Stripe.Subscription
+        console.log("🗑️ Suscripción cancelada:", deletedSub.id)
+
+        const { error: deleteError } = await supabase
+          .from("subscriptions")
+          .update({
+            status: "canceled",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("stripe_subscription_id", deletedSub.id)
+
+        if (deleteError) {
+          console.error("❌ Error al cancelar suscripción:", deleteError)
+          throw deleteError
+        }
+
+        console.log("✅ Suscripción cancelada en BD")
+        break
+
+      case "invoice.payment_failed":
+        const invoice = event.data.object as Stripe.Invoice
+        console.log("💸 Pago fallido:", invoice.id)
+
+        if (invoice.subscription) {
+          const { error: failedError } = await supabase
+            .from("subscriptions")
+            .update({
+              status: "past_due",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("stripe_subscription_id", invoice.subscription as string)
+
+          if (failedError) {
+            console.error("❌ Error al actualizar suscripción fallida:", failedError)
+            throw failedError
+          }
+
+          console.log("✅ Suscripción marcada como vencida")
+        }
+        break
+
+      default:
+        console.log("ℹ️ Evento no manejado:", event.type)
     }
-  }
 
-  return NextResponse.json({ received: true })
+    return NextResponse.json({ received: true })
+  } catch (error) {
+    console.error("❌ Error procesando webhook:", error)
+    return NextResponse.json({ error: "Error procesando webhook", details: error }, { status: 500 })
+  }
 }

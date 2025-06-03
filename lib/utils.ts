@@ -5,40 +5,48 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Función para formatear fechas
-export function formatDate(date: string | Date): string {
-  return new Date(date).toLocaleDateString("es-MX", {
+export function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "2-digit",
+    month: "short",
     year: "numeric",
-    month: "long",
-    day: "numeric",
-  })
+  }).format(date)
 }
 
-// Función para formatear moneda (MXN)
-export function formatCurrency(amount: number): string {
-  // Si el monto es 250 (en centavos de Stripe sería 25000), mostramos $250.00
-  const actualAmount = amount === 250 ? 250 : amount / 100
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-  }).format(actualAmount)
-}
-
-// Función para validar CURP mexicana
+/**
+ * Valida una CURP (Clave Única de Registro de Población) mexicana
+ * @param curp - La CURP a validar
+ * @returns true si la CURP es válida, false en caso contrario
+ */
 export function validateCURP(curp: string): boolean {
-  const regex =
-    /^([A-Z][AEIOUX][A-Z]{2}\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])[HM](?:AS|B[CS]|C[CLMSH]|D[FG]|G[TR]|HG|JC|M[CNS]|N[ETL]|OC|PL|Q[TR]|S[PLR]|T[CSL]|VZ|YN|ZS)[B-DF-HJ-NP-TV-Z]{3}[A-Z\d])(\d)$/
-  return regex.test(curp)
-}
+  // Si está vacía, considerarla válida (para campos opcionales)
+  if (!curp || curp.trim() === "") return true
 
-// Función para validar número de teléfono mexicano
-export function validatePhone(phone: string): boolean {
-  const regex = /^(\+?52)?\s*(\d{2,3})[\s-]?(\d{3,4})[\s-]?(\d{4})$/
-  return regex.test(phone)
-}
+  // Expresión regular para validar el formato de la CURP
+  const curpRegex = /^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z][0-9]$/
 
-// Función para validar correo electrónico
-export function validateEmail(email: string): boolean {
-  const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  return regex.test(email)
+  // Si no cumple con el formato básico, es inválida
+  if (!curpRegex.test(curp)) return false
+
+  // Validación adicional: verificar que la fecha sea válida
+  const year = Number.parseInt(curp.substring(4, 6))
+  const month = Number.parseInt(curp.substring(6, 8))
+  const day = Number.parseInt(curp.substring(8, 10))
+
+  // Determinar el siglo (19xx o 20xx)
+  const currentYear = new Date().getFullYear() % 100
+  const century = year > currentYear ? 1900 : 2000
+  const fullYear = century + year
+
+  // Crear objeto Date para validar la fecha
+  const date = new Date(fullYear, month - 1, day)
+
+  // Verificar que la fecha sea válida
+  if (date.getFullYear() !== fullYear || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return false
+  }
+
+  // Si pasó todas las validaciones, la CURP es válida
+  return true
 }

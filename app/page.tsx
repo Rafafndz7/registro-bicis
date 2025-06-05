@@ -18,8 +18,20 @@ import {
 } from "lucide-react"
 import { BicycleAnimation } from "@/components/bicycle-animation"
 import { RecentRegistrations } from "@/components/recent-registrations"
+import { cookies } from "next/headers"
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 
-export default function Page() {
+export default async function Page() {
+  // Verificar si el usuario está autenticado
+  const supabase = createServerComponentClient({ cookies })
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  const isLoggedIn = !!session
+
+  // Determinar la URL del botón de registro
+  const registerUrl = isLoggedIn ? "/bicycles/register" : "/auth/register"
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
@@ -53,13 +65,13 @@ export default function Page() {
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row justify-center lg:justify-start">
-                <Link href="/auth/register">
+                <Link href={registerUrl}>
                   <Button
                     size="lg"
                     className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                   >
                     <Bicycle className="mr-2 h-5 w-5" />
-                    Registrar mi bicicleta
+                    {isLoggedIn ? "Registrar mi bicicleta" : "Crear cuenta y registrar"}
                   </Button>
                 </Link>
                 <Link href="/search">
@@ -309,10 +321,12 @@ export default function Page() {
                 autoridades y a la comunidad a identificarla y recuperarla.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button variant="destructive" size="lg" className="shadow-lg">
-                  <AlertTriangle className="mr-2 h-4 w-4" />
-                  Reportar robo
-                </Button>
+                <Link href={isLoggedIn ? "/bicycles" : "/auth/login?redirectTo=/bicycles"}>
+                  <Button variant="destructive" size="lg" className="shadow-lg">
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Reportar robo
+                  </Button>
+                </Link>
                 <Button variant="outline" size="lg" className="border-red-300 text-red-700 hover:bg-red-50">
                   <Phone className="mr-2 h-4 w-4" />
                   Contactar autoridades
@@ -360,7 +374,7 @@ export default function Page() {
                   </li>
                 ))}
               </ul>
-              <Link href="/auth/register" className="block">
+              <Link href={isLoggedIn ? "/subscription" : "/auth/register"} className="block">
                 <Button
                   className="w-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                   size="lg"
@@ -389,14 +403,14 @@ export default function Page() {
               de tu bicicleta es nuestra prioridad.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row justify-center">
-              <Link href="/auth/register">
+              <Link href={registerUrl}>
                 <Button
                   size="lg"
                   variant="secondary"
                   className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                 >
                   <Star className="mr-2 h-4 w-4" />
-                  Registrarme ahora
+                  {isLoggedIn ? "Registrar bicicleta" : "Registrarme ahora"}
                 </Button>
               </Link>
               <Link href="/search">

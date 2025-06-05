@@ -18,6 +18,7 @@ import {
   QrCode,
   Edit,
   Trash2,
+  AlertTriangle,
 } from "lucide-react"
 import Link from "next/link"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -43,6 +44,7 @@ interface Bicycle {
   characteristics: string | null
   registration_date: string
   payment_status: boolean
+  theft_status: string | null
 }
 
 interface BicycleImage {
@@ -61,6 +63,7 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [downloadingCertificate, setDownloadingCertificate] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [reportingTheft, setReportingTheft] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -152,6 +155,20 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
     }
   }
 
+  const handleReportTheft = async () => {
+    if (!bicycle) return
+
+    try {
+      setReportingTheft(true)
+      router.push(`/bicycles/${bicycle.id}/report-theft`)
+    } catch (error) {
+      console.error("Error al reportar robo:", error)
+      alert("Error al reportar robo: " + (error as Error).message)
+    } finally {
+      setReportingTheft(false)
+    }
+  }
+
   const downloadCertificate = async () => {
     if (!bicycle || !bicycle.payment_status) return
 
@@ -165,25 +182,15 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
         throw new Error(`Error: ${response.status}`)
       }
 
-      // Crear un blob a partir de la respuesta
+      // Abrir el certificado en una nueva pestaña
       const blob = await response.blob()
-
-      // Crear una URL para el blob
       const url = window.URL.createObjectURL(blob)
-
-      // Crear un enlace temporal para descargar el archivo
-      const a = document.createElement("a")
-      a.style.display = "none"
-      a.href = url
-      a.download = `certificado-bicicleta-${bicycle.serial_number}.pdf`
-
-      // Añadir el enlace al documento y hacer clic en él
-      document.body.appendChild(a)
-      a.click()
+      window.open(url, "_blank")
 
       // Limpiar
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url)
+      }, 1000)
     } catch (error) {
       console.error("Error al descargar certificado:", error)
       alert("Error al descargar el certificado. Por favor, inténtalo de nuevo más tarde.")
@@ -260,6 +267,12 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
                 <BicycleIcon className="h-24 w-24 text-muted-foreground opacity-20" />
               </div>
             )}
+
+            {bicycle.theft_status === "reported_stolen" && (
+              <div className="absolute top-0 left-0 w-full bg-red-600 text-white text-center py-2 font-bold">
+                REPORTADA COMO ROBADA
+              </div>
+            )}
           </div>
 
           {images.length > 0 && (
@@ -293,12 +306,27 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
               <h1 className="text-3xl font-bold">
                 {bicycle.brand} {bicycle.model}
               </h1>
-              <Badge variant={bicycle.payment_status ? "default" : "outline"} className="ml-2">
-                {bicycle.payment_status ? "Registrada" : "Pendiente"}
-              </Badge>
+              <div className="flex space-x-2">
+                <Badge variant={bicycle.payment_status ? "default" : "outline"} className="ml-2">
+                  {bicycle.payment_status ? "Registrada" : "Pendiente"}
+                </Badge>
+
+                {bicycle.theft_status === "reported_stolen" && <Badge variant="destructive">Robada</Badge>}
+              </div>
             </div>
             <p className="text-xl text-muted-foreground">Número de serie: {bicycle.serial_number}</p>
           </div>
+
+          {bicycle.theft_status === "reported_stolen" && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Bicicleta reportada como robada</AlertTitle>
+              <AlertDescription>
+                Esta bicicleta ha sido reportada como robada. Si la recuperas, contacta con nosotros para actualizar su
+                estado.
+              </AlertDescription>
+            </Alert>
+          )}
 
           <Tabs defaultValue="details">
             <TabsList className="grid w-full grid-cols-2">
@@ -326,6 +354,14 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
                 <h3 className="text-sm font-medium text-muted-foreground">Estado del registro</h3>
                 <p className="text-lg">{bicycle.payment_status ? "Registro completo" : "Pendiente de pago"}</p>
               </div>
+              {bicycle.theft_status && (
+                <div>
+                  <h3 className="text-sm font-medium text-muted-foreground">Estado de robo</h3>
+                  <p className="text-lg">
+                    {bicycle.theft_status === "reported_stolen" ? "Reportada como robada" : "No reportada"}
+                  </p>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
 
@@ -353,7 +389,7 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
                     <>Generando certificado...</>
                   ) : (
                     <>
-                      <FileDown className="mr-2 h-4 w-4" /> Descargar certificado
+                      <FileDown className="mr-2 h-4 w-4" /> Ver certificado
                     </>
                   )}
                 </Button>
@@ -363,42 +399,51 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
                     <QrCode className="mr-2 h-4 w-4" /> Ver código QR
                   </Link>
                 </Button>
+
+                {bicycle.theft_status !== "reported_stolen" && (
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={handleReportTheft}
+                    disabled={reportingTheft}
+                  >
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    {reportingTheft ? "Redirigiendo..." : "Reportar como robada"}
+                  </Button>
+                )}
               </>
             )}
 
-            {/* Botones de editar y eliminar solo para bicicletas no pagadas */}
-            {!bicycle.payment_status && (
-              <div className="flex space-x-2 pt-2">
-                <Button variant="outline" className="flex-1" asChild>
-                  <Link href={`/bicycles/${bicycle.id}/edit`}>
-                    <Edit className="mr-2 h-4 w-4" /> Editar
-                  </Link>
-                </Button>
+            {/* Botones de editar y eliminar solo para bicicletas no pag */}
+            <div className="flex space-x-2 pt-4">
+              <Button variant="outline" className="flex-1" asChild>
+                <Link href={`/bicycles/${bicycle.id}/edit`}>
+                  <Edit className="mr-2 h-4 w-4" /> Editar
+                </Link>
+              </Button>
 
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" className="flex-1" disabled={deleting}>
-                      <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Esta acción no se puede deshacer. Se eliminará permanentemente la bicicleta y todos sus datos
-                        asociados.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete} disabled={deleting}>
-                        {deleting ? "Eliminando..." : "Eliminar"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="flex-1">
+                    <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta acción no se puede deshacer. Se eliminará permanentemente esta bicicleta de tu cuenta.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} disabled={deleting}>
+                      {deleting ? "Eliminando..." : "Eliminar"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         </div>
       </div>

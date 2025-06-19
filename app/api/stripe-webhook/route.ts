@@ -6,23 +6,25 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-04-30.basil" as any,
 })
 
-// Función para determinar el plan basado en el precio
-function getPlanFromAmount(amount: number): { planType: string; bicycleLimit: number } {
-  console.log("💰 Detectando plan para monto:", amount)
+// Mapeo de Price IDs a planes
+const PRICE_TO_PLAN = {
+  price_1RbaIiP2bAdrMLI6LPeUmgmN: { planType: "básico", bicycleLimit: 1 }, // $40
+  price_1RbaJWP2bAdrMLI61k1RvTtn: { planType: "estándar", bicycleLimit: 2 }, // $60
+  price_1RbaKNP2bAdrMLI6IehK5s3o: { planType: "familiar", bicycleLimit: 4 }, // $120
+  price_1RbaKoP2bAdrMLI6iNSK4dHl: { planType: "premium", bicycleLimit: 6 }, // $180
+}
 
-  switch (amount) {
-    case 4000: // $40 MXN
-      return { planType: "básico", bicycleLimit: 1 }
-    case 6000: // $60 MXN
-      return { planType: "estándar", bicycleLimit: 2 }
-    case 12000: // $120 MXN
-      return { planType: "familiar", bicycleLimit: 4 }
-    case 18000: // $180 MXN
-      return { planType: "premium", bicycleLimit: 6 }
-    default:
-      console.warn("⚠️ Precio no reconocido:", amount, "- usando plan básico por defecto")
-      return { planType: "básico", bicycleLimit: 1 }
+function getPlanFromPriceId(priceId: string): { planType: string; bicycleLimit: number } {
+  console.log("💰 Detectando plan para Price ID:", priceId)
+
+  const plan = PRICE_TO_PLAN[priceId as keyof typeof PRICE_TO_PLAN]
+  if (plan) {
+    console.log("✅ Plan encontrado:", plan)
+    return plan
   }
+
+  console.warn("⚠️ Price ID no reconocido:", priceId, "- usando plan básico por defecto")
+  return { planType: "básico", bicycleLimit: 1 }
 }
 
 export async function POST(request: Request) {
@@ -39,7 +41,6 @@ export async function POST(request: Request) {
   let event: Stripe.Event
 
   try {
-    // Usar la variable de entorno
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
     console.log("🔑 Usando webhook secret:", webhookSecret ? "✅ Configurado" : "❌ No encontrado")
 
@@ -60,7 +61,6 @@ export async function POST(request: Request) {
         const session = event.data.object as Stripe.Checkout.Session
         console.log("💳 Checkout completado:", {
           id: session.id,
-          amount: session.amount_total,
           mode: session.mode,
           subscription: session.subscription,
           customer: session.customer,
@@ -75,13 +75,22 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "No userId in metadata" }, { status: 400 })
           }
 
-          // Determinar el plan basado en el monto total
-          const { planType, bicycleLimit } = getPlanFromAmount(session.amount_total || 0)
+          // Obtener detalles de la suscripción de Stripe
+          const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
+          const priceId = subscription.items.data[0]?.price.id
+
+          if (!priceId) {
+            console.error("❌ No se encontró Price ID en la suscripción")
+            return NextResponse.json({ error: "No price ID found" }, { status: 400 })
+          }
+
+          // Determinar el plan basado en el Price ID
+          const { planType, bicycleLimit } = getPlanFromPriceId(priceId)
 
           console.log("🎯 Plan determinado:", {
             planType,
             bicycleLimit,
-            amount: session.amount_total,
+            priceId,
             userId,
           })
 
@@ -99,7 +108,7 @@ export async function POST(request: Request) {
             console.log("✅ Suscripciones anteriores canceladas")
           }
 
-          // Crear nueva suscripción con los datos correctos
+          // Crear nueva suscripción
           const subscriptionData = {
             user_id: userId,
             stripe_subscription_id: session.subscription as string,
@@ -107,8 +116,8 @@ export async function POST(request: Request) {
             status: "active",
             plan_type: planType,
             bicycle_limit: bicycleLimit,
-            current_period_start: new Date().toISOString(),
-            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
+            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
           }
 
           console.log("💾 Insertando suscripción en BD:", subscriptionData)
@@ -121,7 +130,6 @@ export async function POST(request: Request) {
 
           if (insertError) {
             console.error("❌ Error creando suscripción:", insertError)
-            console.error("❌ Datos que se intentaron insertar:", subscriptionData)
             return NextResponse.json(
               {
                 error: "Error creating subscription",
@@ -144,37 +152,32 @@ export async function POST(request: Request) {
 
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice
-        console.log("💰 Pago exitoso:", {
-          subscription: invoice.subscription,
-          amount: invoice.amount_paid,
-        })
+        console.log("💰 Pago exitoso para suscripción:", invoice.subscription)
 
         if (invoice.subscription) {
-          const { planType, bicycleLimit } = getPlanFromAmount(invoice.amount_paid || 0)
+          const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string)
+          const priceId = subscription.items.data[0]?.price.id
 
-          console.log("🔄 Actualizando suscripción por pago exitoso:", {
-            stripeSubscriptionId: invoice.subscription,
-            planType,
-            bicycleLimit,
-          })
+          if (priceId) {
+            const { planType, bicycleLimit } = getPlanFromPriceId(priceId)
 
-          const { error } = await supabase
-            .from("subscriptions")
-            .update({
-              status: "active",
-              plan_type: planType,
-              bicycle_limit: bicycleLimit,
-              current_period_start: new Date(invoice.period_start * 1000).toISOString(),
-              current_period_end: new Date(invoice.period_end * 1000).toISOString(),
-            })
-            .eq("stripe_subscription_id", invoice.subscription as string)
+            const { error } = await supabase
+              .from("subscriptions")
+              .update({
+                status: "active",
+                plan_type: planType,
+                bicycle_limit: bicycleLimit,
+                current_period_start: new Date(invoice.period_start * 1000).toISOString(),
+                current_period_end: new Date(invoice.period_end * 1000).toISOString(),
+              })
+              .eq("stripe_subscription_id", invoice.subscription as string)
 
-          if (error) {
-            console.error("❌ Error actualizando suscripción:", error)
-            return NextResponse.json({ error: "Error updating subscription" }, { status: 500 })
+            if (error) {
+              console.error("❌ Error actualizando suscripción:", error)
+            } else {
+              console.log("✅ Suscripción actualizada con plan:", planType)
+            }
           }
-
-          console.log("✅ Suscripción actualizada con plan:", planType)
         }
         break
       }

@@ -1,12 +1,13 @@
+import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase-server"
 import Stripe from "stripe"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-04-30.basil" as any,
 })
 
-// Usar Price IDs de PRODUCCIÓN en lugar de calcular precios
+// Price IDs de PRODUCCIÓN
 const PLAN_PRICE_IDS = {
   basic: "price_1RbaIiP2bAdrMLI6LPeUmgmN", // $40 MXN
   standard: "price_1RbaJWP2bAdrMLI61k1RvTtn", // $60 MXN
@@ -22,20 +23,20 @@ const planLimits = {
 }
 
 export async function POST(request: Request) {
-  console.log("🚀 Creando suscripción en PRODUCCIÓN")
-
-  const supabase = createServerClient()
-
   try {
-    const { user } = await supabase.auth.getUser()
-    if (!user.user) {
+    const supabase = createRouteHandlerClient({ cookies })
+
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { planType, promoCode } = body
+    const { planType = "basic", promoCode } = await request.json()
 
-    console.log("📋 Datos recibidos:", { planType, promoCode, userId: user.user.id })
+    console.log("🔍 Datos recibidos:", { planType, promoCode, userId: session.user.id })
 
     // Obtener el Price ID y límites del plan
     const priceId = PLAN_PRICE_IDS[planType as keyof typeof PLAN_PRICE_IDS]
@@ -47,32 +48,42 @@ export async function POST(request: Request) {
 
     console.log("💰 Usando Price ID de PRODUCCIÓN:", priceId)
 
-    const { data: customer, error: customerError } = await supabase
-      .from("customers")
-      .select("stripe_customer_id")
-      .eq("id", user.user.id)
+    // Obtener perfil del usuario
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", session.user.id)
       .single()
 
-    if (customerError) {
-      console.error("❌ Error obteniendo customer:", customerError)
-      return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
+    if (profileError) {
+      console.error("❌ Error obteniendo perfil:", profileError)
+      return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 })
     }
 
-    if (!customer?.stripe_customer_id) {
-      console.error("❌ No se encontró el customer en Stripe")
-      return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
+    // Crear o recuperar customer de Stripe
+    let customer
+    const existingCustomers = await stripe.customers.list({
+      email: profile.email,
+      limit: 1,
+    })
+
+    if (existingCustomers.data.length > 0) {
+      customer = existingCustomers.data[0]
+      console.log("👤 Customer existente encontrado:", customer.id)
+    } else {
+      customer = await stripe.customers.create({
+        email: profile.email,
+        name: profile.full_name,
+        metadata: {
+          userId: session.user.id,
+        },
+      })
+      console.log("👤 Nuevo customer creado:", customer.id)
     }
 
-    const { data: session, error } = await supabase.auth.getSession()
-
-    if (error) {
-      console.error("Error getting session:", error)
-      return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
-    }
-
-    // Crear sesión de checkout usando Price ID
+    // Crear sesión de checkout
     const checkoutSession = await stripe.checkout.sessions.create({
-      customer: customer.stripe_customer_id,
+      customer: customer.id,
       payment_method_types: ["card"],
       mode: "subscription",
       line_items: [
@@ -93,11 +104,11 @@ export async function POST(request: Request) {
       },
     })
 
-    console.log("✅ Sesión de checkout creada:", checkoutSession.id)
+    console.log("✅ Checkout session creado:", checkoutSession.id)
 
     return NextResponse.json({ url: checkoutSession.url })
   } catch (error) {
-    console.error("❌ Error creando suscripción:", error)
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
+    console.error("❌ Error creating subscription:", error)
+    return NextResponse.json({ error: "Error al crear suscripción" }, { status: 500 })
   }
 }

@@ -1,140 +1,194 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createServerClient } from "@/lib/supabase-server"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-04-30.basil" as any,
+})
+
+// Función para determinar el plan basado en el precio
+function getPlanFromAmount(amount: number): { planType: string; bicycleLimit: number } {
+  console.log("💰 Detectando plan para monto:", amount)
+
+  switch (amount) {
+    case 4000: // $40 MXN
+      return { planType: "básico", bicycleLimit: 1 }
+    case 6000: // $60 MXN
+      return { planType: "estándar", bicycleLimit: 2 }
+    case 12000: // $120 MXN
+      return { planType: "familiar", bicycleLimit: 4 }
+    case 18000: // $180 MXN
+      return { planType: "premium", bicycleLimit: 6 }
+    default:
+      console.warn("⚠️ Precio no reconocido:", amount, "- usando plan básico por defecto")
+      return { planType: "básico", bicycleLimit: 1 }
+  }
+}
+
 export async function POST(request: Request) {
+  console.log("🔔 Webhook recibido - iniciando procesamiento")
+
+  const body = await request.text()
+  const signature = request.headers.get("stripe-signature")
+
+  if (!signature) {
+    console.error("❌ No signature found")
+    return NextResponse.json({ error: "No signature" }, { status: 400 })
+  }
+
+  let event: Stripe.Event
+
   try {
-    const supabase = createRouteHandlerClient({ cookies })
+    // Usar tu clave de webhook
+    event = stripe.webhooks.constructEvent(body, signature, "whsec_LojxdgcI1JnqxCABR2N4M5RnJv6VQtsY")
+    console.log("✅ Webhook verificado:", event.type)
+  } catch (err) {
+    console.error("❌ Error al verificar webhook:", err)
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
+  }
 
-    // Verificar autenticación
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-    if (!session) {
-      return NextResponse.json({ error: "No autorizado" }, { status: 401 })
-    }
+  const supabase = createServerClient()
 
-    const { bicycleId } = await request.json()
-    if (!bicycleId) {
-      return NextResponse.json({ error: "Se requiere el ID de la bicicleta" }, { status: 400 })
-    }
+  try {
+    console.log("📋 Procesando evento:", event.type)
 
-    // Verificar que la bicicleta pertenezca al usuario
-    const { data: bicycle, error: bicycleError } = await supabase
-      .from("bicycles")
-      .select("id, serial_number, brand, model, payment_status")
-      .eq("id", bicycleId)
-      .eq("user_id", session.user.id)
-      .single()
-
-    if (bicycleError || !bicycle) {
-      return NextResponse.json({ error: "Bicicleta no encontrada" }, { status: 404 })
-    }
-
-    // Si la bicicleta ya está pagada, no permitir otro pago
-    if (bicycle.payment_status) {
-      return NextResponse.json({ error: "Esta bicicleta ya está registrada y pagada" }, { status: 400 })
-    }
-
-    // Buscar pago pendiente existente o crear uno nuevo
-    let payment
-    const { data: existingPayment, error: paymentSearchError } = await supabase
-      .from("payments")
-      .select("id, amount, payment_status")
-      .eq("bicycle_id", bicycleId)
-      .eq("user_id", session.user.id)
-      .single()
-
-    if (paymentSearchError && paymentSearchError.code !== "PGRST116") {
-      // Error diferente a "no encontrado"
-      throw paymentSearchError
-    }
-
-    if (existingPayment) {
-      // Si ya existe un pago pendiente, usarlo
-      if (existingPayment.payment_status === "pending") {
-        payment = existingPayment
-      } else if (existingPayment.payment_status === "completed") {
-        return NextResponse.json({ error: "Esta bicicleta ya está pagada" }, { status: 400 })
-      }
-    } else {
-      // Crear nuevo registro de pago
-      const { data: newPayment, error: newPaymentError } = await supabase
-        .from("payments")
-        .insert({
-          user_id: session.user.id,
-          bicycle_id: bicycleId,
-          amount: 4000, // $40 MXN en centavos para Stripe
-          payment_status: "pending",
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session
+        console.log("💳 Checkout completado:", {
+          id: session.id,
+          amount: session.amount_total,
+          mode: session.mode,
+          subscription: session.subscription,
+          customer: session.customer,
+          metadata: session.metadata,
         })
-        .select()
-        .single()
 
-      if (newPaymentError) throw newPaymentError
-      payment = newPayment
-    }
+        if (session.mode === "subscription") {
+          const userId = session.metadata?.userId
 
-    // Inicializar Stripe con la versión correcta
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error("STRIPE_SECRET_KEY no está definida")
-      return NextResponse.json({ error: "Error de configuración de Stripe" }, { status: 500 })
-    }
+          if (!userId) {
+            console.error("❌ No se encontró userId en metadatos:", session.metadata)
+            return NextResponse.json({ error: "No userId in metadata" }, { status: 400 })
+          }
 
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2025-04-30.basil" as any,
-    })
+          // Determinar el plan basado en el monto total
+          const { planType, bicycleLimit } = getPlanFromAmount(session.amount_total || 0)
 
-    // Obtener información del usuario
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("full_name, email")
-      .eq("id", session.user.id)
-      .single()
+          console.log("🎯 Plan determinado:", {
+            planType,
+            bicycleLimit,
+            amount: session.amount_total,
+            userId,
+          })
 
-    if (profileError) {
-      console.error("Error al obtener el perfil:", profileError)
-      throw profileError
-    }
+          // Cancelar suscripciones anteriores del usuario
+          console.log("🔄 Cancelando suscripciones anteriores...")
+          const { error: cancelError } = await supabase
+            .from("subscriptions")
+            .update({ status: "canceled" })
+            .eq("user_id", userId)
+            .neq("status", "canceled")
 
-    // Crear sesión de checkout en Stripe
-    try {
-      const checkoutSession = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        line_items: [
-          {
-            price_data: {
-              currency: "mxn",
-              product_data: {
-                name: `Suscripción Mensual RNB - ${bicycle.brand} ${bicycle.model}`,
-                description: `Número de serie: ${bicycle.serial_number} - Suscripción mensual $40 MXN`,
+          if (cancelError) {
+            console.error("⚠️ Error cancelando suscripciones anteriores:", cancelError)
+          } else {
+            console.log("✅ Suscripciones anteriores canceladas")
+          }
+
+          // Crear nueva suscripción con los datos correctos
+          const subscriptionData = {
+            user_id: userId,
+            stripe_subscription_id: session.subscription as string,
+            stripe_customer_id: session.customer as string,
+            status: "active",
+            plan_type: planType,
+            bicycle_limit: bicycleLimit,
+            current_period_start: new Date().toISOString(),
+            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          }
+
+          console.log("💾 Insertando suscripción en BD:", subscriptionData)
+
+          const { data: newSubscription, error: insertError } = await supabase
+            .from("subscriptions")
+            .insert(subscriptionData)
+            .select()
+            .single()
+
+          if (insertError) {
+            console.error("❌ Error creando suscripción:", insertError)
+            console.error("❌ Datos que se intentaron insertar:", subscriptionData)
+            return NextResponse.json(
+              {
+                error: "Error creating subscription",
+                details: insertError.message,
               },
-              unit_amount: 4000, // $40 MXN en centavos para Stripe
-            },
-            quantity: 1,
-          },
-        ],
-        mode: "payment",
-        customer_email: profile.email,
-        success_url: `${request.headers.get("origin")}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${request.headers.get("origin")}/payment/cancel`,
-        metadata: {
-          bicycleId,
-          paymentId: payment.id,
-          userId: session.user.id,
-        },
-      })
+              { status: 500 },
+            )
+          }
 
-      return NextResponse.json({ url: checkoutSession.url })
-    } catch (stripeError) {
-      console.error("Error al crear sesión de Stripe:", stripeError)
-      return NextResponse.json(
-        { error: "Error al crear sesión de pago en Stripe", details: stripeError },
-        { status: 500 },
-      )
+          console.log("🎉 Suscripción creada exitosamente:", newSubscription)
+
+          return NextResponse.json({
+            success: true,
+            subscription: newSubscription,
+            message: "Suscripción creada correctamente",
+          })
+        }
+        break
+      }
+
+      case "invoice.payment_succeeded": {
+        const invoice = event.data.object as Stripe.Invoice
+        console.log("💰 Pago exitoso:", {
+          subscription: invoice.subscription,
+          amount: invoice.amount_paid,
+        })
+
+        if (invoice.subscription) {
+          const { planType, bicycleLimit } = getPlanFromAmount(invoice.amount_paid || 0)
+
+          console.log("🔄 Actualizando suscripción por pago exitoso:", {
+            stripeSubscriptionId: invoice.subscription,
+            planType,
+            bicycleLimit,
+          })
+
+          const { error } = await supabase
+            .from("subscriptions")
+            .update({
+              status: "active",
+              plan_type: planType,
+              bicycle_limit: bicycleLimit,
+              current_period_start: new Date(invoice.period_start * 1000).toISOString(),
+              current_period_end: new Date(invoice.period_end * 1000).toISOString(),
+            })
+            .eq("stripe_subscription_id", invoice.subscription as string)
+
+          if (error) {
+            console.error("❌ Error actualizando suscripción:", error)
+            return NextResponse.json({ error: "Error updating subscription" }, { status: 500 })
+          }
+
+          console.log("✅ Suscripción actualizada con plan:", planType)
+        }
+        break
+      }
+
+      default:
+        console.log("ℹ️ Evento no manejado:", event.type)
     }
+
+    return NextResponse.json({ received: true })
   } catch (error) {
-    console.error("Error general al crear sesión de pago:", error)
-    return NextResponse.json({ error: "Error al crear sesión de pago", details: error }, { status: 500 })
+    console.error("❌ Error procesando webhook:", error)
+    return NextResponse.json(
+      {
+        error: "Webhook handler failed",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
   }
 }

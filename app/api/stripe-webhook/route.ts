@@ -6,15 +6,15 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-04-30.basil" as any,
 })
 
-// Mapeo de Price IDs a planes
+// Mapeo de Price IDs a planes (PRODUCCIÓN)
 const PRICE_TO_PLAN = {
-  price_1RbaIiP2bAdrMLI6LPeUmgmN: { planType: "básico", bicycleLimit: 1 }, // $40
-  price_1RbaJWP2bAdrMLI61k1RvTtn: { planType: "estándar", bicycleLimit: 2 }, // $60
-  price_1RbaKNP2bAdrMLI6IehK5s3o: { planType: "familiar", bicycleLimit: 4 }, // $120
-  price_1RbaKoP2bAdrMLI6iNSK4dHl: { planType: "premium", bicycleLimit: 6 }, // $180
+  price_1RbaIiP2bAdrMLI6LPeUmgmN: { planType: "básico", bicycleLimit: 1, price: 40 }, // $40
+  price_1RbaJWP2bAdrMLI61k1RvTtn: { planType: "estándar", bicycleLimit: 2, price: 60 }, // $60
+  price_1RbaKNP2bAdrMLI6IehK5s3o: { planType: "familiar", bicycleLimit: 4, price: 120 }, // $120
+  price_1RbaKoP2bAdrMLI6iNSK4dHl: { planType: "premium", bicycleLimit: 6, price: 180 }, // $180
 }
 
-function getPlanFromPriceId(priceId: string): { planType: string; bicycleLimit: number } {
+function getPlanFromPriceId(priceId: string): { planType: string; bicycleLimit: number; price: number } {
   console.log("💰 Detectando plan para Price ID:", priceId)
 
   const plan = PRICE_TO_PLAN[priceId as keyof typeof PRICE_TO_PLAN]
@@ -24,11 +24,13 @@ function getPlanFromPriceId(priceId: string): { planType: string; bicycleLimit: 
   }
 
   console.warn("⚠️ Price ID no reconocido:", priceId, "- usando plan básico por defecto")
-  return { planType: "básico", bicycleLimit: 1 }
+  return { planType: "básico", bicycleLimit: 1, price: 40 }
 }
 
 export async function POST(request: Request) {
-  console.log("🔔 Webhook recibido - iniciando procesamiento")
+  console.log("🔔 =================================")
+  console.log("🔔 WEBHOOK STRIPE RECIBIDO")
+  console.log("🔔 =================================")
 
   const body = await request.text()
   const signature = request.headers.get("stripe-signature")
@@ -42,42 +44,57 @@ export async function POST(request: Request) {
 
   try {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
-    console.log("🔑 Usando webhook secret:", webhookSecret ? "✅ Configurado" : "❌ No encontrado")
+    console.log("🔑 Webhook secret configurado:", webhookSecret ? "✅ SÍ" : "❌ NO")
 
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
-    console.log("✅ Webhook verificado:", event.type)
+    console.log("✅ Webhook verificado exitosamente")
+    console.log("📋 Tipo de evento:", event.type)
+    console.log("🆔 Event ID:", event.id)
   } catch (err) {
     console.error("❌ Error al verificar webhook:", err)
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
   }
 
+  // Crear cliente de Supabase
   const supabase = createServerClient()
+  console.log("🗄️ Cliente Supabase creado")
 
   try {
-    console.log("📋 Procesando evento:", event.type)
-
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session
-        console.log("💳 Checkout completado:", {
-          id: session.id,
-          mode: session.mode,
-          subscription: session.subscription,
-          customer: session.customer,
-          metadata: session.metadata,
-        })
+        console.log("💳 =================================")
+        console.log("💳 CHECKOUT SESSION COMPLETED")
+        console.log("💳 =================================")
+        console.log("💳 Session ID:", session.id)
+        console.log("💳 Mode:", session.mode)
+        console.log("💳 Payment Status:", session.payment_status)
+        console.log("💳 Customer:", session.customer)
+        console.log("💳 Subscription:", session.subscription)
+        console.log("💳 Metadata:", session.metadata)
 
-        if (session.mode === "subscription") {
+        if (session.mode === "subscription" && session.payment_status === "paid") {
           const userId = session.metadata?.userId
 
           if (!userId) {
-            console.error("❌ No se encontró userId en metadatos:", session.metadata)
+            console.error("❌ No se encontró userId en metadatos")
+            console.error("❌ Metadatos disponibles:", session.metadata)
             return NextResponse.json({ error: "No userId in metadata" }, { status: 400 })
           }
 
+          console.log("👤 Usuario ID encontrado:", userId)
+
           // Obtener detalles de la suscripción de Stripe
+          console.log("🔍 Obteniendo detalles de suscripción de Stripe...")
           const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
           const priceId = subscription.items.data[0]?.price.id
+
+          console.log("📊 Detalles de suscripción:")
+          console.log("📊 Subscription ID:", subscription.id)
+          console.log("📊 Status:", subscription.status)
+          console.log("📊 Price ID:", priceId)
+          console.log("📊 Current period start:", subscription.current_period_start)
+          console.log("📊 Current period end:", subscription.current_period_end)
 
           if (!priceId) {
             console.error("❌ No se encontró Price ID en la suscripción")
@@ -85,27 +102,43 @@ export async function POST(request: Request) {
           }
 
           // Determinar el plan basado en el Price ID
-          const { planType, bicycleLimit } = getPlanFromPriceId(priceId)
+          const { planType, bicycleLimit, price } = getPlanFromPriceId(priceId)
 
-          console.log("🎯 Plan determinado:", {
-            planType,
-            bicycleLimit,
-            priceId,
-            userId,
-          })
+          console.log("🎯 Plan determinado:")
+          console.log("🎯 Tipo:", planType)
+          console.log("🎯 Límite de bicis:", bicycleLimit)
+          console.log("🎯 Precio:", price)
+
+          // Verificar si ya existe una suscripción para este usuario
+          console.log("🔍 Verificando suscripciones existentes...")
+          const { data: existingSubscriptions, error: checkError } = await supabase
+            .from("subscriptions")
+            .select("id, status, stripe_subscription_id")
+            .eq("user_id", userId)
+
+          if (checkError) {
+            console.error("❌ Error verificando suscripciones existentes:", checkError)
+          } else {
+            console.log("📋 Suscripciones existentes:", existingSubscriptions)
+          }
 
           // Cancelar suscripciones anteriores del usuario
-          console.log("🔄 Cancelando suscripciones anteriores...")
-          const { error: cancelError } = await supabase
-            .from("subscriptions")
-            .update({ status: "canceled" })
-            .eq("user_id", userId)
-            .neq("status", "canceled")
+          if (existingSubscriptions && existingSubscriptions.length > 0) {
+            console.log("🔄 Cancelando suscripciones anteriores...")
+            const { error: cancelError } = await supabase
+              .from("subscriptions")
+              .update({
+                status: "canceled",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("user_id", userId)
+              .neq("status", "canceled")
 
-          if (cancelError) {
-            console.error("⚠️ Error cancelando suscripciones anteriores:", cancelError)
-          } else {
-            console.log("✅ Suscripciones anteriores canceladas")
+            if (cancelError) {
+              console.error("⚠️ Error cancelando suscripciones anteriores:", cancelError)
+            } else {
+              console.log("✅ Suscripciones anteriores canceladas")
+            }
           }
 
           // Crear nueva suscripción
@@ -113,14 +146,19 @@ export async function POST(request: Request) {
             user_id: userId,
             stripe_subscription_id: session.subscription as string,
             stripe_customer_id: session.customer as string,
-            status: "active",
+            status: subscription.status,
             plan_type: planType,
             bicycle_limit: bicycleLimit,
             current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
             current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           }
 
-          console.log("💾 Insertando suscripción en BD:", subscriptionData)
+          console.log("💾 =================================")
+          console.log("💾 INSERTANDO SUSCRIPCIÓN EN BD")
+          console.log("💾 =================================")
+          console.log("💾 Datos a insertar:", JSON.stringify(subscriptionData, null, 2))
 
           const { data: newSubscription, error: insertError } = await supabase
             .from("subscriptions")
@@ -129,30 +167,50 @@ export async function POST(request: Request) {
             .single()
 
           if (insertError) {
-            console.error("❌ Error creando suscripción:", insertError)
+            console.error("❌ =================================")
+            console.error("❌ ERROR INSERTANDO SUSCRIPCIÓN")
+            console.error("❌ =================================")
+            console.error("❌ Error:", insertError)
+            console.error("❌ Code:", insertError.code)
+            console.error("❌ Message:", insertError.message)
+            console.error("❌ Details:", insertError.details)
+            console.error("❌ Hint:", insertError.hint)
+
             return NextResponse.json(
               {
                 error: "Error creating subscription",
                 details: insertError.message,
+                code: insertError.code,
               },
               { status: 500 },
             )
           }
 
-          console.log("🎉 Suscripción creada exitosamente:", newSubscription)
+          console.log("🎉 =================================")
+          console.log("🎉 SUSCRIPCIÓN CREADA EXITOSAMENTE")
+          console.log("🎉 =================================")
+          console.log("🎉 Suscripción:", JSON.stringify(newSubscription, null, 2))
 
           return NextResponse.json({
             success: true,
             subscription: newSubscription,
             message: "Suscripción creada correctamente",
           })
+        } else {
+          console.log("ℹ️ Session no es de suscripción o pago no completado")
+          console.log("ℹ️ Mode:", session.mode)
+          console.log("ℹ️ Payment Status:", session.payment_status)
         }
         break
       }
 
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice
-        console.log("💰 Pago exitoso para suscripción:", invoice.subscription)
+        console.log("💰 =================================")
+        console.log("💰 INVOICE PAYMENT SUCCEEDED")
+        console.log("💰 =================================")
+        console.log("💰 Invoice ID:", invoice.id)
+        console.log("💰 Subscription:", invoice.subscription)
 
         if (invoice.subscription) {
           const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string)
@@ -161,7 +219,8 @@ export async function POST(request: Request) {
           if (priceId) {
             const { planType, bicycleLimit } = getPlanFromPriceId(priceId)
 
-            const { error } = await supabase
+            console.log("🔄 Actualizando suscripción existente...")
+            const { data: updatedSubscription, error: updateError } = await supabase
               .from("subscriptions")
               .update({
                 status: "active",
@@ -169,13 +228,15 @@ export async function POST(request: Request) {
                 bicycle_limit: bicycleLimit,
                 current_period_start: new Date(invoice.period_start * 1000).toISOString(),
                 current_period_end: new Date(invoice.period_end * 1000).toISOString(),
+                updated_at: new Date().toISOString(),
               })
               .eq("stripe_subscription_id", invoice.subscription as string)
+              .select()
 
-            if (error) {
-              console.error("❌ Error actualizando suscripción:", error)
+            if (updateError) {
+              console.error("❌ Error actualizando suscripción:", updateError)
             } else {
-              console.log("✅ Suscripción actualizada con plan:", planType)
+              console.log("✅ Suscripción actualizada:", updatedSubscription)
             }
           }
         }
@@ -188,7 +249,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ received: true })
   } catch (error) {
-    console.error("❌ Error procesando webhook:", error)
+    console.error("❌ =================================")
+    console.error("❌ ERROR GENERAL EN WEBHOOK")
+    console.error("❌ =================================")
+    console.error("❌ Error:", error)
+    console.error("❌ Stack:", error instanceof Error ? error.stack : "No stack available")
+
     return NextResponse.json(
       {
         error: "Webhook handler failed",

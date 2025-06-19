@@ -24,6 +24,7 @@ const planLimits = {
 
 export async function POST(request: Request) {
   try {
+    console.log("🚀 Iniciando creación de suscripción...")
     const supabase = createRouteHandlerClient({ cookies })
 
     const {
@@ -131,6 +132,23 @@ export async function POST(request: Request) {
       console.log("👤 Nuevo customer creado:", customer.id)
     }
 
+    // Validar que tenemos todos los datos necesarios
+    if (!customer || !customer.id) {
+      throw new Error("No se pudo crear o encontrar el customer de Stripe")
+    }
+
+    if (!priceId) {
+      throw new Error("Price ID no encontrado para el plan: " + planType)
+    }
+
+    console.log("📋 Configuración del checkout:", {
+      customerId: customer.id,
+      priceId,
+      planType,
+      stripeCouponId,
+      origin: request.headers.get("origin"),
+    })
+
     // Configurar sesión de checkout
     const checkoutConfig: any = {
       customer: customer.id,
@@ -168,6 +186,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: checkoutSession.url })
   } catch (error) {
     console.error("❌ Error creating subscription:", error)
-    return NextResponse.json({ error: "Error al crear suscripción" }, { status: 500 })
+    console.error("❌ Error stack:", error instanceof Error ? error.stack : "No stack available")
+    console.error("❌ Error message:", error instanceof Error ? error.message : "Unknown error")
+
+    return NextResponse.json(
+      {
+        error: "Error al crear suscripción",
+        details: error instanceof Error ? error.message : "Error desconocido",
+      },
+      { status: 500 },
+    )
   }
 }

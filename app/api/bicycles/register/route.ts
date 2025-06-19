@@ -10,6 +10,7 @@ export async function POST(request: Request) {
     const {
       data: { session },
     } = await supabase.auth.getSession()
+
     if (!session) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
@@ -29,22 +30,35 @@ export async function POST(request: Request) {
       images = [],
     } = formData
 
+    console.log("📝 Datos recibidos:", { userId, serialNumber, brand, model, bikeType })
+
     // Validar datos obligatorios
     if (!serialNumber || !brand || !model || !color || !bikeType) {
       return NextResponse.json({ error: "Faltan datos obligatorios de la bicicleta" }, { status: 400 })
     }
 
     // Verificar suscripción activa y límite
-    const { data: subscription, error: subError } = await supabase
+    const { data: subscriptions, error: subError } = await supabase
       .from("subscriptions")
-      .select("bicycle_limit, plan_type")
+      .select("bicycle_limit, plan_type, status")
       .eq("user_id", userId)
       .eq("status", "active")
-      .single()
+      .order("created_at", { ascending: false })
+      .limit(1)
 
-    if (subError || !subscription) {
+    console.log("🔍 Suscripciones encontradas:", subscriptions)
+
+    if (subError) {
+      console.error("❌ Error al buscar suscripción:", subError)
+      return NextResponse.json({ error: "Error al verificar suscripción" }, { status: 500 })
+    }
+
+    if (!subscriptions || subscriptions.length === 0) {
       return NextResponse.json({ error: "No tienes una suscripción activa" }, { status: 400 })
     }
+
+    const subscription = subscriptions[0]
+    console.log("✅ Suscripción activa:", subscription)
 
     // Contar bicicletas actuales del usuario
     const { count: bicycleCount, error: countError } = await supabase
@@ -52,7 +66,12 @@ export async function POST(request: Request) {
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId)
 
-    if (countError) throw countError
+    if (countError) {
+      console.error("❌ Error al contar bicicletas:", countError)
+      throw countError
+    }
+
+    console.log("🚲 Bicicletas actuales:", bicycleCount, "Límite:", subscription.bicycle_limit)
 
     if (bicycleCount && bicycleCount >= subscription.bicycle_limit) {
       return NextResponse.json(
@@ -77,7 +96,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // 1. Registrar la bicicleta con los nuevos campos
+    // Registrar la bicicleta
     const { data: bicycle, error: bicycleError } = await supabase
       .from("bicycles")
       .insert({
@@ -92,13 +111,19 @@ export async function POST(request: Request) {
         groupset: groupset || null,
         characteristics,
         payment_status: true, // Automáticamente pagado con suscripción
+        theft_status: "active",
       })
       .select()
       .single()
 
-    if (bicycleError) throw bicycleError
+    if (bicycleError) {
+      console.error("❌ Error al registrar bicicleta:", bicycleError)
+      throw bicycleError
+    }
 
-    // 2. Guardar las imágenes (máximo 4)
+    console.log("✅ Bicicleta registrada:", bicycle.id)
+
+    // Guardar las imágenes (máximo 4)
     if (images.length > 0 && bicycle) {
       const validImages = images.slice(0, 4) // Limitar a 4 imágenes
 
@@ -109,7 +134,12 @@ export async function POST(request: Request) {
 
       const { error: imagesError } = await supabase.from("bicycle_images").insert(imageInserts)
 
-      if (imagesError) throw imagesError
+      if (imagesError) {
+        console.error("⚠️ Error al guardar imágenes:", imagesError)
+        // No fallar por las imágenes, solo registrar el error
+      } else {
+        console.log("✅ Imágenes guardadas:", validImages.length)
+      }
     }
 
     return NextResponse.json(
@@ -121,7 +151,7 @@ export async function POST(request: Request) {
       { status: 201 },
     )
   } catch (error) {
-    console.error("Error al registrar bicicleta:", error)
-    return NextResponse.json({ error: "Error al registrar bicicleta", details: error }, { status: 500 })
+    console.error("💥 Error general al registrar bicicleta:", error)
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
   }
 }

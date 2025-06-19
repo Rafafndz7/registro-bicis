@@ -123,21 +123,26 @@ export default function RegisterBicyclePage() {
 
       setProfile(profileData)
 
-      // Verificar suscripción activa
-      const { data: subscriptionData, error: subscriptionError } = await supabase
+      // Verificar suscripción activa - VERSIÓN SIMPLIFICADA
+      const { data: subscriptions, error: subscriptionError } = await supabase
         .from("subscriptions")
         .select("*")
         .eq("user_id", user.id)
         .eq("status", "active")
         .order("created_at", { ascending: false })
-        .limit(1)
-        .single()
 
-      if (!subscriptionError && subscriptionData) {
+      console.log("🔍 Buscando suscripciones para usuario:", user.id)
+      console.log("📊 Suscripciones encontradas:", subscriptions)
+
+      if (subscriptions && subscriptions.length > 0) {
+        const activeSubscription = subscriptions[0]
         setHasActiveSubscription(true)
-        setSubscriptionData(subscriptionData)
+        setSubscriptionData(activeSubscription)
+        console.log("✅ Suscripción activa encontrada:", activeSubscription)
       } else {
         setHasActiveSubscription(false)
+        setSubscriptionData(null)
+        console.log("❌ No se encontró suscripción activa")
       }
 
       // Contar bicicletas del usuario
@@ -161,6 +166,14 @@ export default function RegisterBicyclePage() {
     } finally {
       setLoading(false)
     }
+
+    // Al final de fetchUserData, agrega:
+    console.log("Estado final:", {
+      hasActiveSubscription,
+      subscriptionData,
+      bicycleCount,
+      bicycleLimit: subscriptionData?.bicycle_limit,
+    })
   }
 
   // Mostrar loading mientras se autentica

@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
@@ -108,18 +110,26 @@ export default function SubscriptionPage() {
     if (!user) return
 
     try {
+      console.log("🔍 Buscando suscripción para usuario:", user.id)
+
       const { data, error } = await supabase
         .from("subscriptions")
         .select("*")
         .eq("user_id", user.id)
         .eq("status", "active")
-        .single()
+        .order("created_at", { ascending: false })
+        .limit(1)
 
-      if (!error && data) {
-        setCurrentSubscription(data)
+      console.log("📊 Resultado de suscripción:", { data, error })
+
+      if (!error && data && data.length > 0) {
+        setCurrentSubscription(data[0])
+        console.log("✅ Suscripción encontrada:", data[0])
+      } else {
+        console.log("❌ No se encontró suscripción activa")
       }
     } catch (error) {
-      console.error("Error fetching subscription:", error)
+      console.error("💥 Error fetching subscription:", error)
     } finally {
       setLoading(false)
     }
@@ -167,6 +177,8 @@ export default function SubscriptionPage() {
   const createSubscription = async (planId: string) => {
     if (!user) return
 
+    console.log("🚀 Creando suscripción:", { planId, userId: user.id })
+
     setIsCreatingSubscription(true)
     setSelectedPlan(planId)
 
@@ -181,16 +193,18 @@ export default function SubscriptionPage() {
       })
 
       const result = await response.json()
+      console.log("📋 Respuesta de crear suscripción:", result)
 
       if (!response.ok) {
         throw new Error(result.error || "Error al crear suscripción")
       }
 
       if (result.url) {
+        console.log("🔗 Redirigiendo a Stripe:", result.url)
         window.location.href = result.url
       }
     } catch (error) {
-      console.error("Error creating subscription:", error)
+      console.error("💥 Error creating subscription:", error)
       alert("Error al crear suscripción: " + (error instanceof Error ? error.message : "Error desconocido"))
     } finally {
       setIsCreatingSubscription(false)
@@ -224,6 +238,10 @@ export default function SubscriptionPage() {
           <AlertDescription>
             Tienes una suscripción {currentSubscription.plan_type} activa que permite registrar hasta{" "}
             {currentSubscription.bicycle_limit} bicicleta{currentSubscription.bicycle_limit > 1 ? "s" : ""}.
+            <br />
+            <Link href="/subscription/manage" className="underline font-medium">
+              Ver detalles de mi suscripción
+            </Link>
           </AlertDescription>
         </Alert>
       )}
@@ -245,7 +263,7 @@ export default function SubscriptionPage() {
               onChange={(e) => {
                 setPromoCode(e.target.value.toUpperCase())
                 if (e.target.value.trim()) {
-                  validatePromoCode(e.target.value, "basic") // Validar con plan básico por defecto
+                  validatePromoCode(e.target.value, "basic")
                 } else {
                   setPromoDiscount(null)
                   setPromoError("")
@@ -340,17 +358,9 @@ export default function SubscriptionPage() {
                   className="w-full"
                   variant={plan.popular ? "default" : "outline"}
                   onClick={() => createSubscription(plan.id)}
-                  disabled={
-                    isCreatingSubscription ||
-                    currentSubscription?.plan_type === plan.name.toLowerCase() ||
-                    selectedPlan === plan.id
-                  }
+                  disabled={isCreatingSubscription || selectedPlan === plan.id}
                 >
-                  {currentSubscription?.plan_type === plan.name.toLowerCase()
-                    ? "Plan Actual"
-                    : selectedPlan === plan.id
-                      ? "Procesando..."
-                      : `Seleccionar ${plan.name}`}
+                  {selectedPlan === plan.id ? "Procesando..." : `Seleccionar ${plan.name}`}
                 </Button>
               </CardFooter>
             </Card>

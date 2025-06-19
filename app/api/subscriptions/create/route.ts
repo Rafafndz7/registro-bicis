@@ -8,10 +8,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 })
 
 const planPrices = {
-  basic: { amount: 4000, bicycleLimit: 1, name: "Básico" },
-  standard: { amount: 6000, bicycleLimit: 2, name: "Estándar" },
-  family: { amount: 12000, bicycleLimit: 4, name: "Familiar" },
-  premium: { amount: 18000, bicycleLimit: 6, name: "Premium" },
+  basic: { amount: 4000, bicycleLimit: 1, name: "básico" },
+  standard: { amount: 6000, bicycleLimit: 2, name: "estándar" },
+  family: { amount: 12000, bicycleLimit: 4, name: "familiar" },
+  premium: { amount: 18000, bicycleLimit: 6, name: "premium" },
 }
 
 export async function POST(request: Request) {
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     const { planType = "basic", promoCode } = await request.json()
 
-    console.log("🔍 Datos recibidos:", { planType, promoCode })
+    console.log("🔍 Datos recibidos:", { planType, promoCode, userId: session.user.id })
 
     if (!planPrices[planType as keyof typeof planPrices]) {
       return NextResponse.json({ error: "Plan no válido" }, { status: 400 })
@@ -86,6 +86,7 @@ export async function POST(request: Request) {
       .single()
 
     if (profileError) {
+      console.error("❌ Error obteniendo perfil:", profileError)
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 })
     }
 
@@ -98,6 +99,7 @@ export async function POST(request: Request) {
 
     if (existingCustomers.data.length > 0) {
       customer = existingCustomers.data[0]
+      console.log("👤 Customer existente encontrado:", customer.id)
     } else {
       customer = await stripe.customers.create({
         email: profile.email,
@@ -106,13 +108,14 @@ export async function POST(request: Request) {
           userId: session.user.id,
         },
       })
+      console.log("👤 Nuevo customer creado:", customer.id)
     }
 
     // Metadatos que se pasarán al checkout
     const metadata = {
       userId: session.user.id,
       type: "subscription",
-      planType: planType,
+      planType: selectedPlan.name, // Usar el nombre correcto del plan
       bicycleLimit: selectedPlan.bicycleLimit.toString(),
       originalAmount: selectedPlan.amount.toString(),
       discountAmount: discountAmount.toString(),

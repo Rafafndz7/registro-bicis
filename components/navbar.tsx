@@ -23,6 +23,7 @@ export function Navbar() {
   const { user } = useAuth()
   const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
   const router = useRouter()
   const supabase = createClientComponentClient()
 
@@ -34,6 +35,31 @@ export function Navbar() {
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  // Verificar suscripción activa
+  useEffect(() => {
+    if (user) {
+      checkSubscription()
+    }
+  }, [user])
+
+  const checkSubscription = async () => {
+    if (!user) return
+
+    try {
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .limit(1)
+        .single()
+
+      setHasActiveSubscription(!error && !!data)
+    } catch (error) {
+      setHasActiveSubscription(false)
+    }
+  }
 
   const handleSignOut = async () => {
     try {
@@ -55,7 +81,11 @@ export function Navbar() {
   const userNavItems = [
     { name: "Mis bicicletas", href: "/bicycles", icon: <BicycleIcon className="h-4 w-4 mr-2" /> },
     { name: "Mi perfil", href: "/profile", icon: <User className="h-4 w-4 mr-2" /> },
-    { name: "Suscripción", href: "/subscription", icon: <Shield className="h-4 w-4 mr-2" /> },
+    {
+      name: "Suscripción",
+      href: hasActiveSubscription ? "/subscription/manage" : "/subscription",
+      icon: <Shield className="h-4 w-4 mr-2" />,
+    },
   ]
 
   const footerNavItems = [
@@ -75,7 +105,6 @@ export function Navbar() {
             <RNBLogo size={32} />
             <div className="flex flex-col">
               <span className="font-bold text-lg leading-none">RNB</span>
-
             </div>
           </Link>
 

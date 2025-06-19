@@ -1,28 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { formatDate } from "@/lib/utils"
-import { BikeIcon as BicycleIcon, Plus, AlertCircle, FileDown, Edit, Trash2 } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { BikeIcon as BicycleIcon, Plus, Search, CheckCircle, AlertTriangle, Download, QrCode, Eye } from "lucide-react"
 import Link from "next/link"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 
 interface Bicycle {
   id: string
@@ -30,286 +18,303 @@ interface Bicycle {
   brand: string
   model: string
   color: string
-  characteristics: string | null
   bike_type: string
   year: number | null
   wheel_size: string | null
   groupset: string | null
+  characteristics: string | null
   registration_date: string
   payment_status: boolean
   theft_status: string
+  bicycle_images: { image_url: string }[]
 }
 
 export default function BicyclesPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClientComponentClient()
   const [bicycles, setBicycles] = useState<Bicycle[]>([])
   const [loading, setLoading] = useState(true)
-  const [downloadingCertificate, setDownloadingCertificate] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
+  const [subscriptionData, setSubscriptionData] = useState<any>(null)
+
+  const success = searchParams.get("success")
 
   useEffect(() => {
+    if (authLoading) return
+
     if (!user) {
-      router.push("/auth/login")
+      router.push("/auth/login?redirectTo=/bicycles")
       return
     }
 
-    fetchBicycles()
-  }, [user, router, supabase])
+    fetchData()
+  }, [user, authLoading, router])
 
-  const fetchBicycles = async () => {
+  const fetchData = async () => {
+    if (!user) return
+
     try {
-      const { data, error } = await supabase
-        .from("bicycles")
+      setLoading(true)
+
+      // Verificar suscripción
+      const { data: subscriptionData, error: subError } = await supabase
+        .from("subscriptions")
         .select("*")
         .eq("user_id", user.id)
-        .order("registration_date", { ascending: false })
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
 
-      if (error) throw error
+      if (subscriptionData && subscriptionData.length > 0) {
+        setHasActiveSubscription(true)
+        setSubscriptionData(subscriptionData[0])
+      }
 
-      setBicycles(data || [])
+      // Cargar bicicletas
+      const { data: bicyclesData, error: bicyclesError } = await supabase
+        .from("bicycles")
+        .select(`
+          *,
+          bicycle_images (
+            image_url
+          )
+        `)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+
+      if (bicyclesError) throw bicyclesError
+
+      setBicycles(bicyclesData || [])
     } catch (error) {
-      console.error("Error al cargar bicicletas:", error)
+      console.error("Error al cargar datos:", error)
+      setError("Error al cargar las bicicletas")
     } finally {
       setLoading(false)
     }
   }
 
-  const downloadCertificate = async (bicycle: Bicycle) => {
-    if (!bicycle.payment_status) return
-
-    try {
-      setDownloadingCertificate(bicycle.id)
-
-      const response = await fetch(`/api/bicycles/generate-certificate?bicycleId=${bicycle.id}`)
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`)
-      }
-
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.style.display = "none"
-      a.href = url
-      a.download = `certificado-bicicleta-${bicycle.serial_number}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-    } catch (error) {
-      console.error("Error al descargar certificado:", error)
-      alert("Error al descargar el certificado. Por favor, inténtalo de nuevo más tarde.")
-    } finally {
-      setDownloadingCertificate(null)
+  const getTheftStatusBadge = (status: string) => {
+    switch (status) {
+      case "stolen":
+        return <Badge variant="destructive">Reportada como robada</Badge>
+      case "recovered":
+        return <Badge variant="secondary">Recuperada</Badge>
+      default:
+        return <Badge variant="outline">Activa</Badge>
     }
   }
 
-  const handleDeleteBicycle = async (bicycleId: string) => {
-    try {
-      const response = await fetch(`/api/bicycles/${bicycleId}`, {
-        method: "DELETE",
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || "Error al eliminar bicicleta")
-      }
-
-      fetchBicycles()
-      alert("Bicicleta eliminada correctamente")
-    } catch (error) {
-      console.error("Error al eliminar bicicleta:", error)
-      alert("Error al eliminar bicicleta: " + (error as Error).message)
-    }
-  }
-
-  if (loading) {
+  if (authLoading || loading) {
     return (
-      <div className="container py-10">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-bold">Mis Bicicletas</h1>
-          <Skeleton className="h-10 w-40" />
-        </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-6 w-32" />
-                <Skeleton className="h-4 w-24" />
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {Array.from({ length: 4 }).map((_, j) => (
-                  <div key={j} className="space-y-1">
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-4 w-full" />
-                  </div>
-                ))}
-              </CardContent>
-              <CardFooter>
-                <Skeleton className="h-10 w-full" />
-              </CardFooter>
-            </Card>
-          ))}
+      <div className="container mx-auto max-w-6xl py-10">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-10 w-40" />
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-32 w-full" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
     )
   }
 
-  return (
-    <div className="container py-10">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Mis Bicicletas</h1>
-        <Link href="/bicycles/register">
-          <Button className="bg-bike-primary hover:bg-bike-primary/90">
-            <Plus className="mr-2 h-4 w-4" /> Registrar bicicleta
-          </Button>
-        </Link>
-      </div>
+  if (!user) return null
 
-      {bicycles.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-10">
-            <BicycleIcon className="mb-4 h-16 w-16 text-muted-foreground" />
-            <h2 className="mb-2 text-xl font-semibold">No tienes bicicletas registradas</h2>
-            <p className="mb-6 text-center text-muted-foreground">
-              Registra tu primera bicicleta para protegerla en el sistema nacional
+  return (
+    <div className="container mx-auto max-w-6xl py-10">
+      <div className="space-y-6">
+        {success && (
+          <Alert>
+            <CheckCircle className="h-4 w-4" />
+            <AlertTitle>¡Bicicleta registrada exitosamente!</AlertTitle>
+            <AlertDescription>Tu bicicleta ha sido registrada en el sistema nacional.</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Mis Bicicletas</h1>
+            <p className="text-muted-foreground">
+              {bicycles.length} bicicleta{bicycles.length !== 1 ? "s" : ""} registrada{bicycles.length !== 1 ? "s" : ""}
+              {subscriptionData && ` de ${subscriptionData.bicycle_limit} permitidas`}
             </p>
-            <Link href="/bicycles/register">
-              <Button className="bg-bike-primary hover:bg-bike-primary/90">
-                <Plus className="mr-2 h-4 w-4" /> Registrar bicicleta
+          </div>
+          <div className="flex gap-2">
+            <Link href="/search">
+              <Button variant="outline">
+                <Search className="mr-2 h-4 w-4" />
+                Buscar bicicletas
               </Button>
             </Link>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {bicycles.map((bicycle) => (
-            <Card key={bicycle.id}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>
-                      {bicycle.brand} {bicycle.model}
-                    </CardTitle>
-                    <CardDescription>Serie: {bicycle.serial_number}</CardDescription>
-                  </div>
-                  <Badge variant={bicycle.payment_status ? "default" : "outline"} className="ml-2">
-                    {bicycle.payment_status ? "Registrada" : "Pendiente"}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="font-medium text-muted-foreground">Tipo</p>
-                    <p className="capitalize">{bicycle.bike_type}</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-muted-foreground">Color</p>
-                    <p>{bicycle.color}</p>
-                  </div>
-                  {bicycle.year && (
-                    <div>
-                      <p className="font-medium text-muted-foreground">Año</p>
-                      <p>{bicycle.year}</p>
-                    </div>
-                  )}
-                  {bicycle.wheel_size && (
-                    <div>
-                      <p className="font-medium text-muted-foreground">Rodada</p>
-                      <p>{bicycle.wheel_size}</p>
-                    </div>
-                  )}
-                </div>
-                {bicycle.groupset && (
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Grupo</p>
-                    <p className="text-sm">{bicycle.groupset}</p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Fecha de registro</p>
-                  <p className="text-sm">{formatDate(bicycle.registration_date)}</p>
-                </div>
-
-                {!bicycle.payment_status && (
-                  <Alert variant="warning" className="bg-amber-50 text-amber-800">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertTitle>Pago pendiente</AlertTitle>
-                    <AlertDescription>
-                      Esta bicicleta no estará oficialmente registrada hasta completar el pago.
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </CardContent>
-              <CardFooter>
-                <div className="flex w-full flex-col space-y-2">
-                  <Link href={`/bicycles/${bicycle.id}`} className="w-full">
-                    <Button variant="outline" className="w-full">
-                      Ver detalles
-                    </Button>
-                  </Link>
-
-                  {/* Solo mostrar botones de editar y eliminar para bicicletas no pagadas */}
-                  {!bicycle.payment_status && (
-                    <div className="flex space-x-2">
-                      <Link href={`/bicycles/${bicycle.id}/edit`} className="flex-1">
-                        <Button variant="outline" size="sm" className="w-full">
-                          <Edit className="mr-2 h-4 w-4" /> Editar
-                        </Button>
-                      </Link>
-
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm" className="flex-1">
-                            <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>¿Eliminar bicicleta?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta acción no se puede deshacer. Se eliminará permanentemente la bicicleta.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteBicycle(bicycle.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Eliminar
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  )}
-
-                  {/* Solo mostrar descarga de certificado para bicicletas pagadas */}
-                  {bicycle.payment_status && (
-                    <Button
-                      onClick={() => downloadCertificate(bicycle)}
-                      className="w-full"
-                      disabled={downloadingCertificate === bicycle.id}
-                    >
-                      {downloadingCertificate === bicycle.id ? (
-                        "Generando..."
-                      ) : (
-                        <>
-                          <FileDown className="mr-2 h-4 w-4" /> Descargar certificado
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </CardFooter>
-            </Card>
-          ))}
+            {hasActiveSubscription && (
+              <Link href="/bicycles/register">
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Registrar bicicleta
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
-      )}
+
+        {!hasActiveSubscription && (
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Suscripción requerida</AlertTitle>
+            <AlertDescription>
+              Necesitas una suscripción activa para registrar nuevas bicicletas.{" "}
+              <Link href="/subscription" className="underline">
+                Ver planes disponibles
+              </Link>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {bicycles.length === 0 ? (
+          <Card className="text-center py-12">
+            <CardContent>
+              <BicycleIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <CardTitle className="mb-2">No tienes bicicletas registradas</CardTitle>
+              <CardDescription className="mb-4">
+                Registra tu primera bicicleta para comenzar a usar el sistema nacional de registro.
+              </CardDescription>
+              {hasActiveSubscription ? (
+                <Link href="/bicycles/register">
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Registrar mi primera bicicleta
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/subscription">
+                  <Button>Ver planes de suscripción</Button>
+                </Link>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {bicycles.map((bicycle) => (
+              <Card key={bicycle.id} className="overflow-hidden">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="text-lg">
+                        {bicycle.brand} {bicycle.model}
+                      </CardTitle>
+                      <CardDescription>
+                        {bicycle.bike_type} • {bicycle.color}
+                        {bicycle.year && ` • ${bicycle.year}`}
+                      </CardDescription>
+                    </div>
+                    {getTheftStatusBadge(bicycle.theft_status)}
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {bicycle.bicycle_images && bicycle.bicycle_images.length > 0 && (
+                    <div className="aspect-video rounded-md overflow-hidden bg-muted">
+                      <img
+                        src={bicycle.bicycle_images[0].image_url || "/placeholder.svg"}
+                        alt={`${bicycle.brand} ${bicycle.model}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Número de serie:</span>
+                      <span className="font-mono">{bicycle.serial_number}</span>
+                    </div>
+                    {bicycle.wheel_size && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Rodada:</span>
+                        <span>{bicycle.wheel_size}</span>
+                      </div>
+                    )}
+                    {bicycle.groupset && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Grupo:</span>
+                        <span>{bicycle.groupset}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Registrada:</span>
+                      <span>{new Date(bicycle.registration_date).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <Link href={`/bicycles/${bicycle.id}`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Eye className="mr-2 h-4 w-4" />
+                        Ver detalles
+                      </Button>
+                    </Link>
+                    <Link href={`/bicycles/${bicycle.id}/qr`}>
+                      <Button variant="outline" size="sm">
+                        <QrCode className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          const response = await fetch("/api/bicycles/generate-certificate", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ bicycleId: bicycle.id }),
+                          })
+
+                          if (response.ok) {
+                            const blob = await response.blob()
+                            const url = window.URL.createObjectURL(blob)
+                            const a = document.createElement("a")
+                            a.href = url
+                            a.download = `certificado-${bicycle.serial_number}.pdf`
+                            document.body.appendChild(a)
+                            a.click()
+                            window.URL.revokeObjectURL(url)
+                            document.body.removeChild(a)
+                          }
+                        } catch (error) {
+                          console.error("Error al descargar certificado:", error)
+                        }
+                      }}
+                    >
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

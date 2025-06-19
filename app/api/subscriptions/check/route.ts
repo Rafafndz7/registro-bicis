@@ -15,31 +15,32 @@ export async function GET() {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    console.log("Verificando suscripción para usuario:", session.user.id)
+    console.log("🔍 Verificando suscripción para usuario:", session.user.id)
 
     // Buscar suscripción activa
-    const { data: subscription, error } = await supabase
+    const { data: subscriptions, error } = await supabase
       .from("subscriptions")
       .select("*")
       .eq("user_id", session.user.id)
       .eq("status", "active")
       .order("created_at", { ascending: false })
       .limit(1)
-      .single()
 
-    if (error && error.code !== "PGRST116") {
-      console.error("Error al buscar suscripción:", error)
+    if (error) {
+      console.error("❌ Error al buscar suscripción:", error)
       throw error
     }
 
-    console.log("Suscripción encontrada:", subscription)
+    const subscription = subscriptions && subscriptions.length > 0 ? subscriptions[0] : null
+
+    console.log("📊 Suscripción encontrada:", subscription)
 
     return NextResponse.json({
       hasActiveSubscription: !!subscription,
       subscription: subscription || null,
     })
   } catch (error) {
-    console.error("Error al verificar suscripción:", error)
+    console.error("💥 Error al verificar suscripción:", error)
     return NextResponse.json({ error: "Error al verificar suscripción" }, { status: 500 })
   }
 }

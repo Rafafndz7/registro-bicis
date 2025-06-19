@@ -17,9 +17,9 @@ export function Footer() {
               recuperación.
             </p>
             <div className="flex space-x-4">
-              <Facebook className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer" />
-              <Twitter className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer" />
-              <Instagram className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer" />
+              <Facebook className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
+              <Twitter className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
+              <Instagram className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer transition-colors" />
             </div>
           </div>
 
@@ -33,11 +33,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/search" className="text-gray-300 hover:text-white transition-colors">
-                  Verificar bicicleta
-                </Link>
-              </li>
-              <li>
                 <Link href="/subscription" className="text-gray-300 hover:text-white transition-colors">
                   Planes y precios
                 </Link>
@@ -45,6 +40,11 @@ export function Footer() {
               <li>
                 <Link href="/contact" className="text-gray-300 hover:text-white transition-colors">
                   Contacto
+                </Link>
+              </li>
+              <li>
+                <Link href="/bicycles/register" className="text-gray-300 hover:text-white transition-colors">
+                  Registrar bicicleta
                 </Link>
               </li>
             </ul>
@@ -55,18 +55,19 @@ export function Footer() {
             <h3 className="text-lg font-semibold">Servicios</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/bicycles/register" className="text-gray-300 hover:text-white transition-colors">
-                  Registrar bicicleta
-                </Link>
+                <span className="text-gray-300">Registro oficial</span>
               </li>
               <li>
-                <span className="text-gray-300">Certificados oficiales</span>
+                <span className="text-gray-300">Certificados digitales</span>
               </li>
               <li>
-                <span className="text-gray-300">Códigos QR</span>
+                <span className="text-gray-300">Códigos QR únicos</span>
               </li>
               <li>
                 <span className="text-gray-300">Reportes de robo</span>
+              </li>
+              <li>
+                <span className="text-gray-300">Verificación pública</span>
               </li>
             </ul>
           </div>
@@ -76,15 +77,15 @@ export function Footer() {
             <h3 className="text-lg font-semibold">Contacto</h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-2">
-                <Mail className="h-4 w-4 text-blue-400" />
-                <span className="text-gray-300">info@rnb.gob.mx</span>
+                <Mail className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                <span className="text-gray-300 break-all">soporteregistronacionalbicis@gmail.com</span>
               </div>
               <div className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-blue-400" />
-                <span className="text-gray-300">01-800-RNB-BICIS</span>
+                <Phone className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                <span className="text-gray-300">(618) 261-4228</span>
               </div>
               <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4 text-blue-400" />
+                <MapPin className="h-4 w-4 text-blue-400 flex-shrink-0" />
                 <span className="text-gray-300">Ciudad de México, México</span>
               </div>
             </div>
@@ -94,14 +95,14 @@ export function Footer() {
         {/* Línea divisoria */}
         <div className="border-t border-gray-700 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-gray-400 text-center md:text-left">
               &copy; {new Date().getFullYear()} Registro Nacional de Bicicletas. Todos los derechos reservados.
             </div>
-            <div className="flex space-x-6 text-sm">
-              <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6 text-sm">
+              <Link href="/terms" className="text-gray-400 hover:text-white transition-colors text-center">
                 Términos de servicio
               </Link>
-              <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
+              <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors text-center">
                 Política de privacidad
               </Link>
             </div>

@@ -12,7 +12,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle } from "lucide-react"
+import { AlertCircle, BikeIcon } from "lucide-react"
 
 // Esquema de validación simplificado
 const registerSchema = z.object({
@@ -75,7 +75,7 @@ export default function RegisterPage() {
         router.push("/auth/login?message=Registro exitoso. Por favor verifica tu correo electrónico e inicia sesión.")
       } else {
         // Si el inicio de sesión es exitoso, redirigir al perfil
-        router.push("/profile") // Esto ya está correcto
+        router.push("/profile")
       }
     } catch (error) {
       console.error("Error de registro:", error)
@@ -85,109 +85,122 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="container flex items-center justify-center py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Crear cuenta</CardTitle>
-          <CardDescription>Registra tus datos para crear una cuenta</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-6">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-8">
+      <div className="w-full max-w-md">
+        <Card className="shadow-xl border-0">
+          <CardHeader className="text-center pb-6">
+            <div className="flex justify-center mb-4">
+              <div className="p-3 bg-blue-100 rounded-full">
+                <BikeIcon className="h-8 w-8 text-blue-600" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl font-bold text-gray-900">Crear cuenta</CardTitle>
+            <CardDescription className="text-gray-600">Registra tus datos para crear una cuenta</CardDescription>
+          </CardHeader>
+          <CardContent className="px-6">
+            {error && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nombre completo</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Juan Pérez González" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                <FormField
+                  control={form.control}
+                  name="fullName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-medium">Nombre completo</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Juan Pérez González" className="h-11" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Correo electrónico</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="correo@ejemplo.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-medium">Correo electrónico</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="correo@ejemplo.com" className="h-11" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contraseña</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="********" {...field} />
-                    </FormControl>
-                    <FormDescription>Mínimo 8 caracteres</FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-medium">Contraseña</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="********" className="h-11" {...field} />
+                      </FormControl>
+                      <FormDescription className="text-xs text-gray-500">Mínimo 8 caracteres</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="birthDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fecha de nacimiento</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="birthDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 font-medium">Fecha de nacimiento</FormLabel>
+                        <FormControl>
+                          <Input type="date" className="h-11" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Teléfono</FormLabel>
-                    <FormControl>
-                      <Input placeholder="5512345678" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 font-medium">Teléfono</FormLabel>
+                        <FormControl>
+                          <Input placeholder="5512345678" className="h-11" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Registrando..." : "Registrarse"}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-muted-foreground">
-            ¿Ya tienes una cuenta?{" "}
-            <Link href="/auth/login" className="text-bike-primary hover:underline">
-              Iniciar sesión
-            </Link>
-          </p>
-        </CardFooter>
-      </Card>
+                <Button
+                  type="submit"
+                  className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Registrando..." : "Registrarse"}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+          <CardFooter className="flex justify-center px-6 pb-6">
+            <p className="text-sm text-gray-600 text-center">
+              ¿Ya tienes una cuenta?{" "}
+              <Link href="/auth/login" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">
+                Iniciar sesión
+              </Link>
+            </p>
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   )
 }

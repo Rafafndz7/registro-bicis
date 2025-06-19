@@ -5,7 +5,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/components/auth-provider"
-import { RNBLogo } from "@/components/rnb-logo"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { BikeIcon as BicycleIcon, Search, User, Menu, LogOut, Home, Info, Phone, FileText, Shield } from "lucide-react"
+import { BikeIcon as BicycleIcon, User, Menu, LogOut, Home, Info, Phone, FileText, Shield } from "lucide-react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useRouter } from "next/navigation"
 
@@ -73,7 +72,6 @@ export function Navbar() {
 
   const navItems = [
     { name: "Inicio", href: "/", icon: <Home className="h-4 w-4 mr-2" /> },
-    { name: "Buscar", href: "/search", icon: <Search className="h-4 w-4 mr-2" /> },
     { name: "Acerca de", href: "/about", icon: <Info className="h-4 w-4 mr-2" /> },
     { name: "Contacto", href: "/contact", icon: <Phone className="h-4 w-4 mr-2" /> },
   ]
@@ -99,16 +97,17 @@ export function Navbar() {
         isScrolled ? "shadow-sm" : ""
       }`}
     >
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-3">
-            <RNBLogo size={32} />
+      <div className="container flex h-16 items-center justify-between px-4">
+        <div className="flex items-center gap-6 lg:gap-8">
+          <Link href="/" className="flex items-center gap-2 lg:gap-3">
+            <BicycleIcon className="h-7 w-7 lg:h-8 lg:w-8 text-blue-600" />
             <div className="flex flex-col">
-              <span className="font-bold text-lg leading-none">RNB</span>
+              <span className="font-bold text-lg lg:text-xl leading-none">RNB</span>
+              <span className="text-xs text-muted-foreground hidden sm:block">Registro Nacional</span>
             </div>
           </Link>
 
-          <nav className="hidden md:flex gap-6">
+          <nav className="hidden md:flex gap-4 lg:gap-6">
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -126,7 +125,7 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
-              <Link href="/bicycles/register" className="hidden md:block">
+              <Link href="/bicycles/register" className="hidden lg:block">
                 <Button variant="outline" size="sm">
                   <BicycleIcon className="mr-2 h-4 w-4" />
                   Registrar bicicleta

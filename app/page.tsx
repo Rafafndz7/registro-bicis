@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge"
 import {
   BikeIcon as Bicycle,
   Shield,
-  Search,
   Users,
   CheckCircle,
   QrCode,
@@ -18,6 +17,7 @@ import {
 } from "lucide-react"
 import { BicycleAnimation } from "@/components/bicycle-animation"
 import { RecentRegistrations } from "@/components/recent-registrations"
+import { Footer } from "@/components/footer"
 import { cookies } from "next/headers"
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 
@@ -52,7 +52,7 @@ export default async function Page() {
           <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center">
             <div className="flex flex-col justify-center space-y-6 text-center lg:text-left">
               <div className="space-y-4">
-                <Badge className="w-fit mx-auto lg:mx-0 bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200">
+                <Badge className="w-fit mx-auto lg:mx-0 bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200 text-sm px-4 py-2">
                   🚴‍♂️ Sistema Oficial Nacional de México
                 </Badge>
                 <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent dark:from-white dark:to-gray-300">
@@ -64,24 +64,14 @@ export default async function Page() {
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row justify-center lg:justify-start">
+              <div className="flex flex-col gap-4 sm:flex-row justify-center lg:justify-start">
                 <Link href={registerUrl}>
                   <Button
                     size="lg"
-                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 h-12 px-8 text-base"
                   >
                     <Bicycle className="mr-2 h-5 w-5" />
                     {isLoggedIn ? "Registrar mi bicicleta" : "Crear cuenta y registrar"}
-                  </Button>
-                </Link>
-                <Link href="/search">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="w-full sm:w-auto border-2 hover:bg-gray-50 transition-all duration-300"
-                  >
-                    <Search className="mr-2 h-4 w-4" />
-                    Verificar bicicleta
                   </Button>
                 </Link>
               </div>
@@ -117,7 +107,7 @@ export default async function Page() {
       {/* Trust Indicators */}
       <section className="w-full py-8 bg-white dark:bg-gray-900 border-b">
         <div className="container px-4 md:px-6 mx-auto max-w-7xl">
-          <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
+          <div className="flex flex-wrap justify-center items-center gap-6 md:gap-8 opacity-60">
             <div className="flex items-center space-x-2">
               <Award className="h-5 w-5" />
               <span className="text-sm font-medium">Certificado Oficial</span>
@@ -143,7 +133,9 @@ export default async function Page() {
         <div className="container px-4 md:px-6 mx-auto max-w-7xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Impacto Real en la Seguridad</h2>
-            <p className="text-gray-600 dark:text-gray-300">Números que demuestran la efectividad de nuestro sistema</p>
+            <p className="text-gray-600 dark:text-gray-300 text-lg">
+              Números que demuestran la efectividad de nuestro sistema
+            </p>
           </div>
           <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
             <Card className="text-center border-0 shadow-lg bg-white/80 backdrop-blur-sm">
@@ -242,7 +234,7 @@ export default async function Page() {
             </p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-4 max-w-6xl mx-auto">
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto">
             {[
               {
                 step: "1",
@@ -293,13 +285,6 @@ export default async function Page() {
             </p>
           </div>
           <RecentRegistrations />
-          <div className="text-center mt-8">
-            <Link href="/search">
-              <Button size="lg" className="shadow-lg hover:shadow-xl transition-all duration-300">
-                <Search className="mr-2 h-4 w-4" /> Buscar bicicleta
-              </Button>
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -322,12 +307,16 @@ export default async function Page() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href={isLoggedIn ? "/bicycles" : "/auth/login?redirectTo=/bicycles"}>
-                  <Button variant="destructive" size="lg" className="shadow-lg">
+                  <Button variant="destructive" size="lg" className="shadow-lg w-full sm:w-auto">
                     <AlertTriangle className="mr-2 h-4 w-4" />
                     Reportar robo
                   </Button>
                 </Link>
-                <Button variant="outline" size="lg" className="border-red-300 text-red-700 hover:bg-red-50">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="border-red-300 text-red-700 hover:bg-red-50 w-full sm:w-auto"
+                >
                   <Phone className="mr-2 h-4 w-4" />
                   Contactar autoridades
                 </Button>
@@ -480,7 +469,7 @@ export default async function Page() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section - Arreglado el botón que se perdía */}
       <section className="w-full py-16 md:py-24 bg-gradient-to-r from-blue-600 to-purple-600 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="absolute top-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
@@ -499,27 +488,19 @@ export default async function Page() {
               <Link href={registerUrl}>
                 <Button
                   size="lg"
-                  variant="secondary"
-                  className="w-full sm:w-auto shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  className="w-full sm:w-auto bg-white text-blue-600 hover:bg-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 h-12 px-8"
                 >
                   <Star className="mr-2 h-4 w-4" />
                   {isLoggedIn ? "Registrar bicicleta" : "Registrarme ahora"}
-                </Button>
-              </Link>
-              <Link href="/search">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full sm:w-auto text-white border-white/30 hover:bg-white/10 backdrop-blur-sm transition-all duration-300"
-                >
-                  <Search className="mr-2 h-4 w-4" />
-                  Verificar bicicleta
                 </Button>
               </Link>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 }

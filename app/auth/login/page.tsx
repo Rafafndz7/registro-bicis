@@ -12,7 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, CheckCircle2, Clock, RefreshCw } from "lucide-react"
+import { AlertCircle, CheckCircle2, Clock, RefreshCw, BikeIcon } from "lucide-react"
 
 // Esquema de validación
 const loginSchema = z.object({
@@ -32,22 +32,7 @@ export default function LoginPage() {
   const [isRateLimited, setIsRateLimited] = useState(false)
   const [countdown, setCountdown] = useState(60)
   const [debugInfo, setDebugInfo] = useState<string | null>(null)
-  const supabase = createClientComponentClient({
-    options: {
-      // Aumentar el tiempo de espera para redes lentas
-      global: {
-        fetch: (url, options) => {
-          return fetch(url, {
-            ...options,
-            // Aumentar timeout a 30 segundos
-            signal: options?.signal || AbortSignal.timeout(30000),
-            // Asegurar que las credenciales se envían
-            credentials: "include",
-          })
-        },
-      },
-    },
-  })
+  const supabase = createClientComponentClient()
 
   // Verificar si el usuario ya está autenticado
   useEffect(() => {
@@ -60,7 +45,6 @@ export default function LoginPage() {
 
         if (sessionError) {
           console.error("Error checking session:", sessionError)
-          setDebugInfo(`Error de sesión: ${sessionError.message}`)
           return
         }
 
@@ -69,7 +53,6 @@ export default function LoginPage() {
         }
       } catch (error) {
         console.error("Error checking session:", error)
-        setDebugInfo(`Error inesperado: ${error instanceof Error ? error.message : String(error)}`)
       }
     }
 
@@ -117,11 +100,6 @@ export default function LoginPage() {
     setDebugInfo(null)
 
     try {
-      // Agregar un pequeño delay para evitar spam
-      if (retryCount > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 1000 * retryCount))
-      }
-
       const { error, data: authData } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -138,10 +116,13 @@ export default function LoginPage() {
       router.push("/profile")
     } catch (error: any) {
       console.error("Error de inicio de sesión:", error)
-      setDebugInfo(`Error completo: ${JSON.stringify(error)}`)
 
       // Manejar diferentes tipos de errores
-      if (error.message?.includes("rate limit") || error.message?.includes("Too many requests")) {
+      if (
+        error.message?.includes("rate limit") ||
+        error.message?.includes("Too many requests") ||
+        error.code === "over_request_rate_limit"
+      ) {
         handleRateLimit()
       } else if (error.message?.includes("Invalid login credentials")) {
         setError("Credenciales incorrectas. Verifica tu email y contraseña.")
@@ -178,112 +159,140 @@ export default function LoginPage() {
       window.location.reload()
     } catch (error) {
       console.error("Error resetting client:", error)
-      setDebugInfo(`Error al reiniciar: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
 
   return (
-    <div className="container flex items-center justify-center py-10">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Iniciar sesión</CardTitle>
-          <CardDescription>Ingresa tus credenciales para acceder a tu cuenta</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {message && (
-            <Alert className="mb-6 bg-green-50">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-green-600">Éxito</AlertTitle>
-              <AlertDescription className="text-green-600">{message}</AlertDescription>
-            </Alert>
-          )}
-
-          {error && (
-            <Alert variant={getErrorVariant()} className="mb-6">
-              {getErrorIcon()}
-              <AlertTitle>{isRateLimited ? `Límite de intentos (${countdown}s)` : "Error"}</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {retryCount > 2 && !isRateLimited && (
-            <Alert className="mb-6 bg-yellow-50">
-              <Clock className="h-4 w-4 text-yellow-600" />
-              <AlertTitle className="text-yellow-600">Múltiples intentos detectados</AlertTitle>
-              <AlertDescription className="text-yellow-600">
-                Si continúas teniendo problemas, verifica tus credenciales o contacta soporte.
-              </AlertDescription>
-            </Alert>
-          )}
-
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Correo electrónico</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="correo@ejemplo.com" {...field} disabled={isRateLimited} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contraseña</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="********" {...field} disabled={isRateLimited} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button type="submit" className="w-full" disabled={isSubmitting || isRateLimited}>
-                {isSubmitting ? "Iniciando sesión..." : isRateLimited ? `Esperando (${countdown}s)` : "Iniciar sesión"}
-              </Button>
-            </form>
-          </Form>
-
-          {debugInfo && (
-            <div className="mt-4 rounded border border-gray-200 bg-gray-50 p-2">
-              <p className="text-xs text-gray-500">Información de depuración:</p>
-              <pre className="mt-1 max-h-20 overflow-auto text-xs text-gray-600">{debugInfo}</pre>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4 py-8">
+      <div className="w-full max-w-md">
+        <Card className="shadow-xl border-0">
+          <CardHeader className="text-center pb-6">
+            <div className="flex justify-center mb-4">
+              <div className="p-3 bg-blue-100 rounded-full">
+                <BikeIcon className="h-8 w-8 text-blue-600" />
+              </div>
             </div>
-          )}
+            <CardTitle className="text-2xl font-bold text-gray-900">Iniciar sesión</CardTitle>
+            <CardDescription className="text-gray-600">
+              Ingresa tus credenciales para acceder a tu cuenta
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="px-6">
+            {message && (
+              <Alert className="mb-6 bg-green-50 border-green-200">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertTitle className="text-green-700">Éxito</AlertTitle>
+                <AlertDescription className="text-green-600">{message}</AlertDescription>
+              </Alert>
+            )}
 
-          <div className="mt-4 flex justify-center">
-            <Button variant="outline" size="sm" onClick={resetClient} className="text-xs">
-              <RefreshCw className="mr-1 h-3 w-3" /> Reiniciar cliente
-            </Button>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <p className="text-sm text-muted-foreground">
-            ¿No tienes una cuenta?{" "}
-            <Link href="/auth/register" className="text-bike-primary hover:underline">
-              Registrarse
-            </Link>
-          </p>
-          <p className="text-sm text-muted-foreground">
-            <Link href="/auth/reset-password" className="text-bike-primary hover:underline">
-              ¿Olvidaste tu contraseña?
-            </Link>
-          </p>
-          {isRateLimited && (
-            <p className="text-xs text-center text-muted-foreground">
-              El límite se restablecerá automáticamente en {countdown} segundos
-            </p>
-          )}
-        </CardFooter>
-      </Card>
+            {error && (
+              <Alert variant={getErrorVariant()} className="mb-6">
+                {getErrorIcon()}
+                <AlertTitle>{isRateLimited ? `Límite de intentos (${countdown}s)` : "Error"}</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {retryCount > 2 && !isRateLimited && (
+              <Alert className="mb-6 bg-yellow-50 border-yellow-200">
+                <Clock className="h-4 w-4 text-yellow-600" />
+                <AlertTitle className="text-yellow-700">Múltiples intentos detectados</AlertTitle>
+                <AlertDescription className="text-yellow-600">
+                  Si continúas teniendo problemas, verifica tus credenciales o contacta soporte.
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-medium">Correo electrónico</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="correo@ejemplo.com"
+                          className="h-11"
+                          {...field}
+                          disabled={isRateLimited}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 font-medium">Contraseña</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="********"
+                          className="h-11"
+                          {...field}
+                          disabled={isRateLimited}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <Button
+                  type="submit"
+                  className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                  disabled={isSubmitting || isRateLimited}
+                >
+                  {isSubmitting
+                    ? "Iniciando sesión..."
+                    : isRateLimited
+                      ? `Esperando (${countdown}s)`
+                      : "Iniciar sesión"}
+                </Button>
+              </form>
+            </Form>
+
+            {retryCount > 3 && (
+              <div className="mt-6 flex justify-center">
+                <Button variant="outline" size="sm" onClick={resetClient} className="text-xs">
+                  <RefreshCw className="mr-1 h-3 w-3" /> Reiniciar cliente
+                </Button>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4 px-6 pb-6">
+            <div className="text-center space-y-2">
+              <p className="text-sm text-gray-600">
+                ¿No tienes una cuenta?{" "}
+                <Link href="/auth/register" className="text-blue-600 hover:text-blue-700 font-medium hover:underline">
+                  Registrarse
+                </Link>
+              </p>
+              <p className="text-sm text-gray-600">
+                <Link
+                  href="/auth/reset-password"
+                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </p>
+            </div>
+            {isRateLimited && (
+              <p className="text-xs text-center text-gray-500">
+                El límite se restablecerá automáticamente en {countdown} segundos
+              </p>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
     </div>
   )
 }

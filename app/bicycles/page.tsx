@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useAuth } from "@/components/auth-provider"
@@ -29,7 +29,7 @@ interface Bicycle {
   bicycle_images: { image_url: string }[]
 }
 
-export default function BicyclesPage() {
+function BicyclesContent() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -316,5 +316,37 @@ export default function BicyclesPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function BicyclesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto max-w-6xl py-10">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-10 w-40" />
+            </div>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-32" />
+                    <Skeleton className="h-4 w-24" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-32 w-full" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <BicyclesContent />
+    </Suspense>
   )
 }

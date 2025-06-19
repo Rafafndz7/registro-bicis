@@ -50,3 +50,21 @@ export function validateCURP(curp: string): boolean {
   // Si pasó todas las validaciones, la CURP es válida
   return true
 }
+
+/**
+ * Valida un número de teléfono mexicano
+ * @param phone - El número de teléfono a validar
+ * @returns true si el teléfono es válido, false en caso contrario
+ */
+export function validatePhone(phone: string): boolean {
+  // Si está vacío, considerarlo válido (para campos opcionales)
+  if (!phone || phone.trim() === "") return true
+
+  // Remover espacios y caracteres especiales
+  const cleanPhone = phone.replace(/[\s\-$$$$]/g, "")
+
+  // Validar formato de teléfono mexicano (10 dígitos)
+  const phoneRegex = /^[0-9]{10}$/
+
+  return phoneRegex.test(cleanPhone)
+}

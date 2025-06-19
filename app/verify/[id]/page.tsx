@@ -15,40 +15,93 @@ interface BicycleImage {
   image_url: string
 }
 
+interface BicycleWithOwner {
+  id: string
+  user_id: string
+  serial_number: string
+  brand: string
+  model: string
+  color: string
+  characteristics: string | null
+  bike_type: string
+  year: number | null
+  wheel_size: string | null
+  groupset: string | null
+  registration_date: string
+  payment_status: boolean
+  theft_status: string
+  created_at: string
+  updated_at: string
+  owner_name: string | null
+  owner_phone: string | null
+}
+
 export default async function VerifyPage({ params }: { params: { id: string } }) {
   const supabase = createServerComponentClient({ cookies })
 
-  // Obtener detalles de la bicicleta con manejo de errores mejorado
-  const { data: bicycle, error } = await supabase
+  // Hacer JOIN explícito para obtener información del propietario
+  const { data: bicycleData, error } = await supabase
     .from("bicycles")
     .select(`
-    *,
-    profiles (
-      full_name,
-      phone
-    )
-  `)
+      *,
+      profiles!bicycles_user_id_fkey (
+        full_name,
+        phone
+      )
+    `)
     .eq("id", params.id)
     .eq("payment_status", true)
     .single()
 
-  console.log("Bicycle data:", bicycle)
-  console.log("Error:", error)
+  console.log("🚴 Bicycle data from DB:", bicycleData)
+  console.log("❌ Error:", error)
 
-  if (error) {
-    console.error("Error fetching bicycle:", error)
-    notFound()
+  // Si la consulta con relación falla, intentamos con una consulta separada
+  if (error || !bicycleData) {
+    console.log("🔄 Trying alternative query...")
+
+    // Primero obtener la bicicleta
+    const { data: bicycle, error: bicycleError } = await supabase
+      .from("bicycles")
+      .select("*")
+      .eq("id", params.id)
+      .eq("payment_status", true)
+      .single()
+
+    if (bicycleError || !bicycle) {
+      console.error("❌ Error fetching bicycle:", bicycleError)
+      notFound()
+    }
+
+    // Luego obtener el perfil del propietario
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("full_name, phone")
+      .eq("id", bicycle.user_id)
+      .single()
+
+    console.log("👤 Profile data:", profile)
+    console.log("❌ Profile error:", profileError)
+
+    // Combinar los datos
+    const combinedData = {
+      ...bicycle,
+      profiles: profile || null,
+    }
+
+    return renderPage(combinedData, params.id, supabase)
   }
 
-  if (!bicycle) {
-    console.log("No bicycle found")
-    notFound()
-  }
+  return renderPage(bicycleData, params.id, supabase)
+}
 
+async function renderPage(bicycle: any, bicycleId: string, supabase: any) {
   // Obtener imágenes de la bicicleta
-  const { data: images } = await supabase.from("bicycle_images").select("*").eq("bicycle_id", params.id)
-
+  const { data: images } = await supabase.from("bicycle_images").select("*").eq("bicycle_id", bicycleId)
   const bicycleImages = (images as BicycleImage[]) || []
+
+  console.log("🖼️ Images:", images)
+  console.log("👤 Final bicycle with profile:", bicycle)
 
   return (
     <div className="container py-10">
@@ -85,7 +138,7 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                 <AlertTitle>Bicicleta reportada como robada</AlertTitle>
                 <AlertDescription>
                   <p className="mb-2">Esta bicicleta ha sido reportada como robada por su propietario legítimo.</p>
-                  <p className="font-semibold">Propietario: {bicycle.profiles?.full_name}</p>
+                  <p className="font-semibold">Propietario: {bicycle.profiles?.full_name || "No disponible"}</p>
                   {bicycle.profiles?.phone && (
                     <p className="flex items-center mt-1">
                       <Phone className="h-4 w-4 mr-1" />
@@ -113,8 +166,12 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                 <div className="flex items-center space-x-2">
                   <span className="font-medium text-blue-700">Nombre:</span>
                   <span className="text-blue-900 text-lg">
-                    {bicycle.profiles?.full_name || "Información no disponible"}
+                    {bicycle.profiles?.full_name || "Cargando información..."}
                   </span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium text-blue-700">User ID:</span>
+                  <span className="text-blue-900 text-sm">{bicycle.user_id}</span>
                 </div>
                 {bicycle.profiles?.phone ? (
                   <div className="flex items-center space-x-2">
@@ -133,7 +190,7 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                   <div className="flex items-center space-x-2">
                     <Phone className="h-5 w-5 text-gray-400" />
                     <span className="font-medium text-gray-600">Contacto:</span>
-                    <span className="text-gray-500">No disponible</span>
+                    <span className="text-gray-500">Buscando información...</span>
                   </div>
                 )}
               </div>
@@ -202,6 +259,16 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                 <p>{bicycle.characteristics}</p>
               </div>
             )}
+
+            {/* DEBUG INFO - Remover en producción */}
+            <div className="bg-gray-100 p-4 rounded text-xs">
+              <p>
+                <strong>DEBUG:</strong>
+              </p>
+              <p>Bicycle ID: {bicycle.id}</p>
+              <p>User ID: {bicycle.user_id}</p>
+              <p>Profile data: {JSON.stringify(bicycle.profiles)}</p>
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-center w-full">

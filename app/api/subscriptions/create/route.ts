@@ -48,6 +48,56 @@ export async function POST(request: Request) {
 
     console.log("💰 Usando Price ID de PRODUCCIÓN:", priceId)
 
+    // Validar código promocional si se proporciona
+    let stripeCouponId = null
+    if (promoCode) {
+      const { data: promo, error: promoError } = await supabase
+        .from("promo_codes")
+        .select("*")
+        .eq("code", promoCode.toUpperCase())
+        .eq("is_active", true)
+        .single()
+
+      if (promoError || !promo) {
+        return NextResponse.json({ error: "Código promocional no válido" }, { status: 400 })
+      }
+
+      // Verificar validez del código
+      const now = new Date()
+      const validFrom = promo.valid_from ? new Date(promo.valid_from) : null
+      const validUntil = promo.valid_until ? new Date(promo.valid_until) : null
+
+      // Verificar fechas
+      if (validFrom && validFrom > now) {
+        return NextResponse.json({ error: "El código aún no es válido" }, { status: 400 })
+      }
+
+      if (validUntil && validUntil < now) {
+        return NextResponse.json({ error: "El código ha expirado" }, { status: 400 })
+      }
+
+      // Verificar usos máximos
+      if (promo.max_uses && promo.current_uses >= promo.max_uses) {
+        return NextResponse.json({ error: "El código ha alcanzado su límite de usos" }, { status: 400 })
+      }
+
+      // Verificar planes aplicables
+      if (promo.applicable_plans && !promo.applicable_plans.includes(planType)) {
+        return NextResponse.json({ error: "El código no es válido para este plan" }, { status: 400 })
+      }
+
+      stripeCouponId = promo.stripe_coupon_id
+      console.log("🎟️ Usando cupón de Stripe:", stripeCouponId)
+
+      // Incrementar el contador de usos
+      if (promo.max_uses) {
+        await supabase
+          .from("promo_codes")
+          .update({ current_uses: promo.current_uses + 1 })
+          .eq("id", promo.id)
+      }
+    }
+
     // Obtener perfil del usuario
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
@@ -81,8 +131,8 @@ export async function POST(request: Request) {
       console.log("👤 Nuevo customer creado:", customer.id)
     }
 
-    // Crear sesión de checkout
-    const checkoutSession = await stripe.checkout.sessions.create({
+    // Configurar sesión de checkout
+    const checkoutConfig: any = {
       customer: customer.id,
       payment_method_types: ["card"],
       mode: "subscription",
@@ -102,7 +152,16 @@ export async function POST(request: Request) {
         priceId: priceId,
         promoCode: promoCode || "",
       },
-    })
+    }
+
+    // Agregar cupón si existe
+    if (stripeCouponId) {
+      checkoutConfig.discounts = [{ coupon: stripeCouponId }]
+      console.log("🎟️ Aplicando descuento:", stripeCouponId)
+    }
+
+    // Crear sesión de checkout
+    const checkoutSession = await stripe.checkout.sessions.create(checkoutConfig)
 
     console.log("✅ Checkout session creado:", checkoutSession.id)
 

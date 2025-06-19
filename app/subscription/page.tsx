@@ -191,11 +191,9 @@ export default function SubscriptionPage() {
     setIsValidatingPromo(true)
     setPromoError("")
 
-    // Debounce la validación
+    // Debounce la validación - usar "standard" como plan por defecto para validación
     setTimeout(async () => {
-      if (selectedPlan) {
-        await validatePromoCode(code, selectedPlan)
-      }
+      await validatePromoCode(code, "standard")
       setIsValidatingPromo(false)
     }, 500)
   }
@@ -206,13 +204,19 @@ export default function SubscriptionPage() {
     console.log("🚀 Creando suscripción:", { planId, userId: user.id })
 
     setIsCreatingSubscription(true)
+    setSelectedPlan(planId)
 
-    // Validar código promocional antes de proceder
+    // Validar código promocional específicamente para este plan
     if (promoCode.trim()) {
       await validatePromoCode(promoCode.trim(), planId)
-    }
 
-    setSelectedPlan(planId)
+      // Si hay error después de validar, no continuar
+      if (promoError) {
+        setIsCreatingSubscription(false)
+        setSelectedPlan(null)
+        return
+      }
+    }
 
     try {
       const response = await fetch("/api/subscriptions/create", {

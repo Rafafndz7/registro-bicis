@@ -96,6 +96,31 @@ function BicyclesContent() {
     }
   }
 
+  const downloadCertificate = async (bicycleId: string, serialNumber: string) => {
+    try {
+      console.log("Descargando certificado para:", bicycleId)
+
+      // Usar GET en lugar de POST
+      const response = await fetch(`/api/bicycles/generate-certificate?bicycleId=${bicycleId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`)
+      }
+
+      // Abrir en nueva ventana para que el usuario pueda descargar
+      const url = `/api/bicycles/generate-certificate?bicycleId=${bicycleId}`
+      window.open(url, "_blank")
+    } catch (error) {
+      console.error("Error al descargar certificado:", error)
+      alert("Error al descargar el certificado: " + (error as Error).message)
+    }
+  }
+
   const getTheftStatusBadge = (status: string) => {
     switch (status) {
       case "stolen":
@@ -297,35 +322,15 @@ function BicyclesContent() {
                         <QrCode className="h-4 w-4" />
                       </Button>
                     </Link>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={async () => {
-                        try {
-                          const response = await fetch("/api/bicycles/generate-certificate", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ bicycleId: bicycle.id }),
-                          })
-
-                          if (response.ok) {
-                            const blob = await response.blob()
-                            const url = window.URL.createObjectURL(blob)
-                            const a = document.createElement("a")
-                            a.href = url
-                            a.download = `certificado-${bicycle.serial_number}.pdf`
-                            document.body.appendChild(a)
-                            a.click()
-                            window.URL.revokeObjectURL(url)
-                            document.body.removeChild(a)
-                          }
-                        } catch (error) {
-                          console.error("Error al descargar certificado:", error)
-                        }
-                      }}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
+                    {bicycle.payment_status && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => downloadCertificate(bicycle.id, bicycle.serial_number)}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>

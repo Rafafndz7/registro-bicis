@@ -10,9 +10,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronLeft, Download, Printer, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import { QRCodeSVG } from "qrcode.react"
-import { RNBLogo } from "@/components/rnb-logo"
+import { BikeIcon as BicycleIcon } from "lucide-react"
+// Remover esta línea:
+// import { RNBLogo } from "@/components/rnb-logo"
 
-interface Bicycle {
+interface BicycleDetails {
   id: string
   serial_number: string
   brand: string
@@ -29,7 +31,7 @@ export default function BicycleQRPage({ params }: { params: { id: string } }) {
   const { user } = useAuth()
   const router = useRouter()
   const supabase = createClientComponentClient()
-  const [bicycle, setBicycle] = useState<Bicycle | null>(null)
+  const [bicycle, setBicycle] = useState<BicycleDetails | null>(null)
   const [loading, setLoading] = useState(true)
   const [verificationUrl, setVerificationUrl] = useState<string>("")
 
@@ -69,7 +71,7 @@ export default function BicycleQRPage({ params }: { params: { id: string } }) {
 
         if (data) {
           // Mapear los datos para asegurar el tipo correcto
-          const mappedData: Bicycle = {
+          const mappedData: BicycleDetails = {
             id: data.id,
             serial_number: data.serial_number,
             brand: data.brand,
@@ -245,8 +247,19 @@ export default function BicycleQRPage({ params }: { params: { id: string } }) {
 
       <Card className="mx-auto max-w-md print:border-none print:shadow-none">
         <CardHeader className="print:pb-2 text-center">
-          <div className="mb-4 flex justify-center">
+          {/* Cambiar esta sección: */}
+          {/* <div className="mb-4 flex justify-center">
             <RNBLogo size={80} />
+          </div> */}
+          {/* Por esta: */}
+          <div className="mb-4 flex justify-center">
+            <div className="flex items-center space-x-3">
+              <BicycleIcon className="h-16 w-16 text-blue-600" />
+              <div className="flex flex-col">
+                <span className="font-bold text-3xl text-blue-600">RNB</span>
+                <span className="text-sm text-muted-foreground">Registro Nacional</span>
+              </div>
+            </div>
           </div>
           <CardTitle className="text-bike-primary">Código QR de Verificación</CardTitle>
           <CardDescription>

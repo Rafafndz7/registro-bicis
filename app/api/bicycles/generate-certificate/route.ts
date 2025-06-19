@@ -98,12 +98,24 @@ export async function GET(request: Request) {
           margin-bottom: 20px;
         }
         
-        .logo {
+        .logo-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 15px;
+        }
+        
+        .logo-svg {
+          width: 60px;
+          height: 60px;
+          margin-right: 15px;
+        }
+        
+        .logo-text {
           color: #3B82F6;
-          font-size: 28px;
+          font-size: 32px;
           font-weight: bold;
-          margin-bottom: 8px;
-          letter-spacing: 3px;
+          letter-spacing: 2px;
         }
         
         .subtitle {
@@ -213,21 +225,44 @@ export async function GET(request: Request) {
         }
         
         .mobile-instructions {
-          display: none;
           background: #FEF3C7;
           border: 1px solid #F59E0B;
-          padding: 10px;
+          padding: 15px;
           border-radius: 6px;
-          margin: 10px 0;
-          font-size: 11px;
+          margin: 20px 0;
+          font-size: 14px;
           color: #92400E;
+          text-align: center;
+        }
+        
+        .download-buttons {
+          text-align: center;
+          margin: 30px 0;
+          padding: 20px;
+          background: #F8FAFC;
+          border-radius: 8px;
+        }
+        
+        .download-btn {
+          display: inline-block;
+          margin: 10px;
+          padding: 15px 25px;
+          background-color: #3B82F6;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-size: 16px;
+          cursor: pointer;
+          font-weight: 600;
+          text-decoration: none;
+          transition: background-color 0.3s;
+        }
+        
+        .download-btn:hover {
+          background-color: #2563EB;
         }
         
         @media screen and (max-width: 768px) {
-          .mobile-instructions {
-            display: block;
-          }
-          
           .certificate {
             padding: 15px;
             border-width: 2px;
@@ -238,12 +273,20 @@ export async function GET(request: Request) {
             gap: 5px;
           }
           
-          .logo {
+          .logo-text {
             font-size: 24px;
           }
           
           .subtitle {
             font-size: 14px;
+          }
+          
+          .download-btn {
+            display: block;
+            width: 90%;
+            margin: 10px auto;
+            font-size: 18px;
+            padding: 18px;
           }
         }
         
@@ -259,7 +302,7 @@ export async function GET(request: Request) {
             min-height: auto;
           }
           
-          .no-print, .mobile-instructions {
+          .no-print, .mobile-instructions, .download-buttons {
             display: none !important;
           }
           
@@ -274,12 +317,26 @@ export async function GET(request: Request) {
     </head>
     <body>
       <div class="mobile-instructions no-print">
-        📱 <strong>Para guardar como PDF:</strong> Toca el botón "Compartir" de tu navegador y selecciona "Imprimir" o "Guardar como PDF"
+        📱 <strong>Instrucciones:</strong><br>
+        • En móvil: Usa el botón "Imprimir" y selecciona "Guardar como PDF"<br>
+        • En PC: Usa Ctrl+P o el botón "Imprimir" para guardar como PDF
       </div>
       
       <div class="certificate">
         <div class="header">
-          <div class="logo">🚲 RNB</div>
+          <div class="logo-container">
+            <svg class="logo-svg" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18.5" cy="17.5" r="3.5"/>
+              <circle cx="5.5" cy="17.5" r="3.5"/>
+              <circle cx="15" cy="5" r="1"/>
+              <path d="m14 17 6-6-3-3-4 4"/>
+              <path d="M9 17h6"/>
+              <path d="m8 17-2-5 1.5-1.5L14 5"/>
+              <path d="M5.5 21V9"/>
+              <path d="M18.5 21v-2"/>
+            </svg>
+            <div class="logo-text">RNB</div>
+          </div>
           <div class="subtitle">REGISTRO NACIONAL DE BICIS</div>
           <div class="certificate-title">CERTIFICADO OFICIAL DE REGISTRO</div>
         </div>
@@ -421,25 +478,34 @@ export async function GET(request: Request) {
         </div>
       </div>
       
-      <button class="no-print" onclick="window.print()" style="
-        display: block;
-        margin: 20px auto;
-        padding: 12px 24px;
-        background-color: #3B82F6;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 14px;
-        cursor: pointer;
-        font-weight: 600;
-      ">
-        📄 Guardar como PDF / Imprimir
-      </button>
+      <div class="download-buttons no-print">
+        <button onclick="window.print()" class="download-btn">
+          📄 Imprimir / Guardar como PDF
+        </button>
+        <button onclick="downloadAsFile()" class="download-btn">
+          💾 Descargar Archivo
+        </button>
+      </div>
       
       <script>
+        function downloadAsFile() {
+          // Crear un blob con el contenido HTML
+          const htmlContent = document.documentElement.outerHTML;
+          const blob = new Blob([htmlContent], { type: 'text/html' });
+          const url = window.URL.createObjectURL(blob);
+          
+          // Crear enlace de descarga
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'certificado-rnb-${bicycle.serial_number}.html';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }
+        
         // Mejorar experiencia en móviles
         document.addEventListener('DOMContentLoaded', function() {
-          // Detectar si es móvil
           const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
           
           if (isMobile) {
@@ -449,27 +515,6 @@ export async function GET(request: Request) {
               viewport.setAttribute('content', 'width=device-width, initial-scale=0.8, user-scalable=yes');
             }
           }
-          
-          // Función mejorada para imprimir/guardar PDF
-          window.print = function() {
-            if (isMobile) {
-              // En móviles, usar la función nativa del navegador
-              if (window.navigator && window.navigator.share) {
-                // Si soporta Web Share API
-                window.navigator.share({
-                  title: 'Certificado RNB - ${bicycle.brand} ${bicycle.model}',
-                  text: 'Certificado oficial de registro de bicicleta',
-                  url: window.location.href
-                }).catch(console.error);
-              } else {
-                // Fallback para móviles sin Web Share API
-                window.print();
-              }
-            } else {
-              // En desktop, usar print normal
-              window.print();
-            }
-          };
         });
       </script>
     </body>

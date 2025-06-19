@@ -139,21 +139,21 @@ export default async function Page() {
           <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
             <Card className="text-center border-0 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardContent className="pt-6">
-                <div className="text-4xl font-bold text-blue-600 mb-2">+15,000</div>
+                <div className="text-4xl font-bold text-blue-600 mb-2">+7,000</div>
                 <p className="text-gray-600 font-medium">Bicicletas registradas</p>
                 <p className="text-sm text-gray-500 mt-1">Y creciendo cada día</p>
               </CardContent>
             </Card>
             <Card className="text-center border-0 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardContent className="pt-6">
-                <div className="text-4xl font-bold text-green-600 mb-2">+500</div>
+                <div className="text-4xl font-bold text-green-600 mb-2">+100</div>
                 <p className="text-gray-600 font-medium">Bicicletas recuperadas</p>
-                <p className="text-sm text-gray-500 mt-1">Gracias al sistema de verificación</p>
+                <p className="text-sm text-gray-500 mt-1">Gracias al apoyo del sistema de verificación</p>
               </CardContent>
             </Card>
             <Card className="text-center border-0 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardContent className="pt-6">
-                <div className="text-4xl font-bold text-blue-600 mb-2">+8,000</div>
+                <div className="text-4xl font-bold text-blue-600 mb-2">+4,000</div>
                 <p className="text-gray-600 font-medium">Usuarios activos</p>
                 <p className="text-sm text-gray-500 mt-1">Comunidad comprometida</p>
               </CardContent>

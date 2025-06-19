@@ -200,18 +200,8 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                 </div>
               )}
 
-              {/* DEBUG INFO - Temporal */}
-              <div className="bg-gray-100 p-4 rounded text-xs">
-                <p>
-                  <strong>DEBUG INFO:</strong>
-                </p>
-                <p>Bicycle ID: {bicycle.id}</p>
-                <p>User ID: {bicycle.user_id}</p>
-                <p>Profile found: {profile ? "✅ Sí" : "❌ No"}</p>
-                <p>Profile name: {profile?.full_name || "N/A"}</p>
-                <p>Profile phone: {profile?.phone || "N/A"}</p>
-                <p>Images count: {images.length}</p>
-              </div>
+            
+
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <div className="text-center w-full">

@@ -18,22 +18,30 @@ interface BicycleImage {
 export default async function VerifyPage({ params }: { params: { id: string } }) {
   const supabase = createServerComponentClient({ cookies })
 
-  // Obtener detalles de la bicicleta SIN restricciones de autenticación
+  // Obtener detalles de la bicicleta con manejo de errores mejorado
   const { data: bicycle, error } = await supabase
     .from("bicycles")
     .select(`
-      *,
-      profiles!inner (
-        full_name,
-        phone
-      )
-    `)
+    *,
+    profiles (
+      full_name,
+      phone
+    )
+  `)
     .eq("id", params.id)
     .eq("payment_status", true)
     .single()
 
-  if (error || !bicycle) {
-    console.log("Error o bicicleta no encontrada:", error)
+  console.log("Bicycle data:", bicycle)
+  console.log("Error:", error)
+
+  if (error) {
+    console.error("Error fetching bicycle:", error)
+    notFound()
+  }
+
+  if (!bicycle) {
+    console.log("No bicycle found")
     notFound()
   }
 
@@ -108,7 +116,7 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                     {bicycle.profiles?.full_name || "Información no disponible"}
                   </span>
                 </div>
-                {bicycle.profiles?.phone && (
+                {bicycle.profiles?.phone ? (
                   <div className="flex items-center space-x-2">
                     <Phone className="h-5 w-5 text-blue-600" />
                     <span className="font-medium text-blue-700">Contacto:</span>
@@ -120,6 +128,12 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                     >
                       {bicycle.profiles.phone} (WhatsApp)
                     </a>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <Phone className="h-5 w-5 text-gray-400" />
+                    <span className="font-medium text-gray-600">Contacto:</span>
+                    <span className="text-gray-500">No disponible</span>
                   </div>
                 )}
               </div>

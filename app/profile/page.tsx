@@ -188,9 +188,14 @@ export default function ProfilePage() {
               <CardContent>
                 <div className="text-center py-6">
                   <p className="mb-4">Gestiona tu suscripción, revisa tu estado actual o actualiza tu plan</p>
-                  <Link href="/subscription">
-                    <Button>Gestionar suscripción</Button>
-                  </Link>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Link href="/subscription/manage">
+                      <Button>Ver detalles de suscripción</Button>
+                    </Link>
+                    <Link href="/subscription">
+                      <Button variant="outline">Cambiar plan</Button>
+                    </Link>
+                  </div>
                 </div>
               </CardContent>
             </Card>

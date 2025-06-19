@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { formatDate } from "@/lib/utils"
-import { BikeIcon as BicycleIcon, Plus, AlertCircle, FileDown, RefreshCw, Edit, Trash2 } from "lucide-react"
+import { BikeIcon as BicycleIcon, Plus, AlertCircle, FileDown, Edit, Trash2 } from "lucide-react"
 import Link from "next/link"
 import {
   AlertDialog,
@@ -31,8 +31,13 @@ interface Bicycle {
   model: string
   color: string
   characteristics: string | null
+  bike_type: string
+  year: number | null
+  wheel_size: string | null
+  groupset: string | null
   registration_date: string
   payment_status: boolean
+  theft_status: string
 }
 
 export default function BicyclesPage() {
@@ -42,7 +47,6 @@ export default function BicyclesPage() {
   const [bicycles, setBicycles] = useState<Bicycle[]>([])
   const [loading, setLoading] = useState(true)
   const [downloadingCertificate, setDownloadingCertificate] = useState<string | null>(null)
-  const [updatingPayment, setUpdatingPayment] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -71,84 +75,26 @@ export default function BicyclesPage() {
     }
   }
 
-  const handlePayment = async (bicycleId: string) => {
-    try {
-      const response = await fetch("/api/payments/create-checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ bicycleId }),
-      })
-
-      const { url } = await response.json()
-
-      if (url) {
-        window.location.href = url
-      }
-    } catch (error) {
-      console.error("Error al crear sesión de pago:", error)
-    }
-  }
-
-  const updatePaymentStatus = async (bicycleId: string) => {
-    try {
-      setUpdatingPayment(bicycleId)
-
-      const response = await fetch("/api/payments/update-status", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ bicycleId }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || "Error al actualizar estado de pago")
-      }
-
-      // Recargar las bicicletas para mostrar el estado actualizado
-      fetchBicycles()
-      alert("Estado de pago actualizado correctamente")
-    } catch (error) {
-      console.error("Error al actualizar estado de pago:", error)
-      alert("Error al actualizar estado de pago: " + (error as Error).message)
-    } finally {
-      setUpdatingPayment(null)
-    }
-  }
-
   const downloadCertificate = async (bicycle: Bicycle) => {
     if (!bicycle.payment_status) return
 
     try {
       setDownloadingCertificate(bicycle.id)
 
-      // Hacer la solicitud para generar el certificado
       const response = await fetch(`/api/bicycles/generate-certificate?bicycleId=${bicycle.id}`)
 
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`)
       }
 
-      // Crear un blob a partir de la respuesta
       const blob = await response.blob()
-
-      // Crear una URL para el blob
       const url = window.URL.createObjectURL(blob)
-
-      // Crear un enlace temporal para descargar el archivo
       const a = document.createElement("a")
       a.style.display = "none"
       a.href = url
       a.download = `certificado-bicicleta-${bicycle.serial_number}.pdf`
-
-      // Añadir el enlace al documento y hacer clic en él
       document.body.appendChild(a)
       a.click()
-
-      // Limpiar
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
     } catch (error) {
@@ -171,7 +117,6 @@ export default function BicyclesPage() {
         throw new Error(result.error || "Error al eliminar bicicleta")
       }
 
-      // Recargar la lista de bicicletas
       fetchBicycles()
       alert("Bicicleta eliminada correctamente")
     } catch (error) {
@@ -216,17 +161,11 @@ export default function BicyclesPage() {
     <div className="container py-10">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Mis Bicicletas</h1>
-        <div className="flex space-x-2">
-          <Button onClick={fetchBicycles} variant="outline" size="sm">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Actualizar
+        <Link href="/bicycles/register">
+          <Button className="bg-bike-primary hover:bg-bike-primary/90">
+            <Plus className="mr-2 h-4 w-4" /> Registrar bicicleta
           </Button>
-          <Link href="/bicycles/register">
-            <Button className="bg-bike-primary hover:bg-bike-primary/90">
-              <Plus className="mr-2 h-4 w-4" /> Registrar bicicleta
-            </Button>
-          </Link>
-        </div>
+        </Link>
       </div>
 
       {bicycles.length === 0 ? (
@@ -262,19 +201,37 @@ export default function BicyclesPage() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Color</p>
-                  <p>{bicycle.color}</p>
-                </div>
-                {bicycle.characteristics && (
+                <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Características</p>
-                    <p>{bicycle.characteristics}</p>
+                    <p className="font-medium text-muted-foreground">Tipo</p>
+                    <p className="capitalize">{bicycle.bike_type}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground">Color</p>
+                    <p>{bicycle.color}</p>
+                  </div>
+                  {bicycle.year && (
+                    <div>
+                      <p className="font-medium text-muted-foreground">Año</p>
+                      <p>{bicycle.year}</p>
+                    </div>
+                  )}
+                  {bicycle.wheel_size && (
+                    <div>
+                      <p className="font-medium text-muted-foreground">Rodada</p>
+                      <p>{bicycle.wheel_size}</p>
+                    </div>
+                  )}
+                </div>
+                {bicycle.groupset && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Grupo</p>
+                    <p className="text-sm">{bicycle.groupset}</p>
                   </div>
                 )}
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Fecha de registro</p>
-                  <p>{formatDate(bicycle.registration_date)}</p>
+                  <p className="text-sm">{formatDate(bicycle.registration_date)}</p>
                 </div>
 
                 {!bicycle.payment_status && (
@@ -295,7 +252,7 @@ export default function BicyclesPage() {
                     </Button>
                   </Link>
 
-                  {/* Botones de editar y eliminar para bicicletas no pagadas */}
+                  {/* Solo mostrar botones de editar y eliminar para bicicletas no pagadas */}
                   {!bicycle.payment_status && (
                     <div className="flex space-x-2">
                       <Link href={`/bicycles/${bicycle.id}/edit`} className="flex-1">
@@ -331,7 +288,8 @@ export default function BicyclesPage() {
                     </div>
                   )}
 
-                  {bicycle.payment_status ? (
+                  {/* Solo mostrar descarga de certificado para bicicletas pagadas */}
+                  {bicycle.payment_status && (
                     <Button
                       onClick={() => downloadCertificate(bicycle)}
                       className="w-full"
@@ -345,25 +303,6 @@ export default function BicyclesPage() {
                         </>
                       )}
                     </Button>
-                  ) : (
-                    <div className="flex space-x-2">
-                      <Button className="flex-1" onClick={() => handlePayment(bicycle.id)}>
-                        Completar pago
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => updatePaymentStatus(bicycle.id)}
-                        disabled={updatingPayment === bicycle.id}
-                        title="Actualizar estado de pago manualmente"
-                      >
-                        {updatingPayment === bicycle.id ? (
-                          <RefreshCw className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <RefreshCw className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
                   )}
                 </div>
               </CardFooter>

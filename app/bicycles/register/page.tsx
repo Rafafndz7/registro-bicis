@@ -13,22 +13,49 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle, Upload, X, ImageIcon, Info, CreditCard, CheckCircle } from "lucide-react"
 
-// Esquema de validación
+// Esquema de validación actualizado
 const bicycleSchema = z.object({
   serialNumber: z.string().min(5, { message: "El número de serie debe tener al menos 5 caracteres" }),
   brand: z.string().min(2, { message: "La marca es requerida" }),
   model: z.string().min(2, { message: "El modelo es requerido" }),
   color: z.string().min(2, { message: "El color es requerido" }),
+  bikeType: z.string().min(1, { message: "El tipo de bicicleta es requerido" }),
+  year: z
+    .number()
+    .min(1990)
+    .max(new Date().getFullYear() + 1)
+    .optional(),
+  wheelSize: z.string().optional(),
+  groupset: z.string().optional(),
   characteristics: z.string().optional(),
   curp: z.string().optional(),
   address: z.string().optional(),
 })
 
 type BicycleFormValues = z.infer<typeof bicycleSchema>
+
+const bikeTypes = [
+  { value: "montaña", label: "Montaña (MTB)" },
+  { value: "ruta", label: "Ruta (Road)" },
+  { value: "urbana", label: "Urbana" },
+  { value: "híbrida", label: "Híbrida" },
+  { value: "bmx", label: "BMX" },
+  { value: "eléctrica", label: "Eléctrica" },
+]
+
+const wheelSizes = [
+  { value: '20"', label: '20"' },
+  { value: '24"', label: '24"' },
+  { value: '26"', label: '26"' },
+  { value: '27.5"', label: '27.5" (650B)' },
+  { value: '29"', label: '29" (700C)' },
+  { value: "700c", label: "700C" },
+]
 
 export default function RegisterBicyclePage() {
   const { user, loading: authLoading } = useAuth()
@@ -52,6 +79,10 @@ export default function RegisterBicyclePage() {
       brand: "",
       model: "",
       color: "",
+      bikeType: "",
+      year: undefined,
+      wheelSize: "",
+      groupset: "",
       characteristics: "",
       curp: "",
       address: "",
@@ -59,20 +90,13 @@ export default function RegisterBicyclePage() {
   })
 
   useEffect(() => {
-    console.log("RegisterBicyclePage - Auth loading:", authLoading, "User:", !!user)
-
-    if (authLoading) {
-      console.log("Esperando autenticación...")
-      return
-    }
+    if (authLoading) return
 
     if (!user) {
-      console.log("No hay usuario, redirigiendo a login")
       router.push("/auth/login?redirectTo=/bicycles/register")
       return
     }
 
-    console.log("Usuario autenticado, cargando datos:", user.id)
     fetchUserData()
   }, [user, authLoading, router])
 
@@ -81,7 +105,6 @@ export default function RegisterBicyclePage() {
 
     try {
       setLoading(true)
-      console.log("Cargando datos para usuario:", user.id)
 
       // Cargar perfil
       const { data: profileData, error: profileError } = await supabase
@@ -91,9 +114,7 @@ export default function RegisterBicyclePage() {
         .single()
 
       if (profileError) {
-        console.error("Error al cargar perfil:", profileError)
         if (profileError.code === "PGRST116") {
-          // Perfil no existe, redirigir a crear perfil
           router.push("/profile")
           return
         }
@@ -101,7 +122,6 @@ export default function RegisterBicyclePage() {
       }
 
       setProfile(profileData)
-      console.log("Perfil cargado:", profileData)
 
       // Verificar suscripción activa
       const { data: subscriptionData, error: subscriptionError } = await supabase
@@ -111,15 +131,12 @@ export default function RegisterBicyclePage() {
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(1)
+        .single()
 
-      console.log("Verificando suscripción:", { subscriptionData, subscriptionError })
-
-      if (!subscriptionError && subscriptionData && subscriptionData.length > 0) {
+      if (!subscriptionError && subscriptionData) {
         setHasActiveSubscription(true)
-        setSubscriptionData(subscriptionData[0])
-        console.log("Suscripción activa encontrada:", subscriptionData[0])
+        setSubscriptionData(subscriptionData)
       } else {
-        console.log("No se encontró suscripción activa")
         setHasActiveSubscription(false)
       }
 
@@ -129,13 +146,9 @@ export default function RegisterBicyclePage() {
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id)
 
-      if (countError) {
-        console.error("Error al contar bicicletas:", countError)
-        throw countError
-      }
+      if (countError) throw countError
 
       setBicycleCount(count || 0)
-      console.log("Conteo de bicicletas:", count)
 
       // Pre-llenar los campos si ya existen datos
       if (profileData) {
@@ -145,39 +158,6 @@ export default function RegisterBicyclePage() {
     } catch (error) {
       console.error("Error al cargar datos del usuario:", error)
       setError("Error al cargar datos del usuario")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Función para verificar suscripción manualmente
-  const checkSubscriptionManually = async () => {
-    if (!user) return
-
-    setLoading(true)
-    try {
-      console.log("Verificación manual de suscripción para usuario:", user.id)
-
-      const { data, error } = await supabase
-        .from("subscriptions")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(1)
-
-      console.log("Resultado verificación manual:", { data, error })
-
-      if (!error && data && data.length > 0) {
-        setHasActiveSubscription(true)
-        setSubscriptionData(data[0])
-        alert("¡Suscripción activa encontrada! Actualizando estado...")
-      } else {
-        alert("No se encontró una suscripción activa. Por favor, suscríbete para continuar.")
-      }
-    } catch (e) {
-      console.error("Error en verificación manual:", e)
-      alert("Error al verificar suscripción")
     } finally {
       setLoading(false)
     }
@@ -219,39 +199,30 @@ export default function RegisterBicyclePage() {
           <CardContent className="space-y-6">
             <Alert>
               <CreditCard className="h-4 w-4" />
-              <AlertTitle>Suscripción mensual - $40 MXN</AlertTitle>
+              <AlertTitle>Planes de suscripción disponibles</AlertTitle>
               <AlertDescription>
-                Para registrar bicicletas necesitas una suscripción activa. Esto te da acceso a:
+                Elige el plan que mejor se adapte a tus necesidades:
                 <ul className="mt-2 list-disc list-inside space-y-1">
-                  <li>Registro ilimitado de bicicletas</li>
-                  <li>Certificados oficiales en PDF</li>
-                  <li>Códigos QR para verificación</li>
-                  <li>Sistema de reportes de robo</li>
-                  <li>Soporte técnico prioritario</li>
+                  <li>
+                    <strong>Básico ($40 MXN/mes):</strong> 1 bicicleta
+                  </li>
+                  <li>
+                    <strong>Estándar ($60 MXN/mes):</strong> 2 bicicletas
+                  </li>
+                  <li>
+                    <strong>Familiar ($120 MXN/mes):</strong> 4 bicicletas
+                  </li>
+                  <li>
+                    <strong>Premium ($180 MXN/mes):</strong> 6 bicicletas
+                  </li>
                 </ul>
+                <p className="mt-2">Todos incluyen certificados oficiales, códigos QR y sistema de reportes de robo.</p>
               </AlertDescription>
             </Alert>
-
-            <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
-              <h4 className="font-medium text-amber-800">¿Ya te suscribiste?</h4>
-              <p className="mt-1 text-sm text-amber-700">
-                Si ya completaste el pago de tu suscripción pero sigues viendo este mensaje, puede haber un retraso en
-                la actualización de tu estado.
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-2 border-amber-300 bg-amber-100 text-amber-800 hover:bg-amber-200"
-                onClick={checkSubscriptionManually}
-                disabled={loading}
-              >
-                {loading ? "Verificando..." : "Verificar suscripción"}
-              </Button>
-            </div>
           </CardContent>
           <CardFooter>
             <Button onClick={() => router.push("/subscription")} className="w-full">
-              Activar suscripción ($40 MXN/mes)
+              Ver planes de suscripción
             </Button>
           </CardFooter>
         </Card>
@@ -259,28 +230,36 @@ export default function RegisterBicyclePage() {
     )
   }
 
-  // Si el usuario ya tiene 2 bicicletas, mostrar mensaje de límite
-  if (!loading && bicycleCount >= 2) {
+  // Si el usuario ya alcanzó el límite de su plan, mostrar mensaje
+  const bicycleLimit = subscriptionData?.bicycle_limit || 1
+  if (!loading && bicycleCount >= bicycleLimit) {
     return (
       <div className="container mx-auto max-w-4xl py-10">
         <Card className="mx-auto max-w-3xl">
           <CardHeader>
             <CardTitle>Límite de registros alcanzado</CardTitle>
-            <CardDescription>Has alcanzado el límite máximo de bicicletas registradas</CardDescription>
+            <CardDescription>Has alcanzado el límite de tu plan actual</CardDescription>
           </CardHeader>
           <CardContent>
             <Alert>
               <Info className="h-4 w-4" />
-              <AlertTitle>Límite máximo</AlertTitle>
+              <AlertTitle>Límite del plan {subscriptionData?.plan_type}</AlertTitle>
               <AlertDescription>
-                Cada usuario puede registrar un máximo de 2 bicicletas en el sistema nacional. Actualmente tienes{" "}
-                {bicycleCount} bicicleta{bicycleCount > 1 ? "s" : ""} registrada{bicycleCount > 1 ? "s" : ""}.
+                Tu plan actual permite registrar hasta {bicycleLimit} bicicleta{bicycleLimit > 1 ? "s" : ""}.
+                Actualmente tienes {bicycleCount} bicicleta{bicycleCount > 1 ? "s" : ""} registrada
+                {bicycleCount > 1 ? "s" : ""}.
+                <br />
+                <br />
+                Puedes actualizar tu plan para registrar más bicicletas.
               </AlertDescription>
             </Alert>
           </CardContent>
-          <CardFooter>
-            <Button onClick={() => router.push("/bicycles")} className="w-full">
+          <CardFooter className="flex space-x-2">
+            <Button onClick={() => router.push("/bicycles")} variant="outline" className="flex-1">
               Ver mis bicicletas
+            </Button>
+            <Button onClick={() => router.push("/subscription")} className="flex-1">
+              Actualizar plan
             </Button>
           </CardFooter>
         </Card>
@@ -352,26 +331,20 @@ export default function RegisterBicyclePage() {
     setUploadProgress(0)
 
     try {
-      console.log("Iniciando registro de bicicleta...")
-
       // Actualizar perfil con CURP y dirección si se proporcionaron
       if (data.curp || data.address) {
         const updateData: any = {}
         if (data.curp) updateData.curp = data.curp
         if (data.address) updateData.address = data.address
 
-        console.log("Actualizando perfil con:", updateData)
-
         const { error: updateError } = await supabase.from("profiles").update(updateData).eq("id", user.id)
 
         if (updateError) {
-          console.error("Error al actualizar perfil:", updateError)
           throw new Error("Error al actualizar perfil: " + updateError.message)
         }
       }
 
       // 1. Registrar la bicicleta
-      console.log("Registrando bicicleta...")
       const response = await fetch("/api/bicycles/register", {
         method: "POST",
         headers: {
@@ -382,39 +355,25 @@ export default function RegisterBicyclePage() {
           brand: data.brand,
           model: data.model,
           color: data.color,
+          bikeType: data.bikeType,
+          year: data.year,
+          wheelSize: data.wheelSize,
+          groupset: data.groupset,
           characteristics: data.characteristics,
         }),
       })
 
       const result = await response.json()
       if (!response.ok) {
-        console.error("Error en respuesta de registro:", result)
         throw new Error(result.error || "Error al registrar bicicleta")
       }
 
-      console.log("Bicicleta registrada:", result)
-
       // 2. Subir imágenes si existen
       if (images.length > 0) {
-        console.log("Subiendo imágenes...")
         await uploadImages(result.bicycleId)
       }
 
-      // 3. Marcar como pagado automáticamente (ya tiene suscripción)
-      console.log("Marcando como pagado...")
-      const { error: updateError } = await supabase
-        .from("bicycles")
-        .update({ payment_status: true })
-        .eq("id", result.bicycleId)
-
-      if (updateError) {
-        console.error("Error al actualizar estado de pago:", updateError)
-        throw updateError
-      }
-
-      console.log("Registro completado exitosamente")
-
-      // 4. Redirigir al panel de bicicletas
+      // 3. Redirigir al panel de bicicletas
       router.push("/bicycles?success=true")
     } catch (error) {
       console.error("Error al registrar bicicleta:", error)
@@ -450,7 +409,9 @@ export default function RegisterBicyclePage() {
           <CardDescription>
             Ingresa los datos de tu bicicleta para registrarla en el sistema nacional
             <br />
-            <span className="text-sm text-muted-foreground">Tienes {bicycleCount} de 2 bicicletas registradas</span>
+            <span className="text-sm text-muted-foreground">
+              Tienes {bicycleCount} de {bicycleLimit} bicicletas registradas (Plan {subscriptionData?.plan_type})
+            </span>
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -467,8 +428,8 @@ export default function RegisterBicyclePage() {
             <AlertTitle>Suscripción activa</AlertTitle>
             <AlertDescription>
               Tienes una suscripción activa desde el{" "}
-              {subscriptionData?.created_at ? new Date(subscriptionData.created_at).toLocaleDateString() : ""}. Puedes
-              registrar hasta 2 bicicletas sin costo adicional.
+              {subscriptionData?.created_at ? new Date(subscriptionData.created_at).toLocaleDateString() : ""}. Plan{" "}
+              {subscriptionData?.plan_type} - hasta {bicycleLimit} bicicletas.
             </AlertDescription>
           </Alert>
 
@@ -524,19 +485,111 @@ export default function RegisterBicyclePage() {
                   />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="color"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Color *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Rojo, Azul, Negro, etc." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid gap-4 md:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="color"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Color *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Rojo, Azul, Negro, etc." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="bikeType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Tipo de bicicleta *</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona el tipo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {bikeTypes.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                  <FormField
+                    control={form.control}
+                    name="year"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Año</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="2024"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(e.target.value ? Number.parseInt(e.target.value) : undefined)
+                            }
+                          />
+                        </FormControl>
+                        <FormDescription>Año de fabricación</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="wheelSize"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rodada</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecciona rodada" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {wheelSizes.map((size) => (
+                              <SelectItem key={size.value} value={size.value}>
+                                {size.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormDescription>Tamaño de rueda</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="groupset"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Grupo</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Shimano Altus, SRAM GX, etc." {...field} />
+                        </FormControl>
+                        <FormDescription>Grupo de componentes</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}
@@ -662,7 +715,7 @@ export default function RegisterBicyclePage() {
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            Tu suscripción mensual de $40 MXN incluye el registro de hasta 2 bicicletas
+            Tu suscripción {subscriptionData?.plan_type} incluye el registro de hasta {bicycleLimit} bicicletas
           </p>
         </CardFooter>
       </Card>

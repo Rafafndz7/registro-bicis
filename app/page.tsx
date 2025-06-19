@@ -342,48 +342,141 @@ export default async function Page() {
         <div className="container px-4 md:px-6 mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">
-              Precio accesible para todos
+              Planes para todos los ciclistas
             </h2>
             <p className="max-w-[900px] mx-auto text-gray-600 text-lg dark:text-gray-300">
-              Protege tu bicicleta con una suscripción mensual muy económica
+              Elige el plan que mejor se adapte a tus necesidades de registro
             </p>
           </div>
 
-          <Card className="mx-auto max-w-md border-0 shadow-2xl bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
-            <CardHeader className="text-center relative">
-              <Badge className="w-fit mx-auto mb-4 bg-blue-100 text-blue-800">Más Popular</Badge>
-              <CardTitle className="text-2xl">Suscripción Mensual</CardTitle>
-              <CardDescription>Acceso completo a todas las funciones</CardDescription>
-              <div className="text-5xl font-bold text-blue-600 mt-4">$40 MXN</div>
-              <div className="text-gray-500">por mes</div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <ul className="space-y-3">
-                {[
-                  "Registro ilimitado de bicicletas",
-                  "Certificados oficiales en PDF",
-                  "Códigos QR para verificación",
-                  "Sistema de reportes de robo",
-                  "Soporte técnico prioritario",
-                  "Domiciliación automática",
-                ].map((feature, index) => (
-                  <li key={index} className="flex items-center text-sm">
-                    <CheckCircle className="mr-3 h-4 w-4 text-green-600 flex-shrink-0" />
-                    <span>{feature}</span>
+          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto">
+            {/* Plan Básico */}
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm relative">
+              <CardHeader className="text-center">
+                <CardTitle className="text-xl">Básico</CardTitle>
+                <CardDescription>Perfecto para un ciclista</CardDescription>
+                <div className="text-4xl font-bold text-blue-600 mt-4">$40</div>
+                <div className="text-gray-500">MXN/mes</div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="space-y-2">
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />1 bicicleta registrada
                   </li>
-                ))}
-              </ul>
-              <Link href={isLoggedIn ? "/subscription" : "/auth/register"} className="block">
-                <Button
-                  className="w-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                  size="lg"
-                >
-                  Comenzar ahora
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Certificado oficial PDF
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Código QR de verificación
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Sistema de reportes
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Plan Estándar */}
+            <Card className="border-2 border-primary shadow-xl bg-white/90 backdrop-blur-sm relative scale-105">
+              <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary">Más Popular</Badge>
+              <CardHeader className="text-center">
+                <CardTitle className="text-xl">Estándar</CardTitle>
+                <CardDescription>Ideal para múltiples bicis</CardDescription>
+                <div className="text-4xl font-bold text-blue-600 mt-4">$60</div>
+                <div className="text-gray-500">MXN/mes</div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="space-y-2">
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />2 bicicletas registradas
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Certificados oficiales PDF
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Códigos QR de verificación
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Soporte prioritario
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Plan Familiar */}
+            <Card className="border-purple-200 shadow-lg bg-gradient-to-br from-white to-purple-50 relative">
+              <Badge className="absolute -top-2 right-4 bg-purple-600">Familiar</Badge>
+              <CardHeader className="text-center">
+                <CardTitle className="text-xl">Familiar</CardTitle>
+                <CardDescription>Perfecto para familias</CardDescription>
+                <div className="text-4xl font-bold text-purple-600 mt-4">$120</div>
+                <div className="text-gray-500">MXN/mes</div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="space-y-2">
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />4 bicicletas registradas
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Gestión familiar
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Soporte prioritario
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Todos los beneficios
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Plan Premium */}
+            <Card className="border-yellow-200 shadow-lg bg-gradient-to-br from-white to-yellow-50 relative">
+              <Badge className="absolute -top-2 right-4 bg-yellow-600">Premium</Badge>
+              <CardHeader className="text-center">
+                <CardTitle className="text-xl">Premium</CardTitle>
+                <CardDescription>Para coleccionistas</CardDescription>
+                <div className="text-4xl font-bold text-yellow-600 mt-4">$180</div>
+                <div className="text-gray-500">MXN/mes</div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ul className="space-y-2">
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />6 bicicletas registradas
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Soporte VIP 24/7
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Reportes avanzados
+                  </li>
+                  <li className="flex items-center text-sm">
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Todos los beneficios
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="text-center mt-12">
+            <Link href={isLoggedIn ? "/subscription" : "/auth/register"}>
+              <Button size="lg" className="shadow-lg hover:shadow-xl transition-all duration-300">
+                Ver todos los planes
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 

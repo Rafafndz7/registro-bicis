@@ -3,11 +3,21 @@ import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2023-10-16",
+})
+
+const planPrices = {
+  basic: { amount: 4000, bicycleLimit: 1, name: "Básico" },
+  standard: { amount: 6000, bicycleLimit: 2, name: "Estándar" },
+  family: { amount: 12000, bicycleLimit: 4, name: "Familiar" },
+  premium: { amount: 18000, bicycleLimit: 6, name: "Premium" },
+}
+
 export async function POST(request: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
 
-    // Verificar autenticación
     const {
       data: { session },
     } = await supabase.auth.getSession()
@@ -16,21 +26,59 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    console.log("Creando suscripción para usuario:", session.user.id)
+    const { planType = "basic", promoCode } = await request.json()
 
-    // Verificar si ya tiene una suscripción activa
-    const { data: existingSubscription, error: subError } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("user_id", session.user.id)
-      .eq("status", "active")
-      .single()
+    console.log("🔍 Datos recibidos:", { planType, promoCode })
 
-    if (existingSubscription && !subError) {
-      return NextResponse.json({ error: "Ya tienes una suscripción activa" }, { status: 400 })
+    if (!planPrices[planType as keyof typeof planPrices]) {
+      return NextResponse.json({ error: "Plan no válido" }, { status: 400 })
     }
 
-    // Obtener información del usuario
+    const selectedPlan = planPrices[planType as keyof typeof planPrices]
+    let finalAmount = selectedPlan.amount
+    let discountAmount = 0
+
+    console.log("📋 Plan seleccionado:", selectedPlan)
+
+    // Validar código promocional si se proporciona
+    if (promoCode) {
+      const { data: promo, error: promoError } = await supabase
+        .from("promo_codes")
+        .select("*")
+        .eq("code", promoCode.toUpperCase())
+        .eq("is_active", true)
+        .single()
+
+      if (!promoError && promo) {
+        const now = new Date()
+        const validFrom = promo.valid_from ? new Date(promo.valid_from) : null
+        const validUntil = promo.valid_until ? new Date(promo.valid_until) : null
+
+        if (
+          (!validFrom || validFrom <= now) &&
+          (!validUntil || validUntil >= now) &&
+          (!promo.max_uses || promo.current_uses < promo.max_uses) &&
+          (!promo.applicable_plans || promo.applicable_plans.includes(planType))
+        ) {
+          if (promo.discount_type === "percentage") {
+            discountAmount = Math.round((selectedPlan.amount * promo.discount_value) / 100)
+          } else if (promo.discount_type === "fixed") {
+            discountAmount = Math.min(promo.discount_value * 100, selectedPlan.amount)
+          }
+
+          finalAmount = Math.max(selectedPlan.amount - discountAmount, 0)
+
+          await supabase
+            .from("promo_codes")
+            .update({ current_uses: promo.current_uses + 1 })
+            .eq("id", promo.id)
+
+          console.log("💰 Descuento aplicado:", { discountAmount, finalAmount })
+        }
+      }
+    }
+
+    // Obtener perfil del usuario
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("full_name, email")
@@ -38,36 +86,55 @@ export async function POST(request: Request) {
       .single()
 
     if (profileError) {
-      console.error("Error al obtener perfil:", profileError)
       return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 })
     }
 
-    // Inicializar Stripe
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error("STRIPE_SECRET_KEY no está definida")
-      return NextResponse.json({ error: "Error de configuración de Stripe" }, { status: 500 })
-    }
-
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-10-16",
+    // Crear o recuperar customer de Stripe
+    let customer
+    const existingCustomers = await stripe.customers.list({
+      email: profile.email,
+      limit: 1,
     })
 
-    console.log("Creando sesión de checkout en Stripe...")
+    if (existingCustomers.data.length > 0) {
+      customer = existingCustomers.data[0]
+    } else {
+      customer = await stripe.customers.create({
+        email: profile.email,
+        name: profile.full_name,
+        metadata: {
+          userId: session.user.id,
+        },
+      })
+    }
 
-    // Crear sesión de checkout para suscripción
+    // Metadatos que se pasarán al checkout
+    const metadata = {
+      userId: session.user.id,
+      type: "subscription",
+      planType: planType,
+      bicycleLimit: selectedPlan.bicycleLimit.toString(),
+      originalAmount: selectedPlan.amount.toString(),
+      discountAmount: discountAmount.toString(),
+      promoCode: promoCode || "",
+    }
+
+    console.log("📤 Metadatos para Stripe:", metadata)
+
+    // Crear sesión de checkout
     const checkoutSession = await stripe.checkout.sessions.create({
+      customer: customer.id,
       payment_method_types: ["card"],
       mode: "subscription",
-      customer_email: profile.email,
       line_items: [
         {
           price_data: {
             currency: "mxn",
             product_data: {
-              name: "Suscripción Mensual RNB",
-              description: "Acceso completo al Registro Nacional de Bicicletas",
+              name: `Plan ${selectedPlan.name} - RNB`,
+              description: `Registro de hasta ${selectedPlan.bicycleLimit} bicicleta${selectedPlan.bicycleLimit > 1 ? "s" : ""}`,
             },
-            unit_amount: 4000, // $40 MXN en centavos
+            unit_amount: finalAmount,
             recurring: {
               interval: "month",
             },
@@ -77,17 +144,14 @@ export async function POST(request: Request) {
       ],
       success_url: `${request.headers.get("origin")}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${request.headers.get("origin")}/subscription?canceled=true`,
-      metadata: {
-        userId: session.user.id,
-        type: "subscription",
-      },
+      metadata: metadata,
     })
 
-    console.log("Sesión de checkout creada:", checkoutSession.id)
+    console.log("✅ Checkout session creado:", checkoutSession.id)
 
     return NextResponse.json({ url: checkoutSession.url })
   } catch (error) {
-    console.error("Error al crear suscripción:", error)
-    return NextResponse.json({ error: "Error al crear suscripción", details: error }, { status: 500 })
+    console.error("❌ Error creating subscription:", error)
+    return NextResponse.json({ error: "Error al crear suscripción" }, { status: 500 })
   }
 }

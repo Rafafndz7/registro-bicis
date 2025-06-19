@@ -3,128 +3,137 @@ import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2023-10-16",
+})
+
+const planMapping = {
+  basic: { bicycleLimit: 1, planType: "básico" },
+  standard: { bicycleLimit: 2, planType: "estándar" },
+  family: { bicycleLimit: 4, planType: "familiar" },
+  premium: { bicycleLimit: 6, planType: "premium" },
+}
+
 export async function POST(request: Request) {
   const body = await request.text()
-  const signature = request.headers.get("stripe-signature") as string
-
-  console.log("Webhook recibido, signature:", signature ? "presente" : "ausente")
+  const signature = request.headers.get("stripe-signature")!
 
   let event: Stripe.Event
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: "2023-10-16",
-  })
 
   try {
     event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!)
-    console.log("Evento de webhook validado:", event.type)
-  } catch (error) {
-    console.error("Error al validar webhook:", error)
-    return NextResponse.json({ error: "Webhook error" }, { status: 400 })
+  } catch (err) {
+    console.error("Webhook signature verification failed:", err)
+    return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
   }
 
   const supabase = createRouteHandlerClient({ cookies })
 
   try {
     switch (event.type) {
-      case "checkout.session.completed":
+      case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session
-        console.log("Checkout completado:", session.id, "Modo:", session.mode)
+        console.log("Checkout session completed:", session.id)
 
-        if (session.mode === "subscription" && session.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
-          console.log("Procesando suscripción:", subscription.id)
+        if (session.mode === "subscription" && session.metadata?.type === "subscription") {
+          const userId = session.metadata.userId
+          const planType = session.metadata.planType || "basic"
+          const bicycleLimit = Number.parseInt(session.metadata.bicycleLimit || "1")
 
-          const subscriptionData = {
-            user_id: session.metadata?.userId!,
+          console.log("Processing subscription:", { userId, planType, bicycleLimit })
+
+          // Cancelar suscripciones anteriores
+          await supabase
+            .from("subscriptions")
+            .update({ status: "canceled" })
+            .eq("user_id", userId)
+            .eq("status", "active")
+
+          // Crear nueva suscripción
+          const { error: insertError } = await supabase.from("subscriptions").insert({
+            user_id: userId,
+            stripe_subscription_id: session.subscription as string,
             stripe_customer_id: session.customer as string,
-            stripe_subscription_id: subscription.id,
-            status: subscription.status,
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            status: "active",
+            plan_type: planType,
+            bicycle_limit: bicycleLimit,
+            current_period_start: new Date().toISOString(),
+            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 días
+          })
+
+          if (insertError) {
+            console.error("Error creating subscription:", insertError)
+            throw insertError
           }
 
-          const { error } = await supabase.from("subscriptions").upsert(subscriptionData, {
-            onConflict: "stripe_subscription_id",
-          })
-
-          if (error) {
-            console.error("Error al crear suscripción:", error)
-          } else {
-            console.log("Suscripción creada/actualizada exitosamente")
-          }
+          console.log("Subscription created successfully")
         }
         break
+      }
 
-      case "customer.subscription.updated":
-        const updatedSubscription = event.data.object as Stripe.Subscription
-        console.log("Suscripción actualizada:", updatedSubscription.id)
-
-        const { error: updateError } = await supabase
-          .from("subscriptions")
-          .update({
-            status: updatedSubscription.status,
-            current_period_start: new Date(updatedSubscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(updatedSubscription.current_period_end * 1000).toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("stripe_subscription_id", updatedSubscription.id)
-
-        if (updateError) {
-          console.error("Error al actualizar suscripción:", updateError)
-        } else {
-          console.log("Suscripción actualizada exitosamente")
-        }
-        break
-
-      case "customer.subscription.deleted":
-        const deletedSubscription = event.data.object as Stripe.Subscription
-        console.log("Suscripción cancelada:", deletedSubscription.id)
-
-        const { error: deleteError } = await supabase
-          .from("subscriptions")
-          .update({
-            status: "canceled",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("stripe_subscription_id", deletedSubscription.id)
-
-        if (deleteError) {
-          console.error("Error al cancelar suscripción:", deleteError)
-        } else {
-          console.log("Suscripción cancelada exitosamente")
-        }
-        break
-
-      case "invoice.payment_failed":
+      case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice
-        console.log("Pago fallido para invoice:", invoice.id)
+        console.log("Payment succeeded for subscription:", invoice.subscription)
 
         if (invoice.subscription) {
-          const { error: failedError } = await supabase
+          const { error } = await supabase
             .from("subscriptions")
             .update({
-              status: "past_due",
-              updated_at: new Date().toISOString(),
+              status: "active",
+              current_period_start: new Date(invoice.period_start * 1000).toISOString(),
+              current_period_end: new Date(invoice.period_end * 1000).toISOString(),
             })
             .eq("stripe_subscription_id", invoice.subscription as string)
 
-          if (failedError) {
-            console.error("Error al actualizar suscripción fallida:", failedError)
-          } else {
-            console.log("Suscripción marcada como vencida")
+          if (error) {
+            console.error("Error updating subscription:", error)
+            throw error
           }
         }
         break
+      }
+
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice
+        console.log("Payment failed for subscription:", invoice.subscription)
+
+        if (invoice.subscription) {
+          const { error } = await supabase
+            .from("subscriptions")
+            .update({ status: "past_due" })
+            .eq("stripe_subscription_id", invoice.subscription as string)
+
+          if (error) {
+            console.error("Error updating subscription status:", error)
+            throw error
+          }
+        }
+        break
+      }
+
+      case "customer.subscription.deleted": {
+        const subscription = event.data.object as Stripe.Subscription
+        console.log("Subscription canceled:", subscription.id)
+
+        const { error } = await supabase
+          .from("subscriptions")
+          .update({ status: "canceled" })
+          .eq("stripe_subscription_id", subscription.id)
+
+        if (error) {
+          console.error("Error canceling subscription:", error)
+          throw error
+        }
+        break
+      }
 
       default:
-        console.log("Evento no manejado:", event.type)
+        console.log(`Unhandled event type: ${event.type}`)
     }
-  } catch (error) {
-    console.error("Error al procesar webhook:", error)
-    return NextResponse.json({ error: "Error al procesar webhook" }, { status: 500 })
-  }
 
-  return NextResponse.json({ received: true })
+    return NextResponse.json({ received: true })
+  } catch (error) {
+    console.error("Webhook error:", error)
+    return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 })
+  }
 }

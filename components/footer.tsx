@@ -1,26 +1,111 @@
 import Link from "next/link"
-import { BikeIcon as Bicycle } from "lucide-react"
+import { BikeIcon as Bicycle, Mail, Phone, MapPin, Facebook, Twitter, Instagram } from "lucide-react"
 
 export function Footer() {
   return (
-    <footer className="border-t bg-background">
-      <div className="container flex flex-col items-center justify-between gap-4 py-10 md:h-24 md:flex-row md:py-0">
-        <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
-          <Bicycle className="h-6 w-6 text-bike-primary" />
-          <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-            &copy; {new Date().getFullYear()} Registro Nacional de Bicis. Todos los derechos reservados.
-          </p>
+    <footer className="bg-gray-900 text-white">
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+          {/* Logo y descripción */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <Bicycle className="h-8 w-8 text-blue-400" />
+              <span className="text-xl font-bold">RNB</span>
+            </div>
+            <p className="text-gray-300 text-sm">
+              Registro Nacional de Bicicletas - El sistema oficial de México para proteger tu bicicleta y facilitar su
+              recuperación.
+            </p>
+            <div className="flex space-x-4">
+              <Facebook className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer" />
+              <Twitter className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer" />
+              <Instagram className="h-5 w-5 text-gray-400 hover:text-blue-400 cursor-pointer" />
+            </div>
+          </div>
+
+          {/* Enlaces rápidos */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Enlaces rápidos</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link href="/about" className="text-gray-300 hover:text-white transition-colors">
+                  Acerca de nosotros
+                </Link>
+              </li>
+              <li>
+                <Link href="/search" className="text-gray-300 hover:text-white transition-colors">
+                  Verificar bicicleta
+                </Link>
+              </li>
+              <li>
+                <Link href="/subscription" className="text-gray-300 hover:text-white transition-colors">
+                  Planes y precios
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="text-gray-300 hover:text-white transition-colors">
+                  Contacto
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Servicios */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Servicios</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link href="/bicycles/register" className="text-gray-300 hover:text-white transition-colors">
+                  Registrar bicicleta
+                </Link>
+              </li>
+              <li>
+                <span className="text-gray-300">Certificados oficiales</span>
+              </li>
+              <li>
+                <span className="text-gray-300">Códigos QR</span>
+              </li>
+              <li>
+                <span className="text-gray-300">Reportes de robo</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Contacto */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Contacto</h3>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-blue-400" />
+                <span className="text-gray-300">info@rnb.gob.mx</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-blue-400" />
+                <span className="text-gray-300">01-800-RNB-BICIS</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-4 w-4 text-blue-400" />
+                <span className="text-gray-300">Ciudad de México, México</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-6 md:px-0">
-          <Link href="/terms" className="text-sm text-muted-foreground hover:underline">
-            Términos de servicio
-          </Link>
-          <Link href="/privacy" className="text-sm text-muted-foreground hover:underline">
-            Política de privacidad
-          </Link>
-          <Link href="/contact" className="text-sm text-muted-foreground hover:underline">
-            Contacto
-          </Link>
+
+        {/* Línea divisoria */}
+        <div className="border-t border-gray-700 mt-8 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div className="text-sm text-gray-400">
+              &copy; {new Date().getFullYear()} Registro Nacional de Bicicletas. Todos los derechos reservados.
+            </div>
+            <div className="flex space-x-6 text-sm">
+              <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
+                Términos de servicio
+              </Link>
+              <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
+                Política de privacidad
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </footer>

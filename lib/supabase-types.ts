@@ -50,6 +50,10 @@ export interface Database {
           model: string
           color: string
           characteristics: string | null
+          bike_type: string
+          year: number | null
+          wheel_size: string | null
+          groupset: string | null
           registration_date: string
           payment_status: boolean
           theft_status: string
@@ -64,6 +68,10 @@ export interface Database {
           model: string
           color: string
           characteristics?: string | null
+          bike_type?: string
+          year?: number | null
+          wheel_size?: string | null
+          groupset?: string | null
           registration_date?: string
           payment_status?: boolean
           theft_status?: string
@@ -78,6 +86,10 @@ export interface Database {
           model?: string
           color?: string
           characteristics?: string | null
+          bike_type?: string
+          year?: number | null
+          wheel_size?: string | null
+          groupset?: string | null
           registration_date?: string
           payment_status?: boolean
           theft_status?: string
@@ -152,6 +164,8 @@ export interface Database {
           user_id: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          plan_type: string
+          bicycle_limit: number
           status: string
           current_period_start: string | null
           current_period_end: string | null
@@ -163,6 +177,8 @@ export interface Database {
           user_id: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          plan_type?: string
+          bicycle_limit?: number
           status?: string
           current_period_start?: string | null
           current_period_end?: string | null
@@ -174,6 +190,8 @@ export interface Database {
           user_id?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          plan_type?: string
+          bicycle_limit?: number
           status?: string
           current_period_start?: string | null
           current_period_end?: string | null
@@ -215,6 +233,50 @@ export interface Database {
           description?: string | null
           police_report_number?: string | null
           status?: string
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      promo_codes: {
+        Row: {
+          id: string
+          code: string
+          discount_type: string
+          discount_value: number
+          max_uses: number | null
+          current_uses: number
+          valid_from: string
+          valid_until: string | null
+          is_active: boolean
+          applicable_plans: string[] | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          discount_type: string
+          discount_value: number
+          max_uses?: number | null
+          current_uses?: number
+          valid_from?: string
+          valid_until?: string | null
+          is_active?: boolean
+          applicable_plans?: string[] | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          discount_type?: string
+          discount_value?: number
+          max_uses?: number | null
+          current_uses?: number
+          valid_from?: string
+          valid_until?: string | null
+          is_active?: boolean
+          applicable_plans?: string[] | null
           created_at?: string
           updated_at?: string
         }

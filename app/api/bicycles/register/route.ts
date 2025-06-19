@@ -16,14 +16,37 @@ export async function POST(request: Request) {
 
     const userId = session.user.id
     const formData = await request.json()
-    const { serialNumber, brand, model, color, characteristics, images = [] } = formData
+    const {
+      serialNumber,
+      brand,
+      model,
+      color,
+      bikeType,
+      year,
+      wheelSize,
+      groupset,
+      characteristics,
+      images = [],
+    } = formData
 
-    // Validar datos
-    if (!serialNumber || !brand || !model || !color) {
+    // Validar datos obligatorios
+    if (!serialNumber || !brand || !model || !color || !bikeType) {
       return NextResponse.json({ error: "Faltan datos obligatorios de la bicicleta" }, { status: 400 })
     }
 
-    // Verificar límite de 2 bicicletas por usuario
+    // Verificar suscripción activa y límite
+    const { data: subscription, error: subError } = await supabase
+      .from("subscriptions")
+      .select("bicycle_limit, plan_type")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .single()
+
+    if (subError || !subscription) {
+      return NextResponse.json({ error: "No tienes una suscripción activa" }, { status: 400 })
+    }
+
+    // Contar bicicletas actuales del usuario
     const { count: bicycleCount, error: countError } = await supabase
       .from("bicycles")
       .select("*", { count: "exact", head: true })
@@ -31,9 +54,11 @@ export async function POST(request: Request) {
 
     if (countError) throw countError
 
-    if (bicycleCount && bicycleCount >= 2) {
+    if (bicycleCount && bicycleCount >= subscription.bicycle_limit) {
       return NextResponse.json(
-        { error: "Has alcanzado el límite máximo de 2 bicicletas registradas por usuario" },
+        {
+          error: `Has alcanzado el límite de ${subscription.bicycle_limit} bicicleta${subscription.bicycle_limit > 1 ? "s" : ""} de tu plan ${subscription.plan_type}`,
+        },
         { status: 400 },
       )
     }
@@ -52,7 +77,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // 1. Registrar la bicicleta
+    // 1. Registrar la bicicleta con los nuevos campos
     const { data: bicycle, error: bicycleError } = await supabase
       .from("bicycles")
       .insert({
@@ -61,7 +86,12 @@ export async function POST(request: Request) {
         brand,
         model,
         color,
+        bike_type: bikeType,
+        year: year || null,
+        wheel_size: wheelSize || null,
+        groupset: groupset || null,
         characteristics,
+        payment_status: true, // Automáticamente pagado con suscripción
       })
       .select()
       .single()
@@ -72,7 +102,7 @@ export async function POST(request: Request) {
     if (images.length > 0 && bicycle) {
       const validImages = images.slice(0, 4) // Limitar a 4 imágenes
 
-      const imageInserts = validImages.map((imageUrl) => ({
+      const imageInserts = validImages.map((imageUrl: string) => ({
         bicycle_id: bicycle.id,
         image_url: imageUrl,
       }))
@@ -82,20 +112,10 @@ export async function POST(request: Request) {
       if (imagesError) throw imagesError
     }
 
-    // 3. Crear registro de pago pendiente
-    const { error: paymentError } = await supabase.from("payments").insert({
-      user_id: userId,
-      bicycle_id: bicycle.id,
-      amount: 25000, // $250 MXN en centavos para Stripe
-      payment_status: "pending",
-    })
-
-    if (paymentError) throw paymentError
-
     return NextResponse.json(
       {
         success: true,
-        message: "Bicicleta registrada correctamente. Pendiente de pago.",
+        message: "Bicicleta registrada correctamente.",
         bicycleId: bicycle.id,
       },
       { status: 201 },

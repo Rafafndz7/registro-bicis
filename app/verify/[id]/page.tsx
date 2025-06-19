@@ -18,12 +18,12 @@ interface BicycleImage {
 export default async function VerifyPage({ params }: { params: { id: string } }) {
   const supabase = createServerComponentClient({ cookies })
 
-  // Obtener detalles de la bicicleta
+  // Obtener detalles de la bicicleta SIN restricciones de autenticación
   const { data: bicycle, error } = await supabase
     .from("bicycles")
     .select(`
       *,
-      profiles (
+      profiles!inner (
         full_name,
         phone
       )
@@ -33,6 +33,7 @@ export default async function VerifyPage({ params }: { params: { id: string } })
     .single()
 
   if (error || !bicycle) {
+    console.log("Error o bicicleta no encontrada:", error)
     notFound()
   }
 
@@ -80,8 +81,8 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                   {bicycle.profiles?.phone && (
                     <p className="flex items-center mt-1">
                       <Phone className="h-4 w-4 mr-1" />
-                      <a href={`tel:${bicycle.profiles.phone}`} className="text-white underline">
-                        {bicycle.profiles.phone}
+                      <a href={`https://wa.me/52${bicycle.profiles.phone}`} className="text-white underline">
+                        {bicycle.profiles.phone} (WhatsApp)
                       </a>
                     </p>
                   )}
@@ -96,6 +97,33 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                 </AlertDescription>
               </Alert>
             )}
+
+            {/* Información de contacto SIEMPRE visible */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-medium mb-3 text-blue-800 text-lg">👤 Información del propietario</h3>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium text-blue-700">Nombre:</span>
+                  <span className="text-blue-900 text-lg">
+                    {bicycle.profiles?.full_name || "Información no disponible"}
+                  </span>
+                </div>
+                {bicycle.profiles?.phone && (
+                  <div className="flex items-center space-x-2">
+                    <Phone className="h-5 w-5 text-blue-600" />
+                    <span className="font-medium text-blue-700">Contacto:</span>
+                    <a
+                      href={`https://wa.me/52${bicycle.profiles.phone}`}
+                      className="text-blue-900 underline hover:text-blue-700 font-medium"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {bicycle.profiles.phone} (WhatsApp)
+                    </a>
+                  </div>
+                )}
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -133,16 +161,6 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                       {bicycle.theft_status === "reported_stolen" ? "Reportada como robada" : "Registrada oficialmente"}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Propietario</p>
-                    <p className="font-medium">{bicycle.profiles?.full_name}</p>
-                  </div>
-                  {bicycle.theft_status === "reported_stolen" && bicycle.profiles?.phone && (
-                    <div>
-                      <p className="text-sm text-muted-foreground">Contacto</p>
-                      <p className="font-medium">{bicycle.profiles.phone}</p>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -170,28 +188,6 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                 <p>{bicycle.characteristics}</p>
               </div>
             )}
-
-            {/* Información de contacto siempre visible */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-medium mb-2 text-blue-800">Información del propietario</h3>
-              <div className="space-y-2">
-                <p className="text-blue-700">
-                  <span className="font-medium">Nombre:</span> {bicycle.profiles?.full_name}
-                </p>
-                {bicycle.profiles?.phone && (
-                  <p className="text-blue-700 flex items-center">
-                    <Phone className="h-4 w-4 mr-2" />
-                    <span className="font-medium">Contacto:</span>
-                    <a
-                      href={`https://wa.me/52${bicycle.profiles.phone}`}
-                      className="ml-1 underline hover:text-blue-900"
-                    >
-                      {bicycle.profiles.phone} (WhatsApp)
-                    </a>
-                  </p>
-                )}
-              </div>
-            </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-center w-full">

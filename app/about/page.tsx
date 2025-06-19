@@ -1,5 +1,8 @@
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Shield, Award, Users, CheckCircle, BikeIcon } from "lucide-react"
+import { Shield, Award, Users, CheckCircle, BikeIcon, Star, Crown, Heart, Zap } from "lucide-react"
 
 export default function AboutPage() {
   return (
@@ -131,6 +134,153 @@ export default function AboutPage() {
         </div>
       </div>
 
+      {/* NUEVA SECCIÓN DE PLANES DE SUSCRIPCIÓN */}
+      <div className="mb-16">
+        <h2 className="text-3xl font-bold mb-8 text-center">Planes de Suscripción</h2>
+        <p className="text-center text-gray-600 dark:text-gray-300 mb-12 max-w-3xl mx-auto">
+          Ofrecemos diferentes planes para adaptarnos a las necesidades de cada ciclista, desde usuarios individuales
+          hasta familias completas.
+        </p>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {/* Plan Básico */}
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-blue-50 dark:from-gray-800 dark:to-blue-900/20">
+            <CardHeader className="text-center pb-4">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+                <BikeIcon className="h-6 w-6 text-blue-600" />
+              </div>
+              <CardTitle className="text-xl">Básico</CardTitle>
+              <div className="text-3xl font-bold text-blue-600 mt-2">$40</div>
+              <div className="text-gray-500">MXN/mes</div>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />1 bicicleta registrada
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  Certificado oficial PDF
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  Código QR de verificación
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  Sistema de reportes
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Plan Estándar */}
+          <Card className="border-2 border-primary shadow-xl bg-gradient-to-br from-white to-green-50 dark:from-gray-800 dark:to-green-900/20 relative scale-105">
+            <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary">Más Popular</Badge>
+            <CardHeader className="text-center pb-4">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                <Star className="h-6 w-6 text-green-600" />
+              </div>
+              <CardTitle className="text-xl">Estándar</CardTitle>
+              <div className="text-3xl font-bold text-green-600 mt-2">$60</div>
+              <div className="text-gray-500">MXN/mes</div>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />2 bicicletas registradas
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  Certificados oficiales PDF
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  Códigos QR de verificación
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  Soporte prioritario
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Plan Familiar */}
+          <Card className="border-purple-200 shadow-lg bg-gradient-to-br from-white to-purple-50 dark:from-gray-800 dark:to-purple-900/20 relative">
+            <Badge className="absolute -top-2 right-4 bg-purple-600">Familiar</Badge>
+            <CardHeader className="text-center pb-4">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-purple-100">
+                <Heart className="h-6 w-6 text-purple-600" />
+              </div>
+              <CardTitle className="text-xl">Familiar</CardTitle>
+              <div className="text-3xl font-bold text-purple-600 mt-2">$120</div>
+              <div className="text-gray-500">MXN/mes</div>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />4 bicicletas registradas
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  Gestión familiar
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  Soporte prioritario
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  Todos los beneficios
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Plan Premium */}
+          <Card className="border-yellow-200 shadow-lg bg-gradient-to-br from-white to-yellow-50 dark:from-gray-800 dark:to-yellow-900/20 relative">
+            <Badge className="absolute -top-2 right-4 bg-yellow-600">Premium</Badge>
+            <CardHeader className="text-center pb-4">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100">
+                <Crown className="h-6 w-6 text-yellow-600" />
+              </div>
+              <CardTitle className="text-xl">Premium</CardTitle>
+              <div className="text-3xl font-bold text-yellow-600 mt-2">$180</div>
+              <div className="text-gray-500">MXN/mes</div>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />6 bicicletas registradas
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  Soporte VIP 24/7
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  Reportes avanzados
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                  Todos los beneficios
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="text-center mt-8">
+          <Link href="/subscription">
+            <Button size="lg" className="shadow-lg hover:shadow-xl transition-all duration-300">
+              <Zap className="mr-2 h-4 w-4" />
+              Ver todos los planes
+            </Button>
+          </Link>
+        </div>
+      </div>
+
       <div className="mb-16">
         <h2 className="text-3xl font-bold mb-8 text-center">Nuestro Equipo</h2>
 
@@ -167,9 +317,9 @@ export default function AboutPage() {
                 "El proceso es simple: creas una cuenta, te suscribes al servicio, registras los datos de tu bicicleta incluyendo fotos y características únicas, y recibes un certificado oficial con código QR para verificación.",
             },
             {
-              question: "¿Cuánto cuesta registrar mi bicicleta?",
+              question: "¿Cuáles son los diferentes planes disponibles?",
               answer:
-                "La suscripción mensual tiene un costo de $40 MXN, lo que te permite registrar hasta 2 bicicletas, obtener certificados oficiales y acceder a todas las funcionalidades del sistema.",
+                "Ofrecemos 4 planes: Básico ($40/mes - 1 bici), Estándar ($60/mes - 2 bicis), Familiar ($120/mes - 4 bicis) y Premium ($180/mes - 6 bicis). Cada plan incluye certificados oficiales, códigos QR y diferentes niveles de soporte.",
             },
             {
               question: "¿Qué hago si mi bicicleta es robada?",

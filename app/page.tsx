@@ -17,7 +17,6 @@ import {
 } from "lucide-react"
 import { BicycleAnimation } from "@/components/bicycle-animation"
 import { RecentRegistrations } from "@/components/recent-registrations"
-import { Footer } from "@/components/footer"
 import { cookies } from "next/headers"
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 
@@ -498,9 +497,6 @@ export default async function Page() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <Footer />
     </div>
   )
 }

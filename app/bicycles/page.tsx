@@ -146,6 +146,24 @@ function BicyclesContent() {
           </Alert>
         )}
 
+        {bicycles.length > 0 && (
+          <Alert className="bg-gradient-to-r from-blue-50 to-green-50 border-blue-200 shadow-lg">
+            <Download className="h-5 w-5 text-blue-600" />
+            <AlertTitle className="text-blue-800 flex items-center gap-2">
+              <QrCode className="h-4 w-4" />
+              ¡Recordatorio Importante!
+            </AlertTitle>
+            <AlertDescription className="text-blue-700">
+              <strong>No olvides descargar tu certificado PDF y código QR</strong> en tu celular para tenerlos siempre
+              disponibles. Estos documentos son esenciales para verificar la propiedad de tu bicicleta ante autoridades
+              o compradores.
+              <div className="mt-2 text-sm font-medium text-blue-600">
+                💡 Tip: Guarda una copia en tu galería y otra en la nube
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Mis Bicicletas</h1>

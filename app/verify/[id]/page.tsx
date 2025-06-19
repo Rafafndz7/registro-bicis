@@ -1,5 +1,4 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createClient } from "@supabase/supabase-js"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,93 +14,44 @@ interface BicycleImage {
   image_url: string
 }
 
-interface BicycleWithOwner {
-  id: string
-  user_id: string
-  serial_number: string
-  brand: string
-  model: string
-  color: string
-  characteristics: string | null
-  bike_type: string
-  year: number | null
-  wheel_size: string | null
-  groupset: string | null
-  registration_date: string
-  payment_status: boolean
-  theft_status: string
-  created_at: string
-  updated_at: string
-  owner_name: string | null
-  owner_phone: string | null
-}
-
 export default async function VerifyPage({ params }: { params: { id: string } }) {
-  const supabase = createServerComponentClient({ cookies })
+  // Usar cliente público de Supabase (sin autenticación)
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
-  // Hacer JOIN explícito para obtener información del propietario
-  const { data: bicycleData, error } = await supabase
+  console.log("🔍 Buscando bicicleta con ID:", params.id)
+
+  // Primero obtener la bicicleta
+  const { data: bicycle, error: bicycleError } = await supabase
     .from("bicycles")
-    .select(`
-      *,
-      profiles!bicycles_user_id_fkey (
-        full_name,
-        phone
-      )
-    `)
+    .select("*")
     .eq("id", params.id)
     .eq("payment_status", true)
     .single()
 
-  console.log("🚴 Bicycle data from DB:", bicycleData)
-  console.log("❌ Error:", error)
+  console.log("🚴 Bicycle data:", bicycle)
+  console.log("❌ Bicycle error:", bicycleError)
 
-  // Si la consulta con relación falla, intentamos con una consulta separada
-  if (error || !bicycleData) {
-    console.log("🔄 Trying alternative query...")
-
-    // Primero obtener la bicicleta
-    const { data: bicycle, error: bicycleError } = await supabase
-      .from("bicycles")
-      .select("*")
-      .eq("id", params.id)
-      .eq("payment_status", true)
-      .single()
-
-    if (bicycleError || !bicycle) {
-      console.error("❌ Error fetching bicycle:", bicycleError)
-      notFound()
-    }
-
-    // Luego obtener el perfil del propietario
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("full_name, phone")
-      .eq("id", bicycle.user_id)
-      .single()
-
-    console.log("👤 Profile data:", profile)
-    console.log("❌ Profile error:", profileError)
-
-    // Combinar los datos
-    const combinedData = {
-      ...bicycle,
-      profiles: profile || null,
-    }
-
-    return renderPage(combinedData, params.id, supabase)
+  if (bicycleError || !bicycle) {
+    console.error("❌ Error fetching bicycle:", bicycleError)
+    notFound()
   }
 
-  return renderPage(bicycleData, params.id, supabase)
-}
+  // Luego obtener el perfil del propietario usando el user_id
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("full_name, phone")
+    .eq("id", bicycle.user_id)
+    .single()
 
-async function renderPage(bicycle: any, bicycleId: string, supabase: any) {
+  console.log("👤 Profile data:", profile)
+  console.log("❌ Profile error:", profileError)
+
   // Obtener imágenes de la bicicleta
-  const { data: images } = await supabase.from("bicycle_images").select("*").eq("bicycle_id", bicycleId)
+  const { data: images } = await supabase.from("bicycle_images").select("*").eq("bicycle_id", params.id)
+
   const bicycleImages = (images as BicycleImage[]) || []
 
   console.log("🖼️ Images:", images)
-  console.log("👤 Final bicycle with profile:", bicycle)
 
   return (
     <div className="container py-10">
@@ -138,13 +88,11 @@ async function renderPage(bicycle: any, bicycleId: string, supabase: any) {
                 <AlertTitle>Bicicleta reportada como robada</AlertTitle>
                 <AlertDescription>
                   <p className="mb-2">Esta bicicleta ha sido reportada como robada por su propietario legítimo.</p>
-                  <p className="font-semibold">Propietario: {bicycle.profiles?.full_name || "No disponible"}</p>
-                  {bicycle.profiles?.phone && (
+                  <p className="font-semibold">Propietario: {profile?.full_name || "No disponible"}</p>
+                  {profile?.phone && (
                     <p className="flex items-center mt-1">
                       <Phone className="h-4 w-4 mr-1" />
-                      <a href={`https://wa.me/52${bicycle.profiles.phone}`} className="text-white underline">
-                        {bicycle.profiles.phone} (WhatsApp)
-                      </a>
+                      <span className="text-white">Teléfono: {profile.phone}</span>
                     </p>
                   )}
                 </AlertDescription>
@@ -165,34 +113,13 @@ async function renderPage(bicycle: any, bicycleId: string, supabase: any) {
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <span className="font-medium text-blue-700">Nombre:</span>
-                  <span className="text-blue-900 text-lg">
-                    {bicycle.profiles?.full_name || "Cargando información..."}
-                  </span>
+                  <span className="text-blue-900 text-lg">{profile?.full_name || "Información no disponible"}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className="font-medium text-blue-700">User ID:</span>
-                  <span className="text-blue-900 text-sm">{bicycle.user_id}</span>
+                  <Phone className="h-5 w-5 text-blue-600" />
+                  <span className="font-medium text-blue-700">Teléfono:</span>
+                  <span className="text-blue-900 font-medium">{profile?.phone || "No disponible"}</span>
                 </div>
-                {bicycle.profiles?.phone ? (
-                  <div className="flex items-center space-x-2">
-                    <Phone className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium text-blue-700">Contacto:</span>
-                    <a
-                      href={`https://wa.me/52${bicycle.profiles.phone}`}
-                      className="text-blue-900 underline hover:text-blue-700 font-medium"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {bicycle.profiles.phone} (WhatsApp)
-                    </a>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <Phone className="h-5 w-5 text-gray-400" />
-                    <span className="font-medium text-gray-600">Contacto:</span>
-                    <span className="text-gray-500">Buscando información...</span>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -260,14 +187,18 @@ async function renderPage(bicycle: any, bicycleId: string, supabase: any) {
               </div>
             )}
 
-            {/* DEBUG INFO - Remover en producción */}
+            {/* DEBUG INFO - Temporal para diagnosticar */}
             <div className="bg-gray-100 p-4 rounded text-xs">
               <p>
-                <strong>DEBUG:</strong>
+                <strong>DEBUG INFO:</strong>
               </p>
               <p>Bicycle ID: {bicycle.id}</p>
               <p>User ID: {bicycle.user_id}</p>
-              <p>Profile data: {JSON.stringify(bicycle.profiles)}</p>
+              <p>Profile found: {profile ? "✅ Sí" : "❌ No"}</p>
+              <p>Profile name: {profile?.full_name || "N/A"}</p>
+              <p>Profile phone: {profile?.phone || "N/A"}</p>
+              <p>Bicycle error: {bicycleError ? JSON.stringify(bicycleError) : "None"}</p>
+              <p>Profile error: {profileError ? JSON.stringify(profileError) : "None"}</p>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">

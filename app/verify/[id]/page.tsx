@@ -135,7 +135,7 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Propietario</p>
-                    <p className="font-medium">{bicycle.profiles?.full_name || "No disponible"}</p>
+                    <p className="font-medium">{bicycle.profiles?.full_name}</p>
                   </div>
                   {bicycle.theft_status === "reported_stolen" && bicycle.profiles?.phone && (
                     <div>
@@ -143,10 +143,6 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                       <p className="font-medium">{bicycle.profiles.phone}</p>
                     </div>
                   )}
-                  <div>
-                    <p className="text-sm text-muted-foreground">Nombre del propietario</p>
-                    <p className="font-medium">{bicycle.profiles?.full_name || "No disponible"}</p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -174,6 +170,28 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                 <p>{bicycle.characteristics}</p>
               </div>
             )}
+
+            {/* Información de contacto siempre visible */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-medium mb-2 text-blue-800">Información del propietario</h3>
+              <div className="space-y-2">
+                <p className="text-blue-700">
+                  <span className="font-medium">Nombre:</span> {bicycle.profiles?.full_name}
+                </p>
+                {bicycle.profiles?.phone && (
+                  <p className="text-blue-700 flex items-center">
+                    <Phone className="h-4 w-4 mr-2" />
+                    <span className="font-medium">Contacto:</span>
+                    <a
+                      href={`https://wa.me/52${bicycle.profiles.phone}`}
+                      className="ml-1 underline hover:text-blue-900"
+                    >
+                      {bicycle.profiles.phone} (WhatsApp)
+                    </a>
+                  </p>
+                )}
+              </div>
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <div className="text-center w-full">

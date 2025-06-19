@@ -7,11 +7,10 @@ import { useRouter } from "next/navigation"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useAuth } from "@/components/auth-provider"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { CheckCircle, Star, Users, Crown, AlertCircle, Tag, Percent } from "lucide-react"
+import { CheckCircle, Star, Users, Crown, AlertCircle } from "lucide-react"
 
 const plans = [
   {
@@ -183,7 +182,7 @@ export default function SubscriptionPage() {
     setSelectedPlan(planId)
 
     try {
-      const response = await fetch("/api/subscriptions/create-with-promo", {
+      const response = await fetch("/api/subscriptions/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -226,9 +225,7 @@ export default function SubscriptionPage() {
     <div className="container mx-auto max-w-6xl py-10">
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold mb-4">Planes de Suscripción</h1>
-        <p className="text-xl text-muted-foreground">
-          Elige el plan que mejor se adapte a tus necesidades de registro de bicicletas
-        </p>
+        <p className="text-xl text-muted-foreground">Suscripción mensual desde solo $40 MXN para acceso completo</p>
       </div>
 
       {currentSubscription && (
@@ -245,54 +242,6 @@ export default function SubscriptionPage() {
           </AlertDescription>
         </Alert>
       )}
-
-      {/* Sección de código promocional */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Tag className="w-5 h-5" />
-            Código Promocional
-          </CardTitle>
-          <CardDescription>¿Tienes un código promocional? Ingrésalo aquí para obtener descuentos</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4 max-w-md">
-            <Input
-              placeholder="Ingresa tu código promocional"
-              value={promoCode}
-              onChange={(e) => {
-                setPromoCode(e.target.value.toUpperCase())
-                if (e.target.value.trim()) {
-                  validatePromoCode(e.target.value, "basic")
-                } else {
-                  setPromoDiscount(null)
-                  setPromoError("")
-                }
-              }}
-            />
-          </div>
-          {promoDiscount && (
-            <Alert className="mt-4 bg-green-50">
-              <Percent className="h-4 w-4 text-green-600" />
-              <AlertTitle className="text-green-600">¡Código válido!</AlertTitle>
-              <AlertDescription className="text-green-600">
-                Descuento de{" "}
-                {promoDiscount.discount_type === "percentage"
-                  ? `${promoDiscount.discount_value}%`
-                  : `$${promoDiscount.discount_value} MXN`}{" "}
-                aplicado
-              </AlertDescription>
-            </Alert>
-          )}
-          {promoError && (
-            <Alert variant="destructive" className="mt-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Código no válido</AlertTitle>
-              <AlertDescription>{promoError}</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {plans.map((plan) => {
@@ -376,7 +325,6 @@ export default function SubscriptionPage() {
             • Todos los planes incluyen certificados oficiales y códigos QR
             <br />• Los planes familiares permiten gestionar múltiples bicicletas
             <br />• Puedes cambiar de plan en cualquier momento
-            <br />• Los códigos promocionales se aplican solo al primer mes
             <br />• Soporte técnico incluido en todos los planes
           </AlertDescription>
         </Alert>

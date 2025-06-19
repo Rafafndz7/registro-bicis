@@ -75,14 +75,14 @@ export async function POST(request: Request) {
       payment = newPayment
     }
 
-    // Inicializar Stripe
+    // Inicializar Stripe con la versión correcta
     if (!process.env.STRIPE_SECRET_KEY) {
       console.error("STRIPE_SECRET_KEY no está definida")
       return NextResponse.json({ error: "Error de configuración de Stripe" }, { status: 500 })
     }
 
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-10-16",
+      apiVersion: "2025-04-30.basil" as any,
     })
 
     // Obtener información del usuario

@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import Link from "next/link"
 
 import { useState, useEffect } from "react"
@@ -11,6 +13,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CheckCircle, Star, Users, Crown, AlertCircle } from "lucide-react"
+import { Input } from "@/components/ui/input"
 
 const plans = [
   {
@@ -93,6 +96,8 @@ export default function SubscriptionPage() {
   const [promoCode, setPromoCode] = useState("")
   const [promoDiscount, setPromoDiscount] = useState<any>(null)
   const [promoError, setPromoError] = useState("")
+  const [isValidatingPromo, setIsValidatingPromo] = useState(false)
+  const [showPromoInput, setShowPromoInput] = useState(false)
 
   useEffect(() => {
     if (authLoading) return
@@ -173,12 +178,40 @@ export default function SubscriptionPage() {
     }
   }
 
+  const handlePromoCodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const code = e.target.value
+    setPromoCode(code)
+
+    if (code.trim() === "") {
+      setPromoDiscount(null)
+      setPromoError("")
+      return
+    }
+
+    setIsValidatingPromo(true)
+    setPromoError("")
+
+    // Debounce la validación
+    setTimeout(async () => {
+      if (selectedPlan) {
+        await validatePromoCode(code, selectedPlan)
+      }
+      setIsValidatingPromo(false)
+    }, 500)
+  }
+
   const createSubscription = async (planId: string) => {
     if (!user) return
 
     console.log("🚀 Creando suscripción:", { planId, userId: user.id })
 
     setIsCreatingSubscription(true)
+
+    // Validar código promocional antes de proceder
+    if (promoCode.trim()) {
+      await validatePromoCode(promoCode.trim(), planId)
+    }
+
     setSelectedPlan(planId)
 
     try {
@@ -226,6 +259,55 @@ export default function SubscriptionPage() {
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold mb-4">Planes de Suscripción</h1>
         <p className="text-xl text-muted-foreground">Suscripción mensual desde solo $40 MXN para acceso completo</p>
+      </div>
+
+      {/* Sección de Código Promocional */}
+      <div className="max-w-md mx-auto mb-8">
+        <div className="text-center mb-4">
+          <Button variant="outline" onClick={() => setShowPromoInput(!showPromoInput)} className="text-sm">
+            {showPromoInput ? "Ocultar código promocional" : "¿Tienes un código promocional?"}
+          </Button>
+        </div>
+
+        {showPromoInput && (
+          <Card className="p-4">
+            <div className="space-y-3">
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Ingresa tu código promocional"
+                  value={promoCode}
+                  onChange={handlePromoCodeChange}
+                  className="pr-10"
+                />
+                {isValidatingPromo && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                  </div>
+                )}
+              </div>
+
+              {promoError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{promoError}</AlertDescription>
+                </Alert>
+              )}
+
+              {promoDiscount && (
+                <Alert className="border-green-200 bg-green-50">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    ¡Código válido!
+                    {promoDiscount.discount_type === "percentage"
+                      ? ` ${promoDiscount.discount_value}% de descuento`
+                      : ` $${promoDiscount.discount_value} MXN de descuento`}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </Card>
+        )}
       </div>
 
       {currentSubscription && (

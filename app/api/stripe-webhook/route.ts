@@ -39,8 +39,11 @@ export async function POST(request: Request) {
   let event: Stripe.Event
 
   try {
-    // Usar tu clave de webhook
-    event = stripe.webhooks.constructEvent(body, signature, "whsec_LojxdgcI1JnqxCABR2N4M5RnJv6VQtsY")
+    // Usar la variable de entorno
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+    console.log("🔑 Usando webhook secret:", webhookSecret ? "✅ Configurado" : "❌ No encontrado")
+
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
     console.log("✅ Webhook verificado:", event.type)
   } catch (err) {
     console.error("❌ Error al verificar webhook:", err)

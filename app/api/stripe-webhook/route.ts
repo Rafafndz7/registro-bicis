@@ -6,17 +6,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-04-30.basil" as any,
 })
 
-// Mapeo de Price IDs a planes (PRODUCCIÓN)
-const PRICE_TO_PLAN = {
-  price_1RbaIiP2bAdrMLI6LPeUmgmN: { planType: "básico", bicycleLimit: 1 },
-  price_1RbaJWP2bAdrMLI61k1RvTtn: { planType: "estándar", bicycleLimit: 2 },
-  price_1RbaKNP2bAdrMLI6IehK5s3o: { planType: "familiar", bicycleLimit: 4 },
-  price_1RbaKoP2bAdrMLI6iNSK4dHl: { planType: "premium", bicycleLimit: 6 },
-}
-
 export async function POST(request: Request) {
   try {
-    const body = await request.text()
+    const buf = await request.arrayBuffer()
+    const body = Buffer.from(buf)
     const signature = request.headers.get("stripe-signature")
 
     if (!signature) {
@@ -31,71 +24,114 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 })
     }
 
-    // Solo procesar checkout.session.completed
+    console.log("Processing webhook event:", event.type, event.id)
+
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session
 
-      // Verificar que sea suscripción pagada
       if (session.mode === "subscription" && session.payment_status === "paid") {
         const userId = session.metadata?.userId
+        const planType = session.metadata?.planType
+        const bicycleLimit = session.metadata?.bicycleLimit
 
-        if (!userId) {
-          return NextResponse.json({ error: "No userId" }, { status: 400 })
-        }
+        console.log("Session metadata:", { userId, planType, bicycleLimit })
 
-        // Obtener detalles de la suscripción
-        const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
-        const priceId = subscription.items.data[0]?.price.id
-
-        if (!priceId) {
-          return NextResponse.json({ error: "No price ID" }, { status: 400 })
-        }
-
-        // Determinar el plan
-        const planInfo = PRICE_TO_PLAN[priceId as keyof typeof PRICE_TO_PLAN]
-        if (!planInfo) {
-          return NextResponse.json({ error: "Invalid price ID" }, { status: 400 })
+        if (!userId || !planType || !bicycleLimit) {
+          console.error("Missing metadata:", { userId, planType, bicycleLimit })
+          return NextResponse.json({ error: "Missing metadata" }, { status: 400 })
         }
 
         const supabase = createServerClient()
 
         try {
+          // Verificar que el usuario existe
+          const { data: userExists, error: userError } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("id", userId)
+            .single()
+
+          if (userError || !userExists) {
+            console.error("User not found:", userId, userError)
+            return NextResponse.json({ error: "User not found" }, { status: 400 })
+          }
+
+          console.log("User exists:", userExists.id)
+
           // Cancelar suscripciones anteriores
-          await supabase
+          const { error: cancelError } = await supabase
             .from("subscriptions")
-            .update({ status: "canceled" })
+            .update({
+              status: "canceled",
+              updated_at: new Date().toISOString(),
+            })
             .eq("user_id", userId)
             .neq("status", "canceled")
 
-          // Crear nueva suscripción
-          const { error } = await supabase.from("subscriptions").insert({
+          if (cancelError) {
+            console.error("Error canceling previous subscriptions:", cancelError)
+          }
+
+          // Preparar datos de suscripción
+          const subscriptionData = {
             user_id: userId,
             stripe_subscription_id: session.subscription as string,
             stripe_customer_id: session.customer as string,
-            status: subscription.status,
-            plan_type: planInfo.planType,
-            bicycle_limit: planInfo.bicycleLimit,
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-          })
-
-          if (error) {
-            console.error("Supabase error:", error)
-            return NextResponse.json({ error: "Database error" }, { status: 500 })
+            status: "active",
+            plan_type: planType,
+            bicycle_limit: Number.parseInt(bicycleLimit),
+            current_period_start: new Date().toISOString(),
+            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           }
 
-          return NextResponse.json({ success: true })
+          console.log("Inserting subscription data:", subscriptionData)
+
+          // Crear nueva suscripción
+          const { data, error } = await supabase.from("subscriptions").insert(subscriptionData).select()
+
+          if (error) {
+            console.error("Supabase insert error:", {
+              message: error.message,
+              details: error.details,
+              hint: error.hint,
+              code: error.code,
+            })
+            return NextResponse.json(
+              {
+                error: "Database insert failed",
+                details: error.message,
+                code: error.code,
+              },
+              { status: 500 },
+            )
+          }
+
+          console.log("Subscription created successfully:", data)
+          return NextResponse.json({ success: true, subscription: data })
         } catch (dbError) {
           console.error("Database operation failed:", dbError)
-          return NextResponse.json({ error: "Database operation failed" }, { status: 500 })
+          return NextResponse.json(
+            {
+              error: "Database operation failed",
+              details: dbError instanceof Error ? dbError.message : "Unknown error",
+            },
+            { status: 500 },
+          )
         }
       }
     }
 
-    // Para todos los otros eventos, devolver success
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error("Webhook error:", error)
-    return NextResponse.json({ error: "Webhook failed" }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: "Webhook failed",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
+      { status: 500 },
+    )
   }
 }

@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Skeleton } from "@/components/ui/skeleton"
-import { AlertCircle, CheckCircle2, ChevronLeft } from "lucide-react"
+import { AlertCircle, CheckCircle2, ChevronLeft, Upload, FileText, Trash2, Eye } from "lucide-react"
 import Link from "next/link"
 
 // Esquema de validación
@@ -46,6 +46,10 @@ export default function EditBicyclePage({ params }: { params: { id: string } }) 
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const [invoice, setInvoice] = useState<any>(null)
+  const [invoiceFile, setInvoiceFile] = useState<File | null>(null)
+  const [uploadingInvoice, setUploadingInvoice] = useState(false)
 
   const form = useForm<EditBicycleFormValues>({
     resolver: zodResolver(editBicycleSchema),
@@ -90,6 +94,21 @@ export default function EditBicyclePage({ params }: { params: { id: string } }) 
     }
 
     fetchBicycle()
+
+    // Cargar factura existente
+    const fetchInvoice = async () => {
+      try {
+        const response = await fetch(`/api/bicycles/${params.id}/invoice`)
+        if (response.ok) {
+          const data = await response.json()
+          setInvoice(data.invoice)
+        }
+      } catch (error) {
+        console.error("Error al cargar factura:", error)
+      }
+    }
+
+    fetchInvoice()
   }, [user, router, supabase, params.id, form])
 
   const onSubmit = async (data: EditBicycleFormValues) => {
@@ -121,6 +140,56 @@ export default function EditBicyclePage({ params }: { params: { id: string } }) 
       setError(error instanceof Error ? error.message : "Error al actualizar bicicleta")
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleInvoiceUpload = async () => {
+    if (!invoiceFile) return
+
+    setUploadingInvoice(true)
+    try {
+      const formData = new FormData()
+      formData.append("invoice", invoiceFile)
+
+      const response = await fetch(`/api/bicycles/${params.id}/invoice`, {
+        method: "POST",
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al subir factura")
+      }
+
+      setInvoice(result.invoice)
+      setInvoiceFile(null)
+      setSuccess("Factura subida correctamente")
+    } catch (error) {
+      console.error("Error al subir factura:", error)
+      setError(error instanceof Error ? error.message : "Error al subir factura")
+    } finally {
+      setUploadingInvoice(false)
+    }
+  }
+
+  const handleInvoiceDelete = async () => {
+    if (!invoice) return
+
+    try {
+      const response = await fetch(`/api/bicycles/${params.id}/invoice`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        throw new Error("Error al eliminar factura")
+      }
+
+      setInvoice(null)
+      setSuccess("Factura eliminada correctamente")
+    } catch (error) {
+      console.error("Error al eliminar factura:", error)
+      setError("Error al eliminar factura")
     }
   }
 
@@ -161,37 +230,6 @@ export default function EditBicyclePage({ params }: { params: { id: string } }) 
     )
   }
 
-  if (bicycle.payment_status) {
-    return (
-      <div className="container py-10">
-        <div className="mb-6">
-          <Link
-            href={`/bicycles/${params.id}`}
-            className="flex items-center text-muted-foreground hover:text-foreground"
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Volver a detalles de la bicicleta
-          </Link>
-        </div>
-        <Card className="mx-auto max-w-2xl">
-          <CardHeader>
-            <CardTitle>No se puede editar</CardTitle>
-            <CardDescription>Esta bicicleta ya está registrada y pagada</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Bicicleta registrada</AlertTitle>
-              <AlertDescription>
-                No se puede editar una bicicleta que ya está oficialmente registrada y pagada en el sistema nacional.
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   return (
     <div className="container py-10">
       <div className="mb-6">
@@ -210,6 +248,12 @@ export default function EditBicyclePage({ params }: { params: { id: string } }) 
             <span className="text-sm text-muted-foreground">
               Número de serie: {bicycle.serial_number} (no se puede cambiar)
             </span>
+            {bicycle.payment_status && (
+              <>
+                <br />
+                <span className="text-sm text-green-600 font-medium">✓ Bicicleta registrada oficialmente</span>
+              </>
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -294,6 +338,58 @@ export default function EditBicyclePage({ params }: { params: { id: string } }) 
                   </FormItem>
                 )}
               />
+
+              {/* Sección de Factura */}
+              <div className="border-t pt-6 mt-6">
+                <h3 className="text-lg font-semibold mb-4">Factura (Opcional)</h3>
+
+                {invoice ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-green-50">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-5 w-5 text-green-600" />
+                        <div>
+                          <p className="font-medium text-green-800">Factura subida</p>
+                          <p className="text-sm text-green-600">
+                            Subida el {new Date(invoice.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(invoice.file_url, "_blank")}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Ver
+                        </Button>
+                        <Button type="button" variant="outline" size="sm" onClick={handleInvoiceDelete}>
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Eliminar
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-4">
+                      <Input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => setInvoiceFile(e.target.files?.[0] || null)}
+                        className="flex-1"
+                      />
+                      <Button type="button" onClick={handleInvoiceUpload} disabled={!invoiceFile || uploadingInvoice}>
+                        <Upload className="h-4 w-4 mr-2" />
+                        {uploadingInvoice ? "Subiendo..." : "Subir Factura"}
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Formatos aceptados: PDF, JPG, PNG. Máximo 5MB.</p>
+                  </div>
+                )}
+              </div>
 
               <div className="flex justify-between pt-4">
                 <Button type="button" variant="outline" onClick={() => router.push(`/bicycles/${params.id}`)}>

@@ -244,7 +244,7 @@ export default async function Page() {
               {
                 step: "2",
                 title: "Suscríbete",
-                description: "Suscripción mensual de solo $40 MXN para acceso completo",
+                description: "Suscripción mensual desde solo $40 MXN para acceso completo",
                 color: "bg-green-600",
               },
               {

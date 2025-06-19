@@ -183,7 +183,7 @@ export default function SubscriptionPage() {
     setSelectedPlan(planId)
 
     try {
-      const response = await fetch("/api/subscriptions/create", {
+      const response = await fetch("/api/subscriptions/create-with-promo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

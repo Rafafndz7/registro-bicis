@@ -143,6 +143,10 @@ export default async function VerifyPage({ params }: { params: { id: string } })
                       <p className="font-medium">{bicycle.profiles.phone}</p>
                     </div>
                   )}
+                  <div>
+                    <p className="text-sm text-muted-foreground">Nombre del propietario</p>
+                    <p className="font-medium">{bicycle.profiles?.full_name || "No disponible"}</p>
+                  </div>
                 </div>
               </div>
             </div>

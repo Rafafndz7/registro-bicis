@@ -63,13 +63,20 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: "Bicicleta no encontrada" }, { status: 404 })
     }
 
-    // Solo permitir edición si no está pagada (para evitar problemas con certificados)
-    if (existingBicycle.payment_status) {
-      return NextResponse.json(
-        { error: "No se puede editar una bicicleta que ya está registrada y pagada" },
-        { status: 400 },
-      )
-    }
+    // Verificar si es admin
+    const { data: userProfile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single()
+    const isAdmin = userProfile?.role === "admin"
+
+    // Permitir edición siempre (usuarios normales y admin)
+    // Solo mostrar advertencia si está pagada pero permitir la edición
+
+    // Solo permitir edición si no está pagada O si es admin
+    // if (existingBicycle.payment_status && !isAdmin) {
+    //   return NextResponse.json(
+    //     { error: "No se puede editar una bicicleta que ya está registrada y pagada" },
+    //     { status: 400 },
+    //   )
+    // }
 
     // Actualizar la bicicleta
     const { data, error } = await supabase
@@ -124,13 +131,62 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       return NextResponse.json({ error: "Bicicleta no encontrada" }, { status: 404 })
     }
 
-    // Solo permitir eliminación si no está pagada
-    if (bicycle.payment_status) {
-      return NextResponse.json(
-        { error: "No se puede eliminar una bicicleta que ya está registrada y pagada" },
-        { status: 400 },
-      )
+    // Verificar si es admin
+    const { data: userProfile } = await supabase.from("profiles").select("role").eq("id", session.user.id).single()
+    const isAdmin = userProfile?.role === "admin"
+
+    // Permitir eliminación siempre (usuarios normales y admin)
+    // Solo reducir contador si es admin eliminando bici pagada
+    if (isAdmin && bicycle.payment_status) {
+      // Buscar la suscripción activa del usuario
+      const { data: subscription } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .eq("status", "active")
+        .single()
+
+      if (subscription && subscription.bicycles_used > 0) {
+        // Reducir el contador
+        await supabase
+          .from("subscriptions")
+          .update({
+            bicycles_used: subscription.bicycles_used - 1,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", subscription.id)
+      }
     }
+
+    // Solo permitir eliminación si no está pagada O si es admin
+    // if (bicycle.payment_status && !isAdmin) {
+    //   return NextResponse.json(
+    //     { error: "No se puede eliminar una bicicleta que ya está registrada y pagada" },
+    //     { status: 400 },
+    //   )
+    // }
+
+    // Si es admin y la bici está pagada, reducir el contador de la suscripción
+    // if (isAdmin && bicycle.payment_status) {
+    //   // Buscar la suscripción activa del usuario
+    //   const { data: subscription } = await supabase
+    //     .from("subscriptions")
+    //     .select("*")
+    //     .eq("user_id", session.user.id)
+    //     .eq("status", "active")
+    //     .single()
+
+    //   if (subscription && subscription.bicycles_used > 0) {
+    //     // Reducir el contador
+    //     await supabase
+    //       .from("subscriptions")
+    //       .update({
+    //         bicycles_used: subscription.bicycles_used - 1,
+    //         updated_at: new Date().toISOString(),
+    //       })
+    //       .eq("id", subscription.id)
+    //   }
+    // }
 
     // Eliminar imágenes asociadas
     const { error: imagesError } = await supabase.from("bicycle_images").delete().eq("bicycle_id", params.id)

@@ -19,6 +19,7 @@ import {
   Edit,
   Trash2,
   AlertTriangle,
+  FileText,
 } from "lucide-react"
 import Link from "next/link"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -53,12 +54,21 @@ interface BicycleImage {
   image_url: string
 }
 
+interface Invoice {
+  id: string
+  bicycle_id: string
+  file_url: string
+  file_name: string
+  created_at: string
+}
+
 export default function BicycleDetailsPage({ params }: { params: { id: string } }) {
   const { user } = useAuth()
   const router = useRouter()
   const supabase = createClientComponentClient()
   const [bicycle, setBicycle] = useState<Bicycle | null>(null)
   const [images, setImages] = useState<BicycleImage[]>([])
+  const [invoice, setInvoice] = useState<Invoice | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [downloadingCertificate, setDownloadingCertificate] = useState(false)
@@ -104,7 +114,23 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
       }
     }
 
+    // Cargar factura si existe
+    const fetchInvoice = async () => {
+      try {
+        const response = await fetch(`/api/bicycles/${params.id}/invoice`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.invoice) {
+            setInvoice(data.invoice)
+          }
+        }
+      } catch (error) {
+        console.error("Error al cargar factura:", error)
+      }
+    }
+
     fetchBicycleDetails()
+    fetchInvoice()
   }, [user, router, supabase, params.id])
 
   const handlePayment = async () => {
@@ -325,9 +351,10 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
           )}
 
           <Tabs defaultValue="details">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="details">Detalles</TabsTrigger>
               <TabsTrigger value="registration">Registro</TabsTrigger>
+              <TabsTrigger value="documents">Documentos</TabsTrigger>
             </TabsList>
             <TabsContent value="details" className="space-y-4 pt-4">
               <div>
@@ -356,6 +383,29 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
                   <p className="text-lg">
                     {bicycle.theft_status === "reported_stolen" ? "Reportada como robada" : "No reportada"}
                   </p>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="documents" className="space-y-4 pt-4">
+              {invoice ? (
+                <div className="flex items-center justify-between p-4 border rounded-lg bg-green-50">
+                  <div className="flex items-center space-x-3">
+                    <FileText className="h-5 w-5 text-green-600" />
+                    <div>
+                      <p className="font-medium text-green-800">Factura disponible</p>
+                      <p className="text-sm text-green-600">Subida el {formatDate(invoice.created_at)}</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => window.open(invoice.file_url, "_blank")}>
+                    <FileText className="h-4 w-4 mr-1" />
+                    Ver Factura
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                  <p>No hay factura subida para esta bicicleta</p>
+                  <p className="text-sm">Puedes agregar una desde la página de edición</p>
                 </div>
               )}
             </TabsContent>
@@ -410,7 +460,7 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
               </>
             )}
 
-            {/* Botones de editar y eliminar solo para bicicletas no pag */}
+            {/* Botones de editar y eliminar para todos los usuarios */}
             <div className="flex space-x-2 pt-4">
               <Button variant="outline" className="flex-1" asChild>
                 <Link href={`/bicycles/${bicycle.id}/edit`}>

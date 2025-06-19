@@ -1,160 +1,103 @@
-import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
+import { createServerClient } from "@/lib/supabase-server"
 import Stripe from "stripe"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-04-30.basil" as any,
 })
 
-const planPrices = {
-  basic: { amount: 4000, bicycleLimit: 1, name: "básico" },
-  standard: { amount: 6000, bicycleLimit: 2, name: "estándar" },
-  family: { amount: 12000, bicycleLimit: 4, name: "familiar" },
-  premium: { amount: 18000, bicycleLimit: 6, name: "premium" },
+// Usar Price IDs de PRODUCCIÓN en lugar de calcular precios
+const PLAN_PRICE_IDS = {
+  basic: "price_1RbaIiP2bAdrMLI6LPeUmgmN", // $40 MXN
+  standard: "price_1RbaJWP2bAdrMLI61k1RvTtn", // $60 MXN
+  family: "price_1RbaKNP2bAdrMLI6IehK5s3o", // $120 MXN
+  premium: "price_1RbaKoP2bAdrMLI6iNSK4dHl", // $180 MXN
+}
+
+const planLimits = {
+  basic: { bicycleLimit: 1, name: "básico" },
+  standard: { bicycleLimit: 2, name: "estándar" },
+  family: { bicycleLimit: 4, name: "familiar" },
+  premium: { bicycleLimit: 6, name: "premium" },
 }
 
 export async function POST(request: Request) {
+  console.log("🚀 Creando suscripción en PRODUCCIÓN")
+
+  const supabase = createServerClient()
+
   try {
-    const supabase = createRouteHandlerClient({ cookies })
-
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
+    const { user } = await supabase.auth.getUser()
+    if (!user.user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    const { planType = "basic", promoCode } = await request.json()
+    const body = await request.json()
+    const { planType, promoCode } = body
 
-    console.log("🔍 Datos recibidos:", { planType, promoCode, userId: session.user.id })
+    console.log("📋 Datos recibidos:", { planType, promoCode, userId: user.user.id })
 
-    if (!planPrices[planType as keyof typeof planPrices]) {
+    // Obtener el Price ID y límites del plan
+    const priceId = PLAN_PRICE_IDS[planType as keyof typeof PLAN_PRICE_IDS]
+    const planInfo = planLimits[planType as keyof typeof planLimits]
+
+    if (!priceId || !planInfo) {
       return NextResponse.json({ error: "Plan no válido" }, { status: 400 })
     }
 
-    const selectedPlan = planPrices[planType as keyof typeof planPrices]
-    let finalAmount = selectedPlan.amount
-    let discountAmount = 0
+    console.log("💰 Usando Price ID de PRODUCCIÓN:", priceId)
 
-    console.log("📋 Plan seleccionado:", selectedPlan)
-
-    // Validar código promocional si se proporciona
-    if (promoCode) {
-      const { data: promo, error: promoError } = await supabase
-        .from("promo_codes")
-        .select("*")
-        .eq("code", promoCode.toUpperCase())
-        .eq("is_active", true)
-        .single()
-
-      if (!promoError && promo) {
-        const now = new Date()
-        const validFrom = promo.valid_from ? new Date(promo.valid_from) : null
-        const validUntil = promo.valid_until ? new Date(promo.valid_until) : null
-
-        if (
-          (!validFrom || validFrom <= now) &&
-          (!validUntil || validUntil >= now) &&
-          (!promo.max_uses || promo.current_uses < promo.max_uses) &&
-          (!promo.applicable_plans || promo.applicable_plans.includes(planType))
-        ) {
-          if (promo.discount_type === "percentage") {
-            discountAmount = Math.round((selectedPlan.amount * promo.discount_value) / 100)
-          } else if (promo.discount_type === "fixed") {
-            discountAmount = Math.min(promo.discount_value * 100, selectedPlan.amount)
-          }
-
-          finalAmount = Math.max(selectedPlan.amount - discountAmount, 0)
-
-          await supabase
-            .from("promo_codes")
-            .update({ current_uses: promo.current_uses + 1 })
-            .eq("id", promo.id)
-
-          console.log("💰 Descuento aplicado:", { discountAmount, finalAmount })
-        }
-      }
-    }
-
-    // Obtener perfil del usuario
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("full_name, email")
-      .eq("id", session.user.id)
+    const { data: customer, error: customerError } = await supabase
+      .from("customers")
+      .select("stripe_customer_id")
+      .eq("id", user.user.id)
       .single()
 
-    if (profileError) {
-      console.error("❌ Error obteniendo perfil:", profileError)
-      return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 })
+    if (customerError) {
+      console.error("❌ Error obteniendo customer:", customerError)
+      return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
     }
 
-    // Crear o recuperar customer de Stripe
-    let customer
-    const existingCustomers = await stripe.customers.list({
-      email: profile.email,
-      limit: 1,
-    })
-
-    if (existingCustomers.data.length > 0) {
-      customer = existingCustomers.data[0]
-      console.log("👤 Customer existente encontrado:", customer.id)
-    } else {
-      customer = await stripe.customers.create({
-        email: profile.email,
-        name: profile.full_name,
-        metadata: {
-          userId: session.user.id,
-        },
-      })
-      console.log("👤 Nuevo customer creado:", customer.id)
+    if (!customer?.stripe_customer_id) {
+      console.error("❌ No se encontró el customer en Stripe")
+      return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
     }
 
-    // Metadatos que se pasarán al checkout
-    const metadata = {
-      userId: session.user.id,
-      type: "subscription",
-      planType: selectedPlan.name, // Usar el nombre correcto del plan
-      bicycleLimit: selectedPlan.bicycleLimit.toString(),
-      originalAmount: selectedPlan.amount.toString(),
-      discountAmount: discountAmount.toString(),
-      promoCode: promoCode || "",
+    const { data: session, error } = await supabase.auth.getSession()
+
+    if (error) {
+      console.error("Error getting session:", error)
+      return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
     }
 
-    console.log("📤 Metadatos para Stripe:", metadata)
-
-    // Crear sesión de checkout
+    // Crear sesión de checkout usando Price ID
     const checkoutSession = await stripe.checkout.sessions.create({
-      customer: customer.id,
+      customer: customer.stripe_customer_id,
       payment_method_types: ["card"],
       mode: "subscription",
       line_items: [
         {
-          price_data: {
-            currency: "mxn",
-            product_data: {
-              name: `Plan ${selectedPlan.name} - RNB`,
-              description: `Registro de hasta ${selectedPlan.bicycleLimit} bicicleta${selectedPlan.bicycleLimit > 1 ? "s" : ""}`,
-            },
-            unit_amount: finalAmount,
-            recurring: {
-              interval: "month",
-            },
-          },
+          price: priceId,
           quantity: 1,
         },
       ],
       success_url: `${request.headers.get("origin")}/subscription/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${request.headers.get("origin")}/subscription?canceled=true`,
-      metadata: metadata,
+      metadata: {
+        userId: session.user.id,
+        type: "subscription",
+        planType: planInfo.name,
+        bicycleLimit: planInfo.bicycleLimit.toString(),
+        priceId: priceId,
+        promoCode: promoCode || "",
+      },
     })
 
-    console.log("✅ Checkout session creado:", checkoutSession.id)
+    console.log("✅ Sesión de checkout creada:", checkoutSession.id)
 
     return NextResponse.json({ url: checkoutSession.url })
   } catch (error) {
-    console.error("❌ Error creating subscription:", error)
-    return NextResponse.json({ error: "Error al crear suscripción" }, { status: 500 })
+    console.error("❌ Error creando suscripción:", error)
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
   }
 }

@@ -175,22 +175,18 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
     try {
       setDownloadingCertificate(true)
 
-      // Hacer la solicitud para generar el certificado
-      const response = await fetch(`/api/bicycles/generate-certificate?bicycleId=${bicycle.id}`)
+      // Detectar si es móvil
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`)
+      const url = `/api/bicycles/generate-certificate?bicycleId=${bicycle.id}`
+
+      if (isMobile) {
+        // En móvil, redirigir directamente a la URL
+        window.location.href = url
+      } else {
+        // En PC, abrir en nueva ventana
+        window.open(url, "_blank")
       }
-
-      // Abrir el certificado en una nueva pestaña
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      window.open(url, "_blank")
-
-      // Limpiar
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url)
-      }, 1000)
     } catch (error) {
       console.error("Error al descargar certificado:", error)
       alert("Error al descargar el certificado. Por favor, inténtalo de nuevo más tarde.")

@@ -100,21 +100,18 @@ function BicyclesContent() {
     try {
       console.log("Descargando certificado para:", bicycleId)
 
-      // Usar GET en lugar de POST
-      const response = await fetch(`/api/bicycles/generate-certificate?bicycleId=${bicycleId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
+      // Detectar si es móvil
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`)
-      }
-
-      // Abrir en nueva ventana para que el usuario pueda descargar
       const url = `/api/bicycles/generate-certificate?bicycleId=${bicycleId}`
-      window.open(url, "_blank")
+
+      if (isMobile) {
+        // En móvil, redirigir directamente a la URL
+        window.location.href = url
+      } else {
+        // En PC, abrir en nueva ventana
+        window.open(url, "_blank")
+      }
     } catch (error) {
       console.error("Error al descargar certificado:", error)
       alert("Error al descargar el certificado: " + (error as Error).message)

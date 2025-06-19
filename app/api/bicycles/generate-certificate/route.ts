@@ -317,9 +317,10 @@ export async function GET(request: Request) {
     </head>
     <body>
       <div class="mobile-instructions no-print">
-        📱 <strong>Instrucciones:</strong><br>
-        • En móvil: Usa el botón "Imprimir" y selecciona "Guardar como PDF"<br>
-        • En PC: Usa Ctrl+P o el botón "Imprimir" para guardar como PDF
+        📱 <strong>Instrucciones para móvil:</strong><br>
+        • <strong>Android:</strong> Usa el menú ⋮ → "Imprimir" → "Guardar como PDF"<br>
+        • <strong>iPhone:</strong> Toca el botón "Compartir" 📤 → "Imprimir" → pellizca para ampliar → "Compartir" → "Guardar en Archivos"<br>
+        • <strong>Alternativa:</strong> Toma captura de pantalla de todo el documento
       </div>
       
       <div class="certificate">
@@ -513,6 +514,19 @@ export async function GET(request: Request) {
             const viewport = document.querySelector('meta[name="viewport"]');
             if (viewport) {
               viewport.setAttribute('content', 'width=device-width, initial-scale=0.8, user-scalable=yes');
+            }
+            
+            // Agregar instrucciones específicas para móvil
+            const instructions = document.querySelector('.mobile-instructions');
+            if (instructions) {
+              instructions.style.display = 'block';
+              instructions.innerHTML = \`
+          📱 <strong>¡Perfecto! Ya tienes tu certificado</strong><br><br>
+          <strong>Para guardarlo:</strong><br>
+          • <strong>Android:</strong> Menú ⋮ → "Imprimir" → "Guardar como PDF"<br>
+          • <strong>iPhone:</strong> Botón "Compartir" 📤 → "Imprimir" → pellizcar para ampliar → "Compartir" → "Guardar en Archivos"<br><br>
+          <strong>💡 Tip:</strong> También puedes tomar capturas de pantalla del documento completo
+        \`;
             }
           }
         });

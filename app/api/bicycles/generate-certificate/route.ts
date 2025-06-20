@@ -742,8 +742,15 @@ body {
         }
         
         // Agregar eventos a los botones
-        const downloadBtn = document.querySelector('.download-btn:first-child');
-        const printBtn = document.querySelector('.download-btn:last-child');
+        const buttons = document.querySelectorAll('.download-btn');
+        buttons.forEach((btn, index) => {
+          btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (index === 0) downloadAsPDF();
+            else if (index === 1) printCertificate();
+            else if (index === 2) downloadAsHTML();
+          });
+        });
         
         if (downloadBtn) {
           downloadBtn.addEventListener('click', function(e) {

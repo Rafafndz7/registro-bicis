@@ -10,7 +10,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 const PRICE_TO_PLAN = {
   price_1RbaIiP2bAdrMLI6LPeUmgmN: { planType: "básico", bicycleLimit: 1, price: 40 }, // $40
   price_1RbaJWP2bAdrMLI61k1RvTtn: { planType: "estándar", bicycleLimit: 2, price: 60 }, // $60
-  price_NUEVO_PRICE_ID_FAMILIAR_120: { planType: "familiar", bicycleLimit: 4, price: 120 }, // $120 - ACTUALIZAR
+  price_1Rc6XxP2bAdrMLI6WYUue92V: { planType: "familiar", bicycleLimit: 4, price: 120 }, // $120 - Plan familiar
   price_1RbaKoP2bAdrMLI6iNSK4dHl: { planType: "premium", bicycleLimit: 6, price: 180 }, // $180
 }
 

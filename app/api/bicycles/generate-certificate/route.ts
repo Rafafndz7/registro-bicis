@@ -471,7 +471,7 @@ body {
     page-break-inside: avoid;
   }
   
-  /* Ocultar completamente las instrucciones y botones al imprimir */
+  /* Eliminar completamente las instrucciones y botones al imprimir */
   .mobile-instructions, 
   .download-buttons,
   .no-print,
@@ -484,6 +484,18 @@ body {
     margin: 0 !important;
     padding: 0 !important;
     overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+  }
+  
+  /* Asegurar que el body solo muestre el certificado */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  body > *:not(.certificate) {
+    display: none !important;
   }
   
   .official-seal {
@@ -496,23 +508,6 @@ body {
   
   .section {
     margin-bottom: 12px;
-  }
-  
-  /* Asegurar que solo se imprima el certificado */
-  body * {
-    visibility: hidden;
-  }
-  
-  .certificate, .certificate * {
-    visibility: visible;
-  }
-  
-  .certificate .mobile-instructions,
-  .certificate .download-buttons,
-  .certificate .no-print,
-  .certificate .download-btn {
-    visibility: hidden !important;
-    display: none !important;
   }
 }
       </style>

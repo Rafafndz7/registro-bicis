@@ -79,24 +79,17 @@ export async function GET(request: Request) {
       <style>
         @page {
   size: A4;
-  margin: 15mm;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+  margin: 10mm;
 }
 
 body {
   font-family: 'Arial', 'Helvetica', sans-serif;
   background: white;
   color: #333;
-  line-height: 1.3;
-  font-size: 10px;
+  line-height: 1.2;
+  font-size: 9px;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
-  
 }
 
 .certificate {
@@ -105,7 +98,6 @@ body {
   border: 2px solid #4F46E5;
   background-color: #fff;
   position: relative;
-  height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -113,225 +105,133 @@ body {
 .header {
   background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
   color: white;
-  padding: 15px;
+  padding: 12px;
   text-align: center;
   position: relative;
   flex-shrink: 0;
 }
 
-.header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-  opacity: 0.3;
-}
-
-.logo-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 10px;
-  position: relative;
-  z-index: 1;
-}
-
 .logo {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   background: white;
   border-radius: 50%;
-  padding: 8px;
-  margin-right: 15px;
+  padding: 6px;
+  margin-right: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-.header-text {
-  position: relative;
-  z-index: 1;
-}
-
 .main-title {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: bold;
-  letter-spacing: 2px;
-  margin-bottom: 3px;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .subtitle {
-  font-size: 12px;
-  margin-bottom: 6px;
+  font-size: 10px;
+  margin-bottom: 4px;
   opacity: 0.95;
 }
 
 .certificate-title {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;
   border: 2px solid white;
-  padding: 6px 12px;
+  padding: 4px 10px;
   display: inline-block;
-  border-radius: 20px;
+  border-radius: 15px;
   background: rgba(255,255,255,0.1);
-  backdrop-filter: blur(10px);
 }
 
 .document-info {
   background: #F8FAFC;
-  padding: 10px 15px;
+  padding: 8px 12px;
   border-bottom: 3px solid #4F46E5;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 15px;
-  font-size: 9px;
+  gap: 12px;
+  font-size: 8px;
   flex-shrink: 0;
 }
 
-.doc-item {
-  text-align: center;
-}
-
-.doc-label {
-  font-weight: bold;
-  color: #4F46E5;
-  text-transform: uppercase;
-  font-size: 8px;
-  letter-spacing: 1px;
-  margin-bottom: 2px;
-}
-
-.doc-value {
-  font-size: 10px;
-  font-weight: bold;
-  color: #1F2937;
-}
-
 .content {
-  padding: 15px;
+  padding: 12px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 15px;
-}
-
-.section {
-  page-break-inside: avoid;
+  gap: 10px;
 }
 
 .section-title {
   background: linear-gradient(90deg, #4F46E5, #3B82F6);
   color: white;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: bold;
-  padding: 6px 12px;
-  margin-bottom: 10px;
+  padding: 4px 10px;
+  margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+  border-radius: 3px;
 }
 
 .info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .info-item {
   background: #F9FAFB;
-  padding: 8px;
-  border-radius: 4px;
+  padding: 6px;
+  border-radius: 3px;
   border-left: 3px solid #4F46E5;
 }
 
 .info-label {
   font-weight: bold;
   color: #374151;
-  font-size: 8px;
+  font-size: 7px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
 }
 
 .info-value {
   color: #1F2937;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
-}
-
-.full-width {
-  grid-column: 1 / -1;
 }
 
 .verification-section {
   background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
-  padding: 12px;
-  border-radius: 8px;
+  padding: 8px;
+  border-radius: 6px;
   border: 2px solid #4F46E5;
   position: relative;
-  font-size: 9px;
-}
-
-.verification-section::before {
-  content: '🔒';
-  position: absolute;
-  top: -10px;
-  left: 15px;
-  background: #4F46E5;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 15px;
-  font-size: 10px;
+  font-size: 8px;
 }
 
 .invoice-section {
   background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
-  padding: 12px;
-  border-radius: 8px;
+  padding: 8px;
+  border-radius: 6px;
   border: 2px solid #10B981;
   position: relative;
-  font-size: 9px;
-}
-
-.invoice-section.no-invoice {
-  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-  border-color: #F59E0B;
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 15px;
   font-size: 8px;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-top: 5px;
-}
-
-.status-verified {
-  background: #10B981;
-  color: white;
-}
-
-.status-pending {
-  background: #F59E0B;
-  color: white;
 }
 
 .official-seal {
   position: absolute;
-  top: 40%;
-  right: 20px;
+  top: 35%;
+  right: 15px;
   transform: translateY(-50%);
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   background: radial-gradient(circle, #4F46E5 0%, #3730A3 100%);
   border-radius: 50%;
   display: flex;
@@ -340,185 +240,48 @@ body {
   justify-content: center;
   color: white;
   font-weight: bold;
-  font-size: 8px;
+  font-size: 7px;
   text-align: center;
   line-height: 1.1;
-  border: 4px solid white;
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+  border: 3px solid white;
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
   z-index: 10;
 }
 
 .seal-logo {
-  width: 30px;
-  height: 30px;
-  margin-bottom: 3px;
+  width: 25px;
+  height: 25px;
+  margin-bottom: 2px;
   filter: brightness(0) invert(1);
-}
-
-.qr-section {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 15px;
-  align-items: center;
-  margin-top: 8px;
-}
-
-.qr-placeholder {
-  width: 60px;
-  height: 60px;
-  border: 2px solid #4F46E5;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 7px;
-  color: #4F46E5;
-  text-align: center;
-  font-weight: bold;
-  background: linear-gradient(45deg, #EEF2FF, #E0E7FF);
 }
 
 .footer {
   background: #1F2937;
   color: white;
-  padding: 12px;
+  padding: 8px;
   text-align: center;
   flex-shrink: 0;
 }
 
-.footer-content {
-  max-width: 600px;
-  margin: 0 auto;
-}
-
 .footer-title {
-  font-size: 11px;
+  font-size: 9px;
   font-weight: bold;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   color: #60A5FA;
 }
 
 .footer-text {
-  font-size: 8px;
-  line-height: 1.4;
-  margin-bottom: 4px;
+  font-size: 7px;
+  line-height: 1.3;
+  margin-bottom: 3px;
 }
 
 .footer-legal {
-  font-size: 7px;
+  font-size: 6px;
   opacity: 0.8;
   border-top: 1px solid #374151;
-  padding-top: 6px;
-  margin-top: 8px;
-}
-
-.mobile-instructions {
-  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-  border: 2px solid #F59E0B;
-  padding: 20px;
-  border-radius: 10px;
-  margin: 20px 0;
-  font-size: 14px;
-  color: #92400E;
-  text-align: center;
-}
-
-.download-buttons {
-  text-align: center;
-  margin: 30px 0;
-  padding: 25px;
-  background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
-  border-radius: 15px;
-  border: 2px solid #CBD5E1;
-}
-
-.download-btn {
-  display: inline-block;
-  margin: 10px;
-  padding: 15px 30px;
-  background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
-  color: white;
-  border: none;
-  border-radius: 25px;
-  font-size: 14px;
-  cursor: pointer;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
-}
-
-.download-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
-}
-
-@media screen and (max-width: 768px) {
-  .certificate {
-    border-width: 1px;
-    height: auto;
-  }
-  
-  .info-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  
-  .document-info {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  
-  .main-title {
-    font-size: 18px;
-  }
-  
-  .official-seal {
-    position: relative;
-    right: auto;
-    top: auto;
-    transform: none;
-    margin: 15px auto;
-  }
-  
-  .download-btn {
-    display: block;
-    width: 90%;
-    margin: 10px auto;
-    font-size: 16px;
-    padding: 18px;
-  }
-}
-
-@media print {
-  body {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  
-  .certificate {
-    border: 2px solid #4F46E5 !important;
-    box-shadow: none;
-    height: auto !important;
-    min-height: 100vh;
-    page-break-inside: avoid;
-  }
-  
-  .no-print, .mobile-instructions, .download-buttons {
-    display: none !important;
-  }
-  
-  .official-seal {
-    position: absolute !important;
-  }
-  
-  .content {
-    gap: 12px;
-  }
-  
-  .section {
-    margin-bottom: 12px;
-  }
+  padding-top: 4px;
+  margin-top: 6px;
 }
       </style>
     </head>
@@ -677,96 +440,46 @@ body {
         </div>
       </div>
       
-      <div class="download-buttons no-print">
-        <button onclick="downloadAsPDF()" class="download-btn">
+      <div class="download-buttons no-print" style="display: block !important;">
+        <button onclick="downloadAsPDF()" class="download-btn" style="display: inline-block !important;">
           📄 Descargar como PDF
         </button>
-        <button onclick="printCertificate()" class="download-btn">
+        <button onclick="printCertificate()" class="download-btn" style="display: inline-block !important;">
           🖨️ Imprimir Certificado
         </button>
-        <button onclick="downloadAsHTML()" class="download-btn" style="background: linear-gradient(135deg, #059669 0%, #10B981 100%);">
+        <button onclick="downloadAsHTML()" class="download-btn" style="background: linear-gradient(135deg, #059669 0%, #10B981 100%); display: inline-block !important;">
           💾 Descargar HTML
         </button>
       </div>
     </body>
     <script>
-      function downloadAsPDF() {
-        // Usar la función de impresión del navegador que permite guardar como PDF
-        window.print();
-      }
-      
-      function printCertificate() {
-        // Función de impresión directa
-        window.print();
-      }
-      
-      function downloadAsHTML() {
-        // Crear un blob con el contenido HTML completo
-        const htmlContent = document.documentElement.outerHTML;
-        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-        const url = window.URL.createObjectURL(blob);
-        
-        // Crear enlace de descarga
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'certificado-rnb-${bicycle.serial_number}.html';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      }
-      
-      // Mejorar experiencia en móviles
-      document.addEventListener('DOMContentLoaded', function() {
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        if (isMobile) {
-          // Ajustar el viewport para mejor visualización
-          const viewport = document.querySelector('meta[name="viewport"]');
-          if (viewport) {
-            viewport.setAttribute('content', 'width=device-width, initial-scale=0.8, user-scalable=yes');
-          }
-          
-          // Actualizar instrucciones para móvil
-          const instructions = document.querySelector('.mobile-instructions');
-          if (instructions) {
-            instructions.style.display = 'block';
-            instructions.innerHTML = \`
-              📱 <strong>¡Perfecto! Ya tienes tu certificado</strong><br><br>
-              <strong>Para guardarlo como PDF:</strong><br>
-              • <strong>Android:</strong> Menú ⋮ → "Imprimir" → "Guardar como PDF"<br>
-              • <strong>iPhone:</strong> Botón "Compartir" 📤 → "Imprimir" → pellizcar para ampliar → "Compartir" → "Guardar en Archivos"<br><br>
-              <strong>💡 Tip:</strong> También puedes tomar capturas de pantalla del documento completo
-            \`;
-          }
-        }
-        
-        // Agregar eventos a los botones
-        const buttons = document.querySelectorAll('.download-btn');
-        buttons.forEach((btn, index) => {
-          btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (index === 0) downloadAsPDF();
-            else if (index === 1) printCertificate();
-            else if (index === 2) downloadAsHTML();
-          });
-        });
-        
-        if (downloadBtn) {
-          downloadBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            downloadAsPDF();
-          });
-        }
-        
-        if (printBtn) {
-          printBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            printCertificate();
-          });
-        }
-      });
-    </script>
+function downloadAsPDF() {
+  window.print();
+}
+
+function printCertificate() {
+  window.print();
+}
+
+function downloadAsHTML() {
+  const htmlContent = document.documentElement.outerHTML;
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+  const url = window.URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'certificado-rnb-${bicycle.serial_number}.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}
+
+// Asegurar que los botones funcionen
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('Certificado cargado - botones disponibles');
+});
+</script>
     </html>
     `
 

@@ -120,11 +120,12 @@ export async function POST(request: Request) {
 `
 
     console.log("Enviando email...")
-    console.log("From: Registro Nacional de Bicis <soporteregistronacionalbicis@gmail.com>")
+    console.log("From: Registro Nacional de Bicis <onboarding@resend.dev>")
     console.log("To:", email)
 
+    // USAR EL DOMINIO POR DEFECTO DE RESEND
     const emailResult = await resend.emails.send({
-      from: "Registro Nacional de Bicis <soporteregistronacionalbicis@gmail.com>",
+      from: "Registro Nacional de Bicis <onboarding@resend.dev>",
       to: [email],
       subject: "Recuperar tu contraseña - Registro Nacional de Bicis",
       html: emailHtml,

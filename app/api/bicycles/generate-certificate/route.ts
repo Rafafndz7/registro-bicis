@@ -528,7 +528,7 @@ body {
     padding: 0 !important;
     height: 100vh !important;
     overflow: hidden !important;
-    font-size: 8px !important;
+    font-size: 7px !important;
   }
   
   .certificate {
@@ -541,125 +541,96 @@ body {
     flex-direction: column !important;
   }
   
-  /* Eliminar completamente las instrucciones y botones */
-  .mobile-instructions, 
-  .download-buttons,
-  .no-print,
-  .download-btn {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    height: 0 !important;
-    width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    position: absolute !important;
-    left: -9999px !important;
-    top: -9999px !important;
-  }
-  
-  /* Ocultar todo excepto el certificado */
-  body > *:not(.certificate) {
-    display: none !important;
-    height: 0 !important;
-    width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    position: absolute !important;
-    left: -9999px !important;
-  }
-  
   .header {
-    padding: 8px !important;
+    padding: 6px !important;
     flex-shrink: 0 !important;
   }
   
   .main-title {
-    font-size: 16px !important;
+    font-size: 14px !important;
   }
   
   .document-info {
-    padding: 4px 6px !important;
+    padding: 3px 4px !important;
     flex-shrink: 0 !important;
-    font-size: 6px !important;
+    font-size: 5px !important;
   }
   
   .content {
-    padding: 6px !important;
-    gap: 3px !important;
+    padding: 4px !important;
+    gap: 2px !important;
     overflow: hidden !important;
     flex: 1 !important;
   }
   
   .section {
-    margin-bottom: 2px !important;
+    margin-bottom: 1px !important;
     page-break-inside: avoid;
   }
   
   .section-title {
-    padding: 2px 6px !important;
-    margin-bottom: 2px !important;
-    font-size: 6px !important;
-  }
-  
-  .info-grid {
-    gap: 2px !important;
-    margin-bottom: 2px !important;
-  }
-  
-  .info-item {
-    padding: 2px !important;
-  }
-  
-  .info-label {
+    padding: 1px 4px !important;
+    margin-bottom: 1px !important;
     font-size: 5px !important;
   }
   
+  .info-grid {
+    gap: 1px !important;
+    margin-bottom: 1px !important;
+  }
+  
+  .info-item {
+    padding: 1px !important;
+  }
+  
+  .info-label {
+    font-size: 4px !important;
+  }
+  
   .info-value {
-    font-size: 8px !important;
+    font-size: 6px !important;
   }
   
   .verification-section,
   .invoice-section,
   .validity-section {
-    padding: 3px !important;
-    font-size: 5px !important;
-    margin-top: 2px !important;
+    padding: 2px !important;
+    font-size: 4px !important;
+    margin-top: 1px !important;
   }
   
   .official-seal {
     position: absolute !important;
-    width: 50px !important;
-    height: 50px !important;
-    font-size: 5px !important;
-    top: 30% !important;
-    right: 10px !important;
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 4px !important;
+    top: 25% !important;
+    right: 8px !important;
   }
   
   .footer {
-    padding: 4px !important;
+    padding: 3px !important;
     flex-shrink: 0 !important;
-    font-size: 5px !important;
+    font-size: 4px !important;
   }
   
   .footer-title {
-    font-size: 6px !important;
+    font-size: 5px !important;
   }
   
   .qr-section {
-    gap: 8px !important;
+    gap: 6px !important;
   }
   
   .qr-placeholder {
-    width: 40px !important;
-    height: 40px !important;
-    font-size: 5px !important;
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 4px !important;
   }
   
   .status-badge {
-    font-size: 5px !important;
-    padding: 2px 4px !important;
+    font-size: 4px !important;
+    padding: 1px 2px !important;
   }
 }
       </style>
@@ -767,15 +738,15 @@ body {
           </div>
 
           <div class="validity-section ${daysUntilExpiration > 7 ? "valid" : ""}">
-            <strong>TÉRMINOS DE VALIDEZ Y CONDICIONES LEGALES</strong>
+            <strong>TÉRMINOS DE VALIDEZ Y CONDICIONES</strong>
             <br><br>
-            <strong>Validez del Certificado:</strong> Este documento es válido únicamente mientras la suscripción del propietario permanezca activa y en buen estado. La expiración o cancelación de la suscripción invalida automáticamente este certificado.
+            <strong>Validez del Certificado:</strong> Este documento es válido únicamente mientras la suscripción del propietario permanezca activa. La expiración o cancelación de la suscripción invalida automáticamente este certificado.
             <br><br>
             <strong>Plan Actual:</strong> ${subscription.plan_type} (${subscription.bicycle_limit} bicicleta${subscription.bicycle_limit !== 1 ? "s" : ""} registradas)
             <br>
             <strong>Vencimiento de Suscripción:</strong> ${expirationDateFormatted}
             <br><br>
-            <strong>Responsabilidad Legal:</strong> El propietario es responsable de mantener actualizada su información y suscripción. Este certificado no constituye un título de propiedad legal, sino un registro en la base de datos del RNB.
+            <strong>Naturaleza del Documento:</strong> Este certificado constituye un registro en la base de datos del RNB y no representa un título de propiedad legal.
             <br><br>
             <strong>Renovación:</strong> Para mantener la validez de este certificado, la suscripción debe renovarse antes de su vencimiento.
             <span class="status-badge ${validityClass}">${validityStatus}</span>
@@ -786,39 +757,35 @@ body {
             ${
               invoice
                 ? `
-                <div class="invoice-section">
-                  <strong>FACTURA OFICIAL VERIFICADA</strong>
-                  <br><br>
-                  La presencia de una factura oficial aumenta significativamente la validez y autenticidad de este certificado. Este documento cuenta con respaldo documental completo.
-                  <br><br>
-                  <strong>Archivo:</strong> ${invoice.original_filename}
-                  <br>
-                  <strong>Fecha de Verificación:</strong> ${new Date(invoice.upload_date).toLocaleDateString("es-MX")}
-                  <br><br>
-                  <strong>Beneficios de Factura Verificada:</strong>
-                  <br>• Mayor credibilidad ante autoridades
-                  <br>• Respaldo legal completo
-                  <br>• Verificación de autenticidad mejorada
-                  <br>• Proceso de recuperación facilitado
-                  <span class="status-badge status-verified">Factura Oficial Verificada</span>
-                </div>
-              `
+    <div class="invoice-section">
+      <strong>FACTURA OFICIAL ADJUNTA</strong>
+      <br><br>
+      Este certificado cuenta con factura de compra verificada, lo que proporciona respaldo documental completo para el registro de la bicicleta.
+      <br><br>
+      <strong>Archivo:</strong> ${invoice.original_filename}
+      <br>
+      <strong>Fecha de Verificación:</strong> ${new Date(invoice.upload_date).toLocaleDateString("es-MX")}
+      <br><br>
+      <strong>Recomendación:</strong> Mantenga siempre su factura original disponible junto con este certificado para cualquier trámite o verificación.
+      <span class="status-badge status-verified">Factura Verificada</span>
+    </div>
+  `
                 : `
-                <div class="invoice-section no-invoice">
-                  <strong>RECOMENDACIÓN IMPORTANTE</strong>
-                  <br><br>
-                  Este certificado no cuenta con factura de compra adjunta. Para mayor seguridad legal y credibilidad del documento, se recomienda encarecidamente adjuntar la factura original de compra.
-                  <br><br>
-                  <strong>Beneficios de adjuntar factura:</strong>
-                  <br>• Validación legal completa
-                  <br>• Mayor credibilidad ante autoridades
-                  <br>• Proceso de recuperación más efectivo
-                  <br>• Respaldo documental oficial
-                  <br><br>
-                  <strong>Nota:</strong> Puede adjuntar su factura en cualquier momento desde su panel de usuario.
-                  <span class="status-badge status-pending">Factura Pendiente</span>
-                </div>
-              `
+    <div class="invoice-section no-invoice">
+      <strong>RECOMENDACIÓN IMPORTANTE</strong>
+      <br><br>
+      Para mayor respaldo documental de su registro, se recomienda adjuntar la factura original de compra de la bicicleta.
+      <br><br>
+      <strong>Beneficios de adjuntar factura:</strong>
+      <br>• Respaldo documental completo
+      <br>• Mayor credibilidad del registro
+      <br>• Facilita procesos de verificación
+      <br>• Documentación integral del bien
+      <br><br>
+      <strong>Importante:</strong> Mantenga siempre su factura original disponible junto con este certificado.
+      <span class="status-badge status-pending">Factura Pendiente</span>
+    </div>
+  `
             }
           </div>
         </div>

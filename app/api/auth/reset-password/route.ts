@@ -61,11 +61,14 @@ export async function POST(request: Request) {
       throw new Error("No se pudo generar el enlace de recuperación")
     }
 
-    // CORREGIR EL ENLACE - reemplazar localhost con el dominio real
-    const correctedResetUrl = resetUrl.replace(
-      "redirect_to=http://localhost:3000",
-      "redirect_to=https://www.registronacionaldebicicletas.com/auth/reset-password/confirm",
-    )
+    // CORREGIR COMPLETAMENTE EL ENLACE - reemplazar todas las referencias a localhost
+    let correctedResetUrl = resetUrl
+      .replace(/http:\/\/localhost:3000/g, "https://www.registronacionaldebicicletas.com")
+      .replace(/localhost:3000/g, "www.registronacionaldebicicletas.com")
+      .replace(/localhost/g, "www.registronacionaldebicicletas.com")
+
+    // También asegurar que el protocolo sea HTTPS
+    correctedResetUrl = correctedResetUrl.replace(/^http:/, "https:")
 
     console.log("URL original:", resetUrl)
     console.log("URL corregida:", correctedResetUrl)

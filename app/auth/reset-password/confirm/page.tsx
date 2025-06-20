@@ -50,12 +50,35 @@ export default function ResetPasswordConfirmPage() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        // Primero verificar si hay parámetros de recuperación en la URL
-        const accessToken = searchParams.get("access_token")
-        const refreshToken = searchParams.get("refresh_token")
-        const type = searchParams.get("type")
+        // Obtener parámetros tanto de query params como del hash
+        const urlHash = window.location.hash.substring(1)
+        const hashParams = new URLSearchParams(urlHash)
 
-        console.log("URL params:", { accessToken: !!accessToken, refreshToken: !!refreshToken, type })
+        const accessToken = searchParams.get("access_token") || hashParams.get("access_token")
+        const refreshToken = searchParams.get("refresh_token") || hashParams.get("refresh_token")
+        const type = searchParams.get("type") || hashParams.get("type")
+        const expiresAt = searchParams.get("expires_at") || hashParams.get("expires_at")
+
+        console.log("URL params:", {
+          accessToken: !!accessToken,
+          refreshToken: !!refreshToken,
+          type,
+          expiresAt,
+          currentTime: Math.floor(Date.now() / 1000),
+        })
+
+        // Verificar si el token ha expirado
+        if (expiresAt) {
+          const expirationTime = Number.parseInt(expiresAt)
+          const currentTime = Math.floor(Date.now() / 1000)
+
+          if (currentTime > expirationTime) {
+            console.log("Token expirado:", { expirationTime, currentTime })
+            setError("El enlace de recuperación ha expirado. Por favor solicita uno nuevo.")
+            setIsValidSession(false)
+            return
+          }
+        }
 
         if (type === "recovery" && accessToken && refreshToken) {
           // Establecer la sesión con los tokens de recuperación
@@ -66,7 +89,11 @@ export default function ResetPasswordConfirmPage() {
 
           if (sessionError) {
             console.error("Error setting session:", sessionError)
-            setError("El enlace de recuperación es inválido o ha expirado.")
+            if (sessionError.message?.includes("expired")) {
+              setError("El enlace de recuperación ha expirado. Por favor solicita uno nuevo.")
+            } else {
+              setError("El enlace de recuperación es inválido o ha expirado.")
+            }
             setIsValidSession(false)
           } else {
             console.log("Session set successfully:", data)
@@ -131,6 +158,8 @@ export default function ResetPasswordConfirmPage() {
         setError("La sesión ha expirado. Por favor solicita un nuevo enlace de recuperación.")
       } else if (error.message?.includes("weak_password")) {
         setError("La contraseña es muy débil. Usa al menos 6 caracteres con letras y números.")
+      } else if (error.message?.includes("expired")) {
+        setError("El enlace ha expirado. Por favor solicita un nuevo enlace de recuperación.")
       } else {
         setError(`Error al actualizar contraseña: ${error.message || "Intenta nuevamente."}`)
       }

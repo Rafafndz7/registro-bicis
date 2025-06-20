@@ -37,12 +37,14 @@ export async function POST(request: Request) {
       })
     }
 
-    // Generar token de recuperación con Supabase - FORZAR DOMINIO CORRECTO
+    // Generar token de recuperación con Supabase - EXTENDER TIEMPO DE EXPIRACIÓN
     const { data, error } = await supabase.auth.admin.generateLink({
       type: "recovery",
       email: email,
       options: {
         redirectTo: `https://www.registronacionaldebicicletas.com/auth/reset-password/confirm`,
+        // Extender el tiempo de expiración a 24 horas (86400 segundos)
+        expiresIn: 86400,
       },
     })
 
@@ -127,7 +129,7 @@ export async function POST(request: Request) {
         </div>
         
         <p style="color: #6c757d; font-size: 14px;">
-          <strong>Importante:</strong> Este enlace expirará en 1 hora por seguridad.
+          <strong>Importante:</strong> Este enlace expirará en 24 horas por seguridad.
         </p>
         
         <p style="color: #6c757d; font-size: 14px;">

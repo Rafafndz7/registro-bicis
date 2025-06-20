@@ -658,10 +658,88 @@ export async function GET(request: Request) {
       </div>
       
       <div class="download-buttons no-print">
-        <a href="#" class="download-btn">Descargar Certificado (PDF)</a>
-        <a href="#" class="download-btn">Imprimir Certificado</a>
+        <button onclick="downloadAsPDF()" class="download-btn">
+          📄 Descargar como PDF
+        </button>
+        <button onclick="printCertificate()" class="download-btn">
+          🖨️ Imprimir Certificado
+        </button>
+        <button onclick="downloadAsHTML()" class="download-btn" style="background: linear-gradient(135deg, #059669 0%, #10B981 100%);">
+          💾 Descargar HTML
+        </button>
       </div>
     </body>
+    <script>
+      function downloadAsPDF() {
+        // Usar la función de impresión del navegador que permite guardar como PDF
+        window.print();
+      }
+      
+      function printCertificate() {
+        // Función de impresión directa
+        window.print();
+      }
+      
+      function downloadAsHTML() {
+        // Crear un blob con el contenido HTML completo
+        const htmlContent = document.documentElement.outerHTML;
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        const url = window.URL.createObjectURL(blob);
+        
+        // Crear enlace de descarga
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'certificado-rnb-${bicycle.serial_number}.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      }
+      
+      // Mejorar experiencia en móviles
+      document.addEventListener('DOMContentLoaded', function() {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          // Ajustar el viewport para mejor visualización
+          const viewport = document.querySelector('meta[name="viewport"]');
+          if (viewport) {
+            viewport.setAttribute('content', 'width=device-width, initial-scale=0.8, user-scalable=yes');
+          }
+          
+          // Actualizar instrucciones para móvil
+          const instructions = document.querySelector('.mobile-instructions');
+          if (instructions) {
+            instructions.style.display = 'block';
+            instructions.innerHTML = \`
+              📱 <strong>¡Perfecto! Ya tienes tu certificado</strong><br><br>
+              <strong>Para guardarlo como PDF:</strong><br>
+              • <strong>Android:</strong> Menú ⋮ → "Imprimir" → "Guardar como PDF"<br>
+              • <strong>iPhone:</strong> Botón "Compartir" 📤 → "Imprimir" → pellizcar para ampliar → "Compartir" → "Guardar en Archivos"<br><br>
+              <strong>💡 Tip:</strong> También puedes tomar capturas de pantalla del documento completo
+            \`;
+          }
+        }
+        
+        // Agregar eventos a los botones
+        const downloadBtn = document.querySelector('.download-btn:first-child');
+        const printBtn = document.querySelector('.download-btn:last-child');
+        
+        if (downloadBtn) {
+          downloadBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            downloadAsPDF();
+          });
+        }
+        
+        if (printBtn) {
+          printBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            printCertificate();
+          });
+        }
+      });
+    </script>
     </html>
     `
 

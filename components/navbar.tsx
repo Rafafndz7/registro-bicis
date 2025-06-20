@@ -17,6 +17,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { BikeIcon as BicycleIcon, User, Menu, LogOut, Home, Info, Phone, FileText, Shield, Search } from "lucide-react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 export function Navbar() {
   const { user } = useAuth()
@@ -101,7 +102,7 @@ export function Navbar() {
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6 lg:gap-8">
           <Link href="/" className="flex items-center gap-2 lg:gap-3">
-            <BicycleIcon className="h-7 w-7 lg:h-8 lg:w-8 text-blue-600" />
+            <Image src="/logo-rnb.png" alt="RNB Logo" width={40} height={40} className="h-8 w-8 lg:h-10 lg:w-10" />
             <div className="flex flex-col">
               <span className="font-bold text-lg lg:text-xl leading-none">RNB</span>
               <span className="text-xs text-muted-foreground hidden sm:block">Registro Nacional</span>

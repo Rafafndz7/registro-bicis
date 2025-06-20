@@ -1,5 +1,6 @@
 import Link from "next/link"
-import { BikeIcon as Bicycle, Facebook, Instagram, Mail, Phone, MapPin } from "lucide-react"
+import { Facebook, Instagram, Mail, Phone, MapPin } from "lucide-react"
+import Image from "next/image"
 
 export function Footer() {
   return (
@@ -8,9 +9,9 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Logo y descripción */}
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Bicycle className="h-8 w-8 text-blue-400" />
-              <span className="text-xl font-bold">RNB</span>
+            <div className="flex items-center space-x-3">
+              <Image src="/logo-rnb.png" alt="RNB Logo" width={48} height={48} className="h-12 w-12" />
+              <span className="text-2xl font-bold">RNB</span>
             </div>
             <p className="text-gray-300 text-sm">
               Registro Nacional de Bicicletas - Sistema oficial para el registro y verificación de bicicletas en México.

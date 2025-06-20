@@ -59,18 +59,27 @@ export async function GET(request: Request) {
 
     console.log("Generando certificado para:", bicycle.brand, bicycle.model)
 
-    // Crear contenido HTML del certificado optimizado para PDF y móviles
+    // Generar número de folio único
+    const folioNumber = `RNB-${new Date().getFullYear()}-${String(bicycle.id).padStart(6, '0')}`
+    const currentDate = new Date()
+    const formattedDate = currentDate.toLocaleDateString("es-MX", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+
+    // Crear contenido HTML del certificado como factura oficial
     const htmlContent = `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Certificado RNB - ${bicycle.brand} ${bicycle.model}</title>
+      <title>Certificado Oficial RNB - ${bicycle.brand} ${bicycle.model}</title>
       <style>
         @page {
           size: A4;
-          margin: 15mm;
+          margin: 20mm;
         }
         
         * {
@@ -83,8 +92,8 @@ export async function GET(request: Request) {
           font-family: 'Arial', 'Helvetica', sans-serif;
           background: white;
           color: #333;
-          line-height: 1.5;
-          font-size: 12px;
+          line-height: 1.4;
+          font-size: 11px;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
@@ -92,18 +101,29 @@ export async function GET(request: Request) {
         .certificate {
           max-width: 100%;
           margin: 0 auto;
-          border: 3px solid #3B82F6;
-          padding: 20px;
+          border: 2px solid #4F46E5;
           background-color: #fff;
-          min-height: 95vh;
           position: relative;
+          min-height: 100vh;
         }
         
         .header {
+          background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
+          color: white;
+          padding: 20px;
           text-align: center;
-          border-bottom: 2px solid #3B82F6;
-          padding-bottom: 15px;
-          margin-bottom: 20px;
+          position: relative;
+        }
+        
+        .header::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+          opacity: 0.3;
         }
         
         .logo-container {
@@ -111,140 +131,283 @@ export async function GET(request: Request) {
           align-items: center;
           justify-content: center;
           margin-bottom: 15px;
+          position: relative;
+          z-index: 1;
         }
         
-        .logo-svg {
-          width: 60px;
-          height: 60px;
-          margin-right: 15px;
+        .logo {
+          width: 80px;
+          height: 80px;
+          background: white;
+          border-radius: 50%;
+          padding: 10px;
+          margin-right: 20px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
-        .logo-text {
-          color: #3B82F6;
-          font-size: 32px;
+        .header-text {
+          position: relative;
+          z-index: 1;
+        }
+        
+        .main-title {
+          font-size: 28px;
           font-weight: bold;
-          letter-spacing: 2px;
+          letter-spacing: 3px;
+          margin-bottom: 5px;
+          text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
         .subtitle {
-          color: #666;
-          font-size: 16px;
+          font-size: 14px;
           margin-bottom: 8px;
-          font-weight: 600;
+          opacity: 0.95;
         }
         
         .certificate-title {
-          font-size: 14px;
-          color: #333;
+          font-size: 16px;
           font-weight: bold;
-          margin-top: 8px;
           text-transform: uppercase;
+          letter-spacing: 2px;
+          border: 2px solid white;
+          padding: 8px 16px;
+          display: inline-block;
+          border-radius: 25px;
+          background: rgba(255,255,255,0.1);
+          backdrop-filter: blur(10px);
+        }
+        
+        .document-info {
+          background: #F8FAFC;
+          padding: 15px 20px;
+          border-bottom: 3px solid #4F46E5;
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 20px;
+          font-size: 10px;
+        }
+        
+        .doc-item {
+          text-align: center;
+        }
+        
+        .doc-label {
+          font-weight: bold;
+          color: #4F46E5;
+          text-transform: uppercase;
+          font-size: 9px;
+          letter-spacing: 1px;
+          margin-bottom: 3px;
+        }
+        
+        .doc-value {
+          font-size: 12px;
+          font-weight: bold;
+          color: #1F2937;
+        }
+        
+        .content {
+          padding: 25px;
         }
         
         .section {
-          margin-bottom: 20px;
+          margin-bottom: 25px;
           page-break-inside: avoid;
         }
         
         .section-title {
-          color: #3B82F6;
-          font-size: 14px;
+          background: linear-gradient(90deg, #4F46E5, #3B82F6);
+          color: white;
+          font-size: 12px;
           font-weight: bold;
-          margin-bottom: 10px;
-          border-bottom: 1px solid #E5E7EB;
-          padding-bottom: 5px;
+          padding: 8px 15px;
+          margin-bottom: 15px;
           text-transform: uppercase;
           letter-spacing: 1px;
+          border-radius: 5px;
+          box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
         }
         
         .info-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 10px;
-          margin-bottom: 10px;
+          gap: 15px;
+          margin-bottom: 15px;
         }
         
-        .info-row {
-          margin-bottom: 8px;
-          font-size: 11px;
-        }
-        
-        .label {
-          font-weight: bold;
-          color: #333;
-          display: block;
-          margin-bottom: 2px;
-        }
-        
-        .value {
-          color: #555;
-          font-weight: normal;
-          word-wrap: break-word;
-        }
-        
-        .verification {
-          background: #F8FAFC;
-          padding: 15px;
+        .info-item {
+          background: #F9FAFB;
+          padding: 12px;
           border-radius: 6px;
-          margin: 15px 0;
-          border: 1px solid #E2E8F0;
+          border-left: 4px solid #4F46E5;
+        }
+        
+        .info-label {
+          font-weight: bold;
+          color: #374151;
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 4px;
+        }
+        
+        .info-value {
+          color: #1F2937;
+          font-size: 12px;
+          font-weight: 600;
+        }
+        
+        .full-width {
+          grid-column: 1 / -1;
+        }
+        
+        .verification-section {
+          background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+          padding: 20px;
+          border-radius: 10px;
+          border: 2px solid #4F46E5;
+          margin: 20px 0;
+          position: relative;
+        }
+        
+        .verification-section::before {
+          content: '🔒';
+          position: absolute;
+          top: -15px;
+          left: 20px;
+          background: #4F46E5;
+          color: white;
+          padding: 8px 12px;
+          border-radius: 20px;
+          font-size: 14px;
         }
         
         .invoice-section {
-          background: #F0F9FF;
-          padding: 15px;
-          border-radius: 6px;
-          margin: 15px 0;
-          border: 1px solid #0EA5E9;
+          background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+          padding: 20px;
+          border-radius: 10px;
+          border: 2px solid #10B981;
+          margin: 20px 0;
+          position: relative;
         }
         
-        .footer {
-          position: absolute;
-          bottom: 20px;
-          left: 20px;
-          right: 20px;
-          text-align: center;
-          padding-top: 15px;
-          border-top: 1px solid #E5E7EB;
+        .invoice-section.no-invoice {
+          background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+          border-color: #F59E0B;
+        }
+        
+        .status-badge {
+          display: inline-block;
+          padding: 6px 12px;
+          border-radius: 20px;
           font-size: 10px;
-          color: #666;
+          font-weight: bold;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+        }
+        
+        .status-verified {
+          background: #10B981;
+          color: white;
+        }
+        
+        .status-pending {
+          background: #F59E0B;
+          color: white;
         }
         
         .official-seal {
-          background: #3B82F6;
-          color: white;
-          padding: 10px;
+          position: absolute;
+          top: 50%;
+          right: 30px;
+          transform: translateY(-50%);
+          width: 120px;
+          height: 120px;
+          background: radial-gradient(circle, #4F46E5 0%, #3730A3 100%);
           border-radius: 50%;
-          width: 80px;
-          height: 80px;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
-          margin: 15px auto;
+          color: white;
           font-weight: bold;
-          font-size: 9px;
+          font-size: 10px;
           text-align: center;
           line-height: 1.2;
+          border: 6px solid white;
+          box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+          z-index: 10;
+        }
+        
+        .seal-logo {
+          width: 40px;
+          height: 40px;
+          margin-bottom: 5px;
+          filter: brightness(0) invert(1);
+        }
+        
+        .qr-section {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 20px;
+          align-items: center;
+          margin-top: 15px;
         }
         
         .qr-placeholder {
-          width: 60px;
-          height: 60px;
-          border: 2px solid #3B82F6;
-          margin: 0 auto;
+          width: 80px;
+          height: 80px;
+          border: 3px solid #4F46E5;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 8px;
-          color: #3B82F6;
+          color: #4F46E5;
           text-align: center;
+          font-weight: bold;
+          background: linear-gradient(45deg, #EEF2FF, #E0E7FF);
+        }
+        
+        .footer {
+          background: #1F2937;
+          color: white;
+          padding: 20px;
+          text-align: center;
+          margin-top: 30px;
+        }
+        
+        .footer-content {
+          max-width: 600px;
+          margin: 0 auto;
+        }
+        
+        .footer-title {
+          font-size: 14px;
+          font-weight: bold;
+          margin-bottom: 10px;
+          color: #60A5FA;
+        }
+        
+        .footer-text {
+          font-size: 10px;
+          line-height: 1.5;
+          margin-bottom: 8px;
+        }
+        
+        .footer-legal {
+          font-size: 9px;
+          opacity: 0.8;
+          border-top: 1px solid #374151;
+          padding-top: 10px;
+          margin-top: 15px;
         }
         
         .mobile-instructions {
-          background: #FEF3C7;
-          border: 1px solid #F59E0B;
-          padding: 15px;
-          border-radius: 6px;
+          background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+          border: 2px solid #F59E0B;
+          padding: 20px;
+          border-radius: 10px;
           margin: 20px 0;
           font-size: 14px;
           color: #92400E;
@@ -254,73 +417,65 @@ export async function GET(request: Request) {
         .download-buttons {
           text-align: center;
           margin: 30px 0;
-          padding: 20px;
-          background: #F8FAFC;
-          border-radius: 8px;
+          padding: 25px;
+          background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+          border-radius: 15px;
+          border: 2px solid #CBD5E1;
         }
         
         .download-btn {
           display: inline-block;
           margin: 10px;
-          padding: 15px 25px;
-          background-color: #3B82F6;
+          padding: 15px 30px;
+          background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
           color: white;
           border: none;
-          border-radius: 8px;
-          font-size: 16px;
+          border-radius: 25px;
+          font-size: 14px;
           cursor: pointer;
           font-weight: 600;
           text-decoration: none;
-          transition: background-color 0.3s;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
         }
         
         .download-btn:hover {
-          background-color: #2563EB;
-        }
-        
-        .status-badge {
-          display: inline-block;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 10px;
-          font-weight: bold;
-          text-transform: uppercase;
-        }
-        
-        .status-verified {
-          background-color: #10B981;
-          color: white;
-        }
-        
-        .status-pending {
-          background-color: #F59E0B;
-          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
         }
         
         @media screen and (max-width: 768px) {
           .certificate {
-            padding: 15px;
-            border-width: 2px;
+            border-width: 1px;
           }
           
           .info-grid {
             grid-template-columns: 1fr;
-            gap: 5px;
+            gap: 10px;
           }
           
-          .logo-text {
-            font-size: 24px;
+          .document-info {
+            grid-template-columns: 1fr;
+            gap: 10px;
           }
           
-          .subtitle {
-            font-size: 14px;
+          .main-title {
+            font-size: 20px;
+          }
+          
+          .official-seal {
+            position: relative;
+            right: auto;
+            top: auto;
+            transform: none;
+            margin: 20px auto;
           }
           
           .download-btn {
             display: block;
             width: 90%;
             margin: 10px auto;
-            font-size: 18px;
+            font-size: 16px;
             padding: 18px;
           }
         }
@@ -332,7 +487,7 @@ export async function GET(request: Request) {
           }
           
           .certificate {
-            border: 3px solid #3B82F6 !important;
+            border: 2px solid #4F46E5 !important;
             box-shadow: none;
             min-height: auto;
           }
@@ -341,297 +496,22 @@ export async function GET(request: Request) {
             display: none !important;
           }
           
-          .footer {
-            position: relative;
-            bottom: auto;
-            left: auto;
-            right: auto;
+          .official-seal {
+            position: absolute !important;
           }
         }
       </style>
     </head>
     <body>
       <div class="mobile-instructions no-print">
-        📱 <strong>Instrucciones para móvil:</strong><br>
-        • <strong>Android:</strong> Usa el menú ⋮ → "Imprimir" → "Guardar como PDF"<br>
-        • <strong>iPhone:</strong> Toca el botón "Compartir" 📤 → "Imprimir" → pellizca para ampliar → "Compartir" → "Guardar en Archivos"<br>
-        • <strong>Alternativa:</strong> Toma captura de pantalla de todo el documento
+        📱 <strong>Instrucciones para móvil:</strong><br><br>
+        • <strong>Android:</strong> Menú ⋮ → "Imprimir" → "Guardar como PDF"<br>
+        • <strong>iPhone:</strong> Botón "Compartir" 📤 → "Imprimir" → pellizcar para ampliar → "Compartir" → "Guardar en Archivos"<br><br>
+        <strong>💡 Tip:</strong> También puedes tomar capturas de pantalla del documento completo
       </div>
       
       <div class="certificate">
         <div class="header">
           <div class="logo-container">
-            <svg class="logo-svg" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="18.5" cy="17.5" r="3.5"/>
-              <circle cx="5.5" cy="17.5" r="3.5"/>
-              <circle cx="15" cy="5" r="1"/>
-              <path d="m14 17 6-6-3-3-4 4"/>
-              <path d="M9 17h6"/>
-              <path d="m8 17-2-5 1.5-1.5L14 5"/>
-              <path d="M5.5 21V9"/>
-              <path d="M18.5 21v-2"/>
-            </svg>
-            <div class="logo-text">RNB</div>
-          </div>
-          <div class="subtitle">REGISTRO NACIONAL DE BICIS</div>
-          <div class="certificate-title">CERTIFICADO OFICIAL DE REGISTRO</div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Información de la Bicicleta</div>
-          <div class="info-grid">
-            <div class="info-row">
-              <span class="label">Número de Serie:</span>
-              <span class="value">${bicycle.serial_number}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Marca:</span>
-              <span class="value">${bicycle.brand}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Modelo:</span>
-              <span class="value">${bicycle.model}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Color:</span>
-              <span class="value">${bicycle.color}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Tipo:</span>
-              <span class="value">${bicycle.bike_type || "No especificado"}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Año:</span>
-              <span class="value">${bicycle.year || "No especificado"}</span>
-            </div>
-            ${
-              bicycle.wheel_size
-                ? `
-            <div class="info-row">
-              <span class="label">Rodada:</span>
-              <span class="value">${bicycle.wheel_size}</span>
-            </div>
-            `
-                : ""
-            }
-            ${
-              bicycle.groupset
-                ? `
-            <div class="info-row">
-              <span class="label">Grupo:</span>
-              <span class="value">${bicycle.groupset}</span>
-            </div>
-            `
-                : ""
-            }
-          </div>
-          <div class="info-row">
-            <span class="label">Fecha de Registro:</span>
-            <span class="value">${new Date(bicycle.registration_date).toLocaleDateString("es-MX", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}</span>
-          </div>
-          ${
-            bicycle.characteristics
-              ? `
-          <div class="info-row">
-            <span class="label">Características:</span>
-            <span class="value">${bicycle.characteristics}</span>
-          </div>
-          `
-              : ""
-          }
-        </div>
-
-        <div class="section">
-          <div class="section-title">Información del Propietario</div>
-          <div class="info-grid">
-            <div class="info-row">
-              <span class="label">Nombre:</span>
-              <span class="value">${bicycle.profiles?.full_name || "No disponible"}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Email:</span>
-              <span class="value">${bicycle.profiles?.email || "No disponible"}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">Teléfono:</span>
-              <span class="value">${bicycle.profiles?.phone || "No disponible"}</span>
-            </div>
-            ${
-              bicycle.profiles?.curp
-                ? `
-            <div class="info-row">
-              <span class="label">CURP:</span>
-              <span class="value">${bicycle.profiles.curp}</span>
-            </div>
-            `
-                : ""
-            }
-          </div>
-        </div>
-
-        ${
-          invoice
-            ? `
-        <div class="invoice-section">
-          <div class="section-title">📄 Documentación de Compra</div>
-          <div class="info-row">
-            <span class="label">Estado de Factura:</span>
-            <span class="value">
-              <span class="status-badge status-verified">✓ FACTURA REGISTRADA</span>
-            </span>
-          </div>
-          <div class="info-row">
-            <span class="label">Archivo:</span>
-            <span class="value">${invoice.original_filename}</span>
-          </div>
-          <div class="info-row">
-            <span class="label">Fecha de Registro:</span>
-            <span class="value">${new Date(invoice.upload_date).toLocaleDateString("es-MX", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}</span>
-          </div>
-        </div>
-        `
-            : `
-        <div class="invoice-section">
-          <div class="section-title">📄 Documentación de Compra</div>
-          <div class="info-row">
-            <span class="label">Estado de Factura:</span>
-            <span class="value">
-              <span class="status-badge status-pending">⚠ SIN FACTURA REGISTRADA</span>
-            </span>
-          </div>
-          <div class="info-row">
-            <span class="value" style="font-style: italic; color: #666;">
-              No se ha registrado factura de compra para esta bicicleta
-            </span>
-          </div>
-        </div>
-        `
-        }
-
-        <div class="verification">
-          <div class="section-title">Verificación y Autenticidad</div>
-          <div style="display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: center;">
-            <div>
-              <div class="info-row">
-                <span class="label">ID de Registro:</span>
-                <span class="value">${bicycle.id}</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Fecha de Emisión:</span>
-                <span class="value">${new Date().toLocaleDateString("es-MX", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}</span>
-              </div>
-              <div class="info-row">
-                <span class="label">Verificar en:</span>
-                <span class="value">registronacionaldebicis.com/verify/${bicycle.id}</span>
-              </div>
-            </div>
-            <div class="qr-placeholder">
-              QR<br>CODE
-            </div>
-          </div>
-        </div>
-
-        <div class="official-seal">
-          SELLO<br>OFICIAL<br>RNB
-        </div>
-
-        <div class="footer">
-          <p><strong>Este certificado confirma que la bicicleta está oficialmente registrada en el Sistema Nacional de Registro de Bicicletas (RNB).</strong></p>
-          <p>Documento generado electrónicamente - Válido sin firma autógrafa</p>
-          <p><strong>DOCUMENTO OFICIAL RNB - ${new Date().getFullYear()}</strong></p>
-          <p style="margin-top: 10px; font-size: 9px;">
-            Para verificar la autenticidad de este documento, visite nuestro sitio web oficial y utilice el ID de registro proporcionado.
-          </p>
-        </div>
-      </div>
-      
-      <div class="download-buttons no-print">
-        <button onclick="window.print()" class="download-btn">
-          📄 Imprimir / Guardar como PDF
-        </button>
-        <button onclick="downloadAsFile()" class="download-btn">
-          💾 Descargar Archivo
-        </button>
-      </div>
-      
-      <script>
-        function downloadAsFile() {
-          // Crear un blob con el contenido HTML
-          const htmlContent = document.documentElement.outerHTML;
-          const blob = new Blob([htmlContent], { type: 'text/html' });
-          const url = window.URL.createObjectURL(blob);
-          
-          // Crear enlace de descarga
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'certificado-rnb-${bicycle.serial_number}.html';
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url);
-        }
-        
-        // Mejorar experiencia en móviles
-        document.addEventListener('DOMContentLoaded', function() {
-          const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          
-          if (isMobile) {
-            // Ajustar el viewport para mejor visualización
-            const viewport = document.querySelector('meta[name="viewport"]');
-            if (viewport) {
-              viewport.setAttribute('content', 'width=device-width, initial-scale=0.8, user-scalable=yes');
-            }
-            
-            // Agregar instrucciones específicas para móvil
-            const instructions = document.querySelector('.mobile-instructions');
-            if (instructions) {
-              instructions.style.display = 'block';
-              instructions.innerHTML = \`
-          📱 <strong>¡Perfecto! Ya tienes tu certificado</strong><br><br>
-          <strong>Para guardarlo:</strong><br>
-          • <strong>Android:</strong> Menú ⋮ → "Imprimir" → "Guardar como PDF"<br>
-          • <strong>iPhone:</strong> Botón "Compartir" 📤 → "Imprimir" → pellizcar para ampliar → "Compartir" → "Guardar en Archivos"<br><br>
-          <strong>💡 Tip:</strong> También puedes tomar capturas de pantalla del documento completo
-        \`;
-            }
-          }
-        });
-      </script>
-    </body>
-    </html>
-    `
-
-    // Devolver el HTML como respuesta con headers correctos para PDF
-    return new Response(htmlContent, {
-      headers: {
-        "Content-Type": "text/html; charset=utf-8",
-        "Content-Disposition": `inline; filename="certificado-rnb-${bicycle.serial_number}.html"`,
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-        "X-Frame-Options": "SAMEORIGIN",
-      },
-    })
-  } catch (error) {
-    console.error("Error al generar certificado:", error)
-    return NextResponse.json(
-      {
-        error: "Error al generar certificado",
-        details: error instanceof Error ? error.message : "Error desconocido",
-      },
-      { status: 500 },
-    )
-  }
-}
+            <div class="logo">
+              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgdmlld0JveD0iMCAwIDYwMCA2MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0yMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy

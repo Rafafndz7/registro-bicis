@@ -37,18 +37,16 @@ export async function POST(request: Request) {
       })
     }
 
-    // Generar token de recuperación con Supabase - EXTENDER TIEMPO DE EXPIRACIÓN
+    // Generar token de recuperación con Supabase - FORZAR DOMINIO CORRECTO
     const { data, error } = await supabase.auth.admin.generateLink({
       type: "recovery",
       email: email,
       options: {
         redirectTo: `https://www.registronacionaldebicicletas.com/auth/reset-password/confirm`,
-        // Extender el tiempo de expiración a 24 horas (86400 segundos)
-        expiresIn: 86400,
       },
     })
 
-    console.log("Enlace generado:", data)
+    console.log("Enlace generado completo:", JSON.stringify(data, null, 2))
     console.log("Error generando enlace:", error)
 
     if (error) {
@@ -63,42 +61,62 @@ export async function POST(request: Request) {
       throw new Error("No se pudo generar el enlace de recuperación")
     }
 
-    // CORRECCIÓN COMPLETA Y AGRESIVA DEL ENLACE
+    console.log("URL original completa:", resetUrl)
+
+    // CREAR ENLACE COMPLETAMENTE NUEVO - MÉTODO AGRESIVO
     let correctedResetUrl = resetUrl
-      // Reemplazar TODA la base URL de localhost
+
+    // Método 1: Reemplazos múltiples
+    correctedResetUrl = correctedResetUrl
       .replace(/https?:\/\/localhost:3000/g, "https://www.registronacionaldebicicletas.com")
       .replace(/localhost:3000/g, "www.registronacionaldebicicletas.com")
       .replace(/localhost/g, "www.registronacionaldebicicletas.com")
-      // Reemplazar específicamente en los parámetros de redirect
       .replace(
         /redirect_to=https?%3A%2F%2Flocalhost%3A3000/g,
         "redirect_to=https%3A%2F%2Fwww.registronacionaldebicicletas.com",
       )
       .replace(/redirect_to=localhost%3A3000/g, "redirect_to=www.registronacionaldebicicletas.com")
 
-    // También asegurar que el protocolo sea HTTPS
-    correctedResetUrl = correctedResetUrl.replace(/^http:/, "https:")
-
-    // CREAR ENLACE COMPLETAMENTE NUEVO SI ES NECESARIO
+    // Método 2: Si aún contiene localhost, reconstruir completamente
     if (correctedResetUrl.includes("localhost")) {
-      // Si aún contiene localhost, construir el enlace manualmente
-      const urlParams = new URL(resetUrl)
-      const accessToken =
-        urlParams.searchParams.get("access_token") || urlParams.hash.match(/access_token=([^&]+)/)?.[1]
-      const refreshToken =
-        urlParams.searchParams.get("refresh_token") || urlParams.hash.match(/refresh_token=([^&]+)/)?.[1]
-      const expiresAt = urlParams.searchParams.get("expires_at") || urlParams.hash.match(/expires_at=([^&]+)/)?.[1]
-      const expiresIn = urlParams.searchParams.get("expires_in") || urlParams.hash.match(/expires_in=([^&]+)/)?.[1]
-      const tokenType = urlParams.searchParams.get("token_type") || urlParams.hash.match(/token_type=([^&]+)/)?.[1]
-      const type = urlParams.searchParams.get("type") || urlParams.hash.match(/type=([^&]+)/)?.[1]
+      console.log("Aún contiene localhost, reconstruyendo...")
 
-      if (accessToken && refreshToken) {
-        correctedResetUrl = `https://www.registronacionaldebicicletas.com/auth/reset-password/confirm#access_token=${accessToken}&expires_at=${expiresAt}&expires_in=${expiresIn}&refresh_token=${refreshToken}&token_type=${tokenType}&type=${type}`
+      try {
+        // Extraer tokens del enlace original
+        const urlObj = new URL(resetUrl)
+        const fragment = urlObj.hash.substring(1)
+        const params = new URLSearchParams(fragment)
+
+        const accessToken = params.get("access_token")
+        const refreshToken = params.get("refresh_token")
+        const expiresAt = params.get("expires_at")
+        const expiresIn = params.get("expires_in")
+        const tokenType = params.get("token_type") || "bearer"
+        const type = params.get("type") || "recovery"
+
+        if (accessToken && refreshToken) {
+          correctedResetUrl = `https://www.registronacionaldebicicletas.com/auth/reset-password/confirm#access_token=${accessToken}&expires_at=${expiresAt}&expires_in=${expiresIn}&refresh_token=${refreshToken}&token_type=${tokenType}&type=${type}`
+          console.log("Enlace reconstruido:", correctedResetUrl)
+        }
+      } catch (e) {
+        console.error("Error reconstruyendo enlace:", e)
       }
     }
 
-    console.log("URL original:", resetUrl)
-    console.log("URL corregida:", correctedResetUrl)
+    // Método 3: Verificación final
+    if (correctedResetUrl.includes("localhost")) {
+      console.error("ADVERTENCIA: El enlace aún contiene localhost!")
+      // Como último recurso, usar solo los tokens
+      const tokenMatch = resetUrl.match(/access_token=([^&]+)/)
+      const refreshMatch = resetUrl.match(/refresh_token=([^&]+)/)
+      const expiresMatch = resetUrl.match(/expires_at=([^&]+)/)
+
+      if (tokenMatch && refreshMatch && expiresMatch) {
+        correctedResetUrl = `https://www.registronacionaldebicicletas.com/auth/reset-password/confirm#access_token=${tokenMatch[1]}&refresh_token=${refreshMatch[1]}&expires_at=${expiresMatch[1]}&token_type=bearer&type=recovery`
+      }
+    }
+
+    console.log("URL final corregida:", correctedResetUrl)
 
     const emailHtml = `
   <!DOCTYPE html>
@@ -129,7 +147,7 @@ export async function POST(request: Request) {
         </div>
         
         <p style="color: #6c757d; font-size: 14px;">
-          <strong>Importante:</strong> Este enlace expirará en 24 horas por seguridad.
+          <strong>Importante:</strong> Este enlace expirará en 1 hora por seguridad.
         </p>
         
         <p style="color: #6c757d; font-size: 14px;">

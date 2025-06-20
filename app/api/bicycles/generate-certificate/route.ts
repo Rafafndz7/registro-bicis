@@ -292,7 +292,6 @@ body {
   transform: translateY(-50%);
   width: 80px;
   height: 80px;
-  background: radial-gradient(circle, #4F46E5 0%, #3730A3 100%);
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -304,7 +303,6 @@ body {
   text-align: center;
   line-height: 1.1;
   border: 3px solid white;
-  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
   z-index: 10;
 }
 
@@ -364,7 +362,7 @@ body {
 
 .doc-label {
   font-weight: bold;
-  color: #4F46E5;
+  color: #6B7280;
   text-transform: uppercase;
   font-size: 8px;
   letter-spacing: 1px;
@@ -436,21 +434,18 @@ body {
 }
 
 .qr-placeholder {
-  border: 2px solid #6B7280;
-  color: #6B7280;
-  background: linear-gradient(45deg, #F3F4F6, #E5E7EB);
   width: 60px;
   height: 60px;
-  border: 2px solid #4F46E5;
+  border: 2px solid #6B7280;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 7px;
-  color: #4F46E5;
+  color: #6B7280;
   text-align: center;
   font-weight: bold;
-  background: linear-gradient(45deg, #EEF2FF, #E0E7FF);
+  background: linear-gradient(45deg, #F3F4F6, #E5E7EB);
 }
 
 .status-badge {
@@ -526,33 +521,6 @@ body {
 }
 
 @media print {
-  /* Forzar altura específica para móviles */
-  .certificate {
-    height: 297mm !important; /* Altura A4 */
-    max-height: 297mm !important;
-  }
-  
-  /* Reducir aún más los espacios en móviles */
-  .content {
-    padding: 8px !important;
-    gap: 4px !important;
-  }
-  
-  .section {
-    margin-bottom: 3px !important;
-  }
-  
-  .info-grid {
-    gap: 2px !important;
-    margin-bottom: 2px !important;
-  }
-  
-  .verification-section,
-  .invoice-section,
-  .validity-section {
-    padding: 4px !important;
-    font-size: 6px !important;
-  }
   body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -560,10 +528,11 @@ body {
     padding: 0 !important;
     height: 100vh !important;
     overflow: hidden !important;
+    font-size: 8px !important;
   }
   
   .certificate {
-    border: 2px solid #4F46E5 !important;
+    border: 2px solid #6B7280 !important;
     box-shadow: none;
     height: 100vh !important;
     max-height: 100vh !important;
@@ -601,70 +570,96 @@ body {
     left: -9999px !important;
   }
   
-  /* Optimizar espacios para una sola página */
   .header {
-    padding: 12px !important;
+    padding: 8px !important;
     flex-shrink: 0 !important;
+  }
+  
+  .main-title {
+    font-size: 16px !important;
   }
   
   .document-info {
-    padding: 6px 8px !important;
+    padding: 4px 6px !important;
     flex-shrink: 0 !important;
+    font-size: 6px !important;
   }
   
   .content {
-    padding: 12px !important;
-    gap: 8px !important;
-    overflow: hidden !important;
-  }
-  
-  .footer {
     padding: 6px !important;
-    flex-shrink: 0 !important;
+    gap: 3px !important;
+    overflow: hidden !important;
+    flex: 1 !important;
   }
   
   .section {
-    margin-bottom: 6px !important;
+    margin-bottom: 2px !important;
     page-break-inside: avoid;
   }
   
   .section-title {
-    padding: 4px 10px !important;
-    margin-bottom: 4px !important;
-    font-size: 8px !important;
+    padding: 2px 6px !important;
+    margin-bottom: 2px !important;
+    font-size: 6px !important;
   }
   
   .info-grid {
-    gap: 4px !important;
-    margin-bottom: 4px !important;
+    gap: 2px !important;
+    margin-bottom: 2px !important;
   }
   
   .info-item {
-    padding: 4px !important;
+    padding: 2px !important;
+  }
+  
+  .info-label {
+    font-size: 5px !important;
+  }
+  
+  .info-value {
+    font-size: 8px !important;
   }
   
   .verification-section,
   .invoice-section,
   .validity-section {
-    padding: 6px !important;
-    font-size: 7px !important;
+    padding: 3px !important;
+    font-size: 5px !important;
+    margin-top: 2px !important;
   }
   
   .official-seal {
     position: absolute !important;
-    width: 70px !important;
-    height: 70px !important;
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 5px !important;
+    top: 30% !important;
+    right: 10px !important;
   }
   
-  /* Asegurar que no haya scroll ni overflow */
-  html, body {
-    overflow: hidden !important;
-    height: 100vh !important;
+  .footer {
+    padding: 4px !important;
+    flex-shrink: 0 !important;
+    font-size: 5px !important;
   }
   
-  /* Eliminar cualquier margen o padding extra */
-  * {
-    box-sizing: border-box !important;
+  .footer-title {
+    font-size: 6px !important;
+  }
+  
+  .qr-section {
+    gap: 8px !important;
+  }
+  
+  .qr-placeholder {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 5px !important;
+  }
+  
+  .status-badge {
+    font-size: 5px !important;
+    padding: 2px 4px !important;
   }
 }
       </style>

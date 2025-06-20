@@ -484,24 +484,6 @@ body {
   grid-column: 1 / -1;
 }
 
-/* Eliminar completamente las instrucciones y botones */
-.mobile-instructions, 
-.download-buttons,
-.no-print,
-.download-btn {
-  display: none !important;
-  visibility: hidden !important;
-  opacity: 0 !important;
-  height: 0 !important;
-  width: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  position: absolute !important;
-  left: -9999px !important;
-  top: -9999px !important;
-}
-
 @media screen and (max-width: 768px) {
   body {
     font-size: 8px !important;
@@ -635,6 +617,15 @@ body {
     width: 35px !important;
     height: 35px !important;
     font-size: 4px !important;
+  }
+}
+
+@media print {
+  /* Ocultar solo en impresión */
+  .mobile-instructions, 
+  .download-buttons,
+  .no-print {
+    display: none !important;
   }
 }
       </style>

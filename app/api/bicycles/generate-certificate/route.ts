@@ -461,17 +461,23 @@ body {
   body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100vh !important;
+    overflow: hidden !important;
   }
   
   .certificate {
     border: 2px solid #4F46E5 !important;
     box-shadow: none;
-    height: auto !important;
-    min-height: 100vh;
+    height: 100vh !important;
+    max-height: 100vh !important;
     page-break-inside: avoid;
+    display: flex !important;
+    flex-direction: column !important;
   }
   
-  /* Eliminar completamente las instrucciones y botones al imprimir */
+  /* Eliminar completamente las instrucciones y botones */
   .mobile-instructions, 
   .download-buttons,
   .no-print,
@@ -486,28 +492,84 @@ body {
     overflow: hidden !important;
     position: absolute !important;
     left: -9999px !important;
+    top: -9999px !important;
   }
   
-  /* Asegurar que el body solo muestre el certificado */
-  body {
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-  
+  /* Ocultar todo excepto el certificado */
   body > *:not(.certificate) {
     display: none !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+  }
+  
+  /* Optimizar espacios para una sola página */
+  .header {
+    padding: 8px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .document-info {
+    padding: 6px 8px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .content {
+    padding: 8px !important;
+    flex: 1 !important;
+    gap: 6px !important;
+    overflow: hidden !important;
+  }
+  
+  .footer {
+    padding: 6px !important;
+    flex-shrink: 0 !important;
+  }
+  
+  .section {
+    margin-bottom: 6px !important;
+    page-break-inside: avoid;
+  }
+  
+  .section-title {
+    padding: 3px 8px !important;
+    margin-bottom: 4px !important;
+    font-size: 8px !important;
+  }
+  
+  .info-grid {
+    gap: 4px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  .info-item {
+    padding: 4px !important;
+  }
+  
+  .verification-section,
+  .invoice-section {
+    padding: 6px !important;
+    font-size: 7px !important;
   }
   
   .official-seal {
     position: absolute !important;
+    width: 70px !important;
+    height: 70px !important;
   }
   
-  .content {
-    gap: 12px;
+  /* Asegurar que no haya scroll ni overflow */
+  html, body {
+    overflow: hidden !important;
+    height: 100vh !important;
   }
   
-  .section {
-    margin-bottom: 12px;
+  /* Eliminar cualquier margen o padding extra */
+  * {
+    box-sizing: border-box !important;
   }
 }
       </style>

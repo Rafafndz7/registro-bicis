@@ -11,9 +11,13 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       data: { user },
       error: authError,
     } = await supabase.auth.getUser()
+
     if (authError || !user) {
+      console.error("Auth error:", authError)
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
+
+    console.log("✅ Usuario autenticado:", user.id)
 
     const bicycleId = params.id
 
@@ -26,8 +30,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       .single()
 
     if (bicycleError || !bicycle) {
+      console.error("Bicycle error:", bicycleError)
       return NextResponse.json({ error: "Bicicleta no encontrada" }, { status: 404 })
     }
+
+    console.log("✅ Bicicleta encontrada:", bicycle.id)
 
     // Obtener el archivo del FormData
     const formData = await request.formData()
@@ -36,6 +43,12 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     if (!file) {
       return NextResponse.json({ error: "No se proporcionó archivo" }, { status: 400 })
     }
+
+    console.log("✅ Archivo recibido:", {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    })
 
     // Validar tipo de archivo
     const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"]
@@ -58,23 +71,29 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       )
     }
 
-    // Verificar que el bucket existe
+    // Verificar que el bucket existe y es accesible
+    console.log("🔍 Verificando bucket...")
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets()
 
     if (bucketsError) {
-      console.error("Error checking buckets:", bucketsError)
+      console.error("❌ Error checking buckets:", bucketsError)
       return NextResponse.json(
         {
-          error: "Error verificando almacenamiento",
+          error: "Error verificando almacenamiento: " + bucketsError.message,
         },
         { status: 500 },
       )
     }
 
+    console.log(
+      "📦 Buckets disponibles:",
+      buckets?.map((b) => b.name),
+    )
+
     const bucketExists = buckets?.some((bucket) => bucket.name === "bicycle-invoices")
 
     if (!bucketExists) {
-      console.error("Bucket 'bicycle-invoices' does not exist")
+      console.error("❌ Bucket 'bicycle-invoices' no existe")
       return NextResponse.json(
         {
           error: "El bucket de almacenamiento no existe. Contacta al administrador.",
@@ -83,20 +102,42 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       )
     }
 
+    console.log("✅ Bucket 'bicycle-invoices' existe")
+
+    // Probar listar archivos en el bucket
+    const { data: files, error: listError } = await supabase.storage
+      .from("bicycle-invoices")
+      .list(user.id, { limit: 1 })
+
+    if (listError) {
+      console.error("❌ Error listing files:", listError)
+      return NextResponse.json(
+        {
+          error: "Error accediendo al almacenamiento: " + listError.message,
+        },
+        { status: 500 },
+      )
+    }
+
+    console.log("✅ Acceso al bucket confirmado")
+
     // Generar nombre único para el archivo
     const fileExtension = file.name.split(".").pop()
-    const fileName = `${user.id}/${bicycleId}-${Date.now()}.${fileExtension}`
+    const fileName = `${bicycleId}-${Date.now()}.${fileExtension}`
+    const filePath = `${user.id}/${fileName}`
+
+    console.log("📁 Subiendo archivo a:", filePath)
 
     // Subir archivo a Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("bicycle-invoices")
-      .upload(fileName, file, {
+      .upload(filePath, file, {
         cacheControl: "3600",
         upsert: false,
       })
 
     if (uploadError) {
-      console.error("Error uploading to storage:", uploadError)
+      console.error("❌ Error uploading to storage:", uploadError)
       return NextResponse.json(
         {
           error: "Error al subir archivo: " + uploadError.message,
@@ -105,8 +146,12 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       )
     }
 
+    console.log("✅ Archivo subido:", uploadData.path)
+
     // Obtener URL pública del archivo
-    const { data: urlData } = supabase.storage.from("bicycle-invoices").getPublicUrl(fileName)
+    const { data: urlData } = supabase.storage.from("bicycle-invoices").getPublicUrl(filePath)
+
+    console.log("🔗 URL pública:", urlData.publicUrl)
 
     // Eliminar factura anterior si existe
     const { error: deleteOldError } = await supabase
@@ -116,7 +161,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       .eq("user_id", user.id)
 
     if (deleteOldError) {
-      console.warn("Error deleting old invoice:", deleteOldError)
+      console.warn("⚠️ Error deleting old invoice:", deleteOldError)
     }
 
     // Guardar información del archivo en la base de datos
@@ -134,10 +179,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       .single()
 
     if (dbError) {
+      console.error("❌ Database error:", dbError)
       // Si falla la inserción en DB, eliminar archivo subido
-      await supabase.storage.from("bicycle-invoices").remove([fileName])
+      await supabase.storage.from("bicycle-invoices").remove([filePath])
 
-      console.error("Database error:", dbError)
       return NextResponse.json(
         {
           error: "Error al guardar información de la factura: " + dbError.message,
@@ -146,12 +191,14 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       )
     }
 
+    console.log("✅ Factura guardada en DB:", invoiceData.id)
+
     return NextResponse.json({
       message: "Factura subida exitosamente",
       invoice: invoiceData,
     })
   } catch (error) {
-    console.error("Error en POST /api/bicycles/[id]/invoice:", error)
+    console.error("💥 Error general:", error)
     return NextResponse.json(
       {
         error: "Error interno del servidor",
@@ -185,15 +232,19 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       .order("created_at", { ascending: false })
 
     if (error) {
+      console.error("Error getting invoices:", error)
       return NextResponse.json(
         {
-          error: "Error al obtener facturas",
+          error: "Error al obtener facturas: " + error.message,
         },
         { status: 500 },
       )
     }
 
-    return NextResponse.json({ invoices })
+    // Si hay facturas, devolver la primera (más reciente)
+    const invoice = invoices && invoices.length > 0 ? invoices[0] : null
+
+    return NextResponse.json({ invoice })
   } catch (error) {
     console.error("Error en GET /api/bicycles/[id]/invoice:", error)
     return NextResponse.json(
@@ -232,15 +283,21 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "Factura no encontrada" }, { status: 404 })
     }
 
-    // Extraer el nombre del archivo de la URL
-    const fileName = invoice.file_url.split("/").pop()?.split("?")[0]
+    // Extraer el path del archivo de la URL
+    const urlParts = invoice.file_url.split("/")
+    const fileName = urlParts[urlParts.length - 1]?.split("?")[0]
+    const filePath = `${user.id}/${fileName}`
+
+    console.log("🗑️ Eliminando archivo:", filePath)
 
     if (fileName) {
       // Eliminar archivo de storage
-      const { error: storageError } = await supabase.storage.from("bicycle-invoices").remove([`${user.id}/${fileName}`])
+      const { error: storageError } = await supabase.storage.from("bicycle-invoices").remove([filePath])
 
       if (storageError) {
-        console.warn("Error deleting file from storage:", storageError)
+        console.warn("⚠️ Error deleting file from storage:", storageError)
+      } else {
+        console.log("✅ Archivo eliminado del storage")
       }
     }
 
@@ -252,6 +309,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       .eq("user_id", user.id)
 
     if (deleteError) {
+      console.error("❌ Error deleting from DB:", deleteError)
       return NextResponse.json(
         {
           error: "Error al eliminar factura de la base de datos",
@@ -260,11 +318,13 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       )
     }
 
+    console.log("✅ Factura eliminada de la DB")
+
     return NextResponse.json({
       message: "Factura eliminada correctamente",
     })
   } catch (error) {
-    console.error("Error en DELETE /api/bicycles/[id]/invoice:", error)
+    console.error("💥 Error en DELETE:", error)
     return NextResponse.json(
       {
         error: "Error interno del servidor",

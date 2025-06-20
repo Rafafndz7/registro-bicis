@@ -60,7 +60,7 @@ export async function GET(request: Request) {
     console.log("Generando certificado para:", bicycle.brand, bicycle.model)
 
     // Generar número de folio único
-    const folioNumber = `RNB-${new Date().getFullYear()}-${String(bicycle.id).padStart(6, '0')}`
+    const folioNumber = `RNB-${new Date().getFullYear()}-${String(bicycle.id).padStart(6, "0")}`
     const currentDate = new Date()
     const formattedDate = currentDate.toLocaleDateString("es-MX", {
       year: "numeric",
@@ -514,4 +514,168 @@ export async function GET(request: Request) {
         <div class="header">
           <div class="logo-container">
             <div class="logo">
-              <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgdmlld0JveD0iMCAwIDYwMCA2MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0yMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy AyNDUgMjEzIDI0NSAyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMyAyNDUgMjEzIDI0NSAyMTMgMjQ1QzIxMy
+              <img src="/logo-rnb.png" alt="RNB Logo" style="width: 100%; height: 100%; object-fit: contain;" />
+            </div>
+            <div class="header-text">
+              <h1 class="main-title">Registro Nacional de Bicicletas</h1>
+              <p class="subtitle">Certificado Oficial de Registro</p>
+              <span class="certificate-title">Bicicleta Verificada</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="document-info">
+          <div class="doc-item">
+            <div class="doc-label">Número de Folio</div>
+            <div class="doc-value">${folioNumber}</div>
+          </div>
+          <div class="doc-item">
+            <div class="doc-label">Fecha de Emisión</div>
+            <div class="doc-value">${formattedDate}</div>
+          </div>
+          <div class="doc-item">
+            <div class="doc-label">Validez del Certificado</div>
+            <div class="doc-value">Indefinida</div>
+          </div>
+        </div>
+        
+        <div class="content">
+          <div class="section">
+            <h2 class="section-title">Información del Propietario</h2>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Nombre Completo</div>
+                <div class="info-value">${bicycle.profiles?.full_name || "No Disponible"}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Correo Electrónico</div>
+                <div class="info-value">${bicycle.profiles?.email || "No Disponible"}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">CURP</div>
+                <div class="info-value">${bicycle.profiles?.curp || "No Disponible"}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Dirección</div>
+                <div class="info-value">${bicycle.profiles?.address || "No Disponible"}</div>
+              </div>
+              <div class="info-item full-width">
+                <div class="info-label">Teléfono</div>
+                <div class="info-value">${bicycle.profiles?.phone || "No Disponible"}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="section">
+            <h2 class="section-title">Detalles de la Bicicleta</h2>
+            <div class="info-grid">
+              <div class="info-item">
+                <div class="info-label">Marca</div>
+                <div class="info-value">${bicycle.brand || "No Disponible"}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Modelo</div>
+                <div class="info-value">${bicycle.model || "No Disponible"}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Año</div>
+                <div class="info-value">${bicycle.year || "No Disponible"}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Color</div>
+                <div class="info-value">${bicycle.color || "No Disponible"}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Número de Serie</div>
+                <div class="info-value">${bicycle.serial_number || "No Disponible"}</div>
+              </div>
+              <div class="info-item">
+                <div class="info-label">Tipo de Bicicleta</div>
+                <div class="info-value">${bicycle.bicycle_type || "No Disponible"}</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="verification-section">
+            Este certificado valida que la bicicleta ha sido registrada en la base de datos del Registro Nacional de Bicicletas (RNB) y está asociada al propietario actual.
+            <div class="qr-section">
+              <div>
+                Para verificar la autenticidad de este certificado, escanee el código QR con su dispositivo móvil.
+              </div>
+              <div class="qr-placeholder">
+                Código QR aquí
+              </div>
+            </div>
+          </div>
+          
+          <div class="section">
+            <h2 class="section-title">Información de la Factura</h2>
+            ${
+              invoice
+                ? `
+                <div class="invoice-section">
+                  La factura ha sido verificada y se encuentra adjunta a este certificado.
+                  <br><br>
+                  <strong>Nombre del Archivo:</strong> ${invoice.original_filename}
+                  <br>
+                  <strong>Fecha de Carga:</strong> ${new Date(invoice.upload_date).toLocaleDateString("es-MX")}
+                  <span class="status-badge status-verified">Factura Verificada</span>
+                </div>
+              `
+                : `
+                <div class="invoice-section no-invoice">
+                  No se ha adjuntado una factura a este certificado.
+                  <br><br>
+                  Para mayor seguridad, le recomendamos adjuntar la factura de compra de su bicicleta.
+                  <span class="status-badge status-pending">Factura Pendiente</span>
+                </div>
+              `
+            }
+          </div>
+        </div>
+        
+        <div class="official-seal">
+          <img src="/logo-rnb.png" alt="RNB" class="seal-logo" />
+          <div>SELLO</div>
+          <div>OFICIAL</div>
+          <div>RNB</div>
+        </div>
+        
+        <div class="footer">
+          <div class="footer-content">
+            <h3 class="footer-title">Registro Nacional de Bicicletas (RNB)</h3>
+            <p class="footer-text">
+              Este certificado es un documento oficial que acredita el registro de la bicicleta en la base de datos del RNB.
+            </p>
+            <p class="footer-text">
+              Para más información, visite nuestro sitio web o contáctenos a través de nuestros canales de atención al cliente.
+            </p>
+            <div class="footer-legal">
+              © 2024 Registro Nacional de Bicicletas. Todos los derechos reservados.
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="download-buttons no-print">
+        <a href="#" class="download-btn">Descargar Certificado (PDF)</a>
+        <a href="#" class="download-btn">Imprimir Certificado</a>
+      </div>
+    </body>
+    </html>
+    `
+
+    // Configurar encabezados para la respuesta
+    const headers = new Headers()
+    headers.append("Content-Type", "text/html")
+
+    // Retornar la respuesta con el contenido HTML y los encabezados
+    return new NextResponse(htmlContent, {
+      status: 200,
+      headers: headers,
+    })
+  } catch (error: any) {
+    console.error("Error al generar el certificado:", error)
+    return NextResponse.json({ error: "Error al generar el certificado" }, { status: 500 })
+  }
+}

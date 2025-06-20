@@ -60,6 +60,8 @@ interface Invoice {
   file_url: string
   file_name: string
   created_at: string
+  invoice_url: string
+  original_filename: string
 }
 
 export default function BicycleDetailsPage({ params }: { params: { id: string } }) {
@@ -393,10 +395,12 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
                     <FileText className="h-5 w-5 text-green-600" />
                     <div>
                       <p className="font-medium text-green-800">Factura disponible</p>
-                      <p className="text-sm text-green-600">Subida el {formatDate(invoice.created_at)}</p>
+                      <p className="text-sm text-green-600">
+                        {invoice.original_filename} - Subida el {formatDate(invoice.created_at)}
+                      </p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => window.open(invoice.file_url, "_blank")}>
+                  <Button variant="outline" size="sm" onClick={() => window.open(invoice.invoice_url, "_blank")}>
                     <FileText className="h-4 w-4 mr-1" />
                     Ver Factura
                   </Button>

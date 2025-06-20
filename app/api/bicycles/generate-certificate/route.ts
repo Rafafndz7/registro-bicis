@@ -49,6 +49,14 @@ export async function GET(request: Request) {
       )
     }
 
+    // Obtener información de la factura si existe
+    const { data: invoice } = await supabase
+      .from("bicycle_invoices")
+      .select("original_filename, upload_date")
+      .eq("bicycle_id", bicycleId)
+      .eq("user_id", session.user.id)
+      .single()
+
     console.log("Generando certificado para:", bicycle.brand, bicycle.model)
 
     // Crear contenido HTML del certificado optimizado para PDF y móviles
@@ -182,6 +190,14 @@ export async function GET(request: Request) {
           border: 1px solid #E2E8F0;
         }
         
+        .invoice-section {
+          background: #F0F9FF;
+          padding: 15px;
+          border-radius: 6px;
+          margin: 15px 0;
+          border: 1px solid #0EA5E9;
+        }
+        
         .footer {
           position: absolute;
           bottom: 20px;
@@ -260,6 +276,25 @@ export async function GET(request: Request) {
         
         .download-btn:hover {
           background-color: #2563EB;
+        }
+        
+        .status-badge {
+          display: inline-block;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 10px;
+          font-weight: bold;
+          text-transform: uppercase;
+        }
+        
+        .status-verified {
+          background-color: #10B981;
+          color: white;
+        }
+        
+        .status-pending {
+          background-color: #F59E0B;
+          color: white;
         }
         
         @media screen and (max-width: 768px) {
@@ -437,6 +472,49 @@ export async function GET(request: Request) {
             }
           </div>
         </div>
+
+        ${
+          invoice
+            ? `
+        <div class="invoice-section">
+          <div class="section-title">📄 Documentación de Compra</div>
+          <div class="info-row">
+            <span class="label">Estado de Factura:</span>
+            <span class="value">
+              <span class="status-badge status-verified">✓ FACTURA REGISTRADA</span>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="label">Archivo:</span>
+            <span class="value">${invoice.original_filename}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Fecha de Registro:</span>
+            <span class="value">${new Date(invoice.upload_date).toLocaleDateString("es-MX", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}</span>
+          </div>
+        </div>
+        `
+            : `
+        <div class="invoice-section">
+          <div class="section-title">📄 Documentación de Compra</div>
+          <div class="info-row">
+            <span class="label">Estado de Factura:</span>
+            <span class="value">
+              <span class="status-badge status-pending">⚠ SIN FACTURA REGISTRADA</span>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="value" style="font-style: italic; color: #666;">
+              No se ha registrado factura de compra para esta bicicleta
+            </span>
+          </div>
+        </div>
+        `
+        }
 
         <div class="verification">
           <div class="section-title">Verificación y Autenticidad</div>

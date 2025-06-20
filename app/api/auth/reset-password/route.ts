@@ -102,7 +102,7 @@ export async function POST(request: Request) {
 `
 
     await resend.emails.send({
-      from: "Registro Nacional de Bicis <onboarding@resend.dev>",
+      from: "Registro Nacional de Bicis <soporteregistronacionalbicis@gmail.com>",
       to: [email],
       subject: "Recuperar tu contraseña - Registro Nacional de Bicis",
       html: emailHtml,

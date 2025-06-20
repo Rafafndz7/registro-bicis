@@ -71,58 +71,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       )
     }
 
-    // Usar el bucket de bicycle-images (que ya funciona)
+    // USAR EL MISMO BUCKET QUE LAS IMÁGENES (que ya funciona perfectamente)
     const bucketName = "bicycle-images"
-
-    // Verificar que el bucket existe y es accesible
-    console.log("🔍 Verificando bucket bicycle-images...")
-    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets()
-
-    if (bucketsError) {
-      console.error("❌ Error checking buckets:", bucketsError)
-      return NextResponse.json(
-        {
-          error: "Error verificando almacenamiento: " + bucketsError.message,
-        },
-        { status: 500 },
-      )
-    }
-
-    console.log(
-      "📦 Buckets disponibles:",
-      buckets?.map((b) => b.name),
-    )
-
-    const bucketExists = buckets?.some((bucket) => bucket.name === bucketName)
-
-    if (!bucketExists) {
-      console.error(`❌ Bucket '${bucketName}' no existe`)
-      return NextResponse.json(
-        {
-          error: "El bucket de almacenamiento no existe. Contacta al administrador.",
-        },
-        { status: 500 },
-      )
-    }
-
-    console.log(`✅ Bucket '${bucketName}' existe`)
-
-    // Probar listar archivos en el bucket
-    const { data: files, error: listError } = await supabase.storage
-      .from(bucketName)
-      .list(`${user.id}/${bicycleId}`, { limit: 1 })
-
-    if (listError) {
-      console.error("❌ Error listing files:", listError)
-      return NextResponse.json(
-        {
-          error: "Error accediendo al almacenamiento: " + listError.message,
-        },
-        { status: 500 },
-      )
-    }
-
-    console.log("✅ Acceso al bucket confirmado")
 
     // Generar nombre único para el archivo (en carpeta de facturas)
     const fileExtension = file.name.split(".").pop()
@@ -131,7 +81,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     console.log("📁 Subiendo factura a:", filePath)
 
-    // Subir archivo a Supabase Storage (mismo bucket que las imágenes)
+    // Subir archivo a Supabase Storage (MISMO BUCKET que las imágenes)
     const { data: uploadData, error: uploadError } = await supabase.storage.from(bucketName).upload(filePath, file, {
       cacheControl: "3600",
       upsert: false,
@@ -149,7 +99,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     console.log("✅ Archivo subido:", uploadData.path)
 
-    // Obtener URL pública del archivo
+    // Obtener URL pública del archivo (IGUAL que las imágenes)
     const { data: urlData } = supabase.storage.from(bucketName).getPublicUrl(filePath)
 
     console.log("🔗 URL pública:", urlData.publicUrl)
@@ -165,7 +115,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       console.warn("⚠️ Error deleting old invoice:", deleteOldError)
     }
 
-    // Guardar información del archivo en la base de datos
+    // Guardar información del archivo en la base de datos (IGUAL que las imágenes)
     const { data: invoiceData, error: dbError } = await supabase
       .from("bicycle_invoices")
       .insert({
@@ -284,18 +234,15 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: "Factura no encontrada" }, { status: 404 })
     }
 
-    // Extraer el path del archivo de la URL
-    const urlParts = invoice.file_url.split("/")
+    // Extraer el path del archivo de la URL (IGUAL que las imágenes)
     const bucketName = "bicycle-images"
-
-    // El path debería ser algo como: user_id/bicycle_id/invoices/filename
     const pathParts = invoice.file_url.split(`${bucketName}/`)[1]?.split("?")[0]
     const filePath = pathParts
 
     console.log("🗑️ Eliminando archivo:", filePath)
 
     if (filePath) {
-      // Eliminar archivo de storage
+      // Eliminar archivo de storage (MISMO BUCKET que las imágenes)
       const { error: storageError } = await supabase.storage.from(bucketName).remove([filePath])
 
       if (storageError) {

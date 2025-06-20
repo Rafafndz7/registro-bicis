@@ -117,6 +117,41 @@ export interface Database {
           created_at?: string
         }
       }
+      bicycle_invoices: {
+        Row: {
+          id: string
+          bicycle_id: string
+          user_id: string
+          file_name: string
+          file_url: string
+          file_size: number | null
+          mime_type: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          bicycle_id: string
+          user_id: string
+          file_name: string
+          file_url: string
+          file_size?: number | null
+          mime_type?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          bicycle_id?: string
+          user_id?: string
+          file_name?: string
+          file_url?: string
+          file_size?: number | null
+          mime_type?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       payments: {
         Row: {
           id: string

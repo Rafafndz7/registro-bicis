@@ -202,11 +202,11 @@ body {
 }
 
 .content {
-  padding: 16px;
+  padding: 8px !important;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 4px !important;
 }
 
 .section-title {
@@ -224,13 +224,13 @@ body {
 .info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 3px !important;
+  margin-bottom: 3px !important;
 }
 
 .info-item {
   background: #F9FAFB;
-  padding: 6px;
+  padding: 3px !important;
   border-radius: 3px;
   border-left: 3px solid #6B7280;
 }
@@ -377,6 +377,7 @@ body {
 
 .section {
   page-break-inside: avoid;
+  margin-bottom: 3px !important;
 }
 
 .footer-content {
@@ -483,24 +484,84 @@ body {
   grid-column: 1 / -1;
 }
 
+/* Eliminar completamente las instrucciones y botones */
+.mobile-instructions, 
+.download-buttons,
+.no-print,
+.download-btn {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+}
+
 @media screen and (max-width: 768px) {
+  body {
+    font-size: 8px !important;
+  }
+  
   .certificate {
     border-width: 1px;
     height: auto;
+    max-height: 100vh;
+    overflow: hidden;
+  }
+  
+  .content {
+    padding: 6px !important;
+    gap: 3px !important;
   }
   
   .info-grid {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 3px !important;
   }
   
   .document-info {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 3px !important;
+    padding: 4px 6px !important;
   }
   
   .main-title {
-    font-size: 18px;
+    font-size: 16px !important;
+  }
+  
+  .section {
+    margin-bottom: 2px !important;
+  }
+  
+  .section-title {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+    margin-bottom: 3px !important;
+  }
+  
+  .info-item {
+    padding: 2px !important;
+  }
+  
+  .info-label {
+    font-size: 6px !important;
+  }
+  
+  .info-value {
+    font-size: 9px !important;
+  }
+  
+  .verification-section,
+  .invoice-section,
+  .validity-section {
+    padding: 4px !important;
+    font-size: 6px !important;
+    margin-top: 2px !important;
   }
   
   .official-seal {
@@ -508,129 +569,72 @@ body {
     right: auto;
     top: auto;
     transform: none;
-    margin: 15px auto;
+    margin: 8px auto;
+    width: 60px !important;
+    height: 60px !important;
+    font-size: 5px !important;
   }
   
+  .footer {
+    padding: 4px !important;
+    font-size: 5px !important;
+  }
+  
+  .footer-title {
+    font-size: 6px !important;
+  }
+  
+  .qr-placeholder {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 5px !important;
+  }
+  
+  .status-badge {
+    font-size: 6px !important;
+    padding: 2px 4px !important;
+  }
+  
+  /* Ocultar botones en móvil también */
   .download-btn {
-    display: block;
-    width: 90%;
-    margin: 10px auto;
-    font-size: 16px;
-    padding: 18px;
+    display: none !important;
   }
 }
 
-@media print {
+/* Media query específica para móviles en modo impresión */
+@media print and (max-width: 768px) {
   body {
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-    margin: 0 !important;
-    padding: 0 !important;
+    font-size: 7px !important;
     height: 100vh !important;
     overflow: hidden !important;
-    font-size: 7px !important;
   }
   
   .certificate {
-    border: 2px solid #6B7280 !important;
-    box-shadow: none;
     height: 100vh !important;
     max-height: 100vh !important;
-    page-break-inside: avoid;
-    display: flex !important;
-    flex-direction: column !important;
-  }
-  
-  .header {
-    padding: 6px !important;
-    flex-shrink: 0 !important;
-  }
-  
-  .main-title {
-    font-size: 14px !important;
-  }
-  
-  .document-info {
-    padding: 3px 4px !important;
-    flex-shrink: 0 !important;
-    font-size: 5px !important;
   }
   
   .content {
     padding: 4px !important;
     gap: 2px !important;
-    overflow: hidden !important;
-    flex: 1 !important;
   }
   
   .section {
     margin-bottom: 1px !important;
-    page-break-inside: avoid;
-  }
-  
-  .section-title {
-    padding: 1px 4px !important;
-    margin-bottom: 1px !important;
-    font-size: 5px !important;
   }
   
   .info-grid {
-    gap: 1px !important;
-    margin-bottom: 1px !important;
+    gap: 2px !important;
   }
   
   .info-item {
     padding: 1px !important;
   }
   
-  .info-label {
-    font-size: 4px !important;
-  }
-  
-  .info-value {
-    font-size: 6px !important;
-  }
-  
-  .verification-section,
-  .invoice-section,
-  .validity-section {
-    padding: 2px !important;
-    font-size: 4px !important;
-    margin-top: 1px !important;
-  }
-  
   .official-seal {
-    position: absolute !important;
-    width: 40px !important;
-    height: 40px !important;
+    width: 35px !important;
+    height: 35px !important;
     font-size: 4px !important;
-    top: 25% !important;
-    right: 8px !important;
-  }
-  
-  .footer {
-    padding: 3px !important;
-    flex-shrink: 0 !important;
-    font-size: 4px !important;
-  }
-  
-  .footer-title {
-    font-size: 5px !important;
-  }
-  
-  .qr-section {
-    gap: 6px !important;
-  }
-  
-  .qr-placeholder {
-    width: 30px !important;
-    height: 30px !important;
-    font-size: 4px !important;
-  }
-  
-  .status-badge {
-    font-size: 4px !important;
-    padding: 1px 2px !important;
   }
 }
       </style>

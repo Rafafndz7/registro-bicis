@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       })
     }
 
-    // Generar token de recuperación con Supabase
+    // Generar token de recuperación con Supabase - FORZAR DOMINIO CORRECTO
     const { data, error } = await supabase.auth.admin.generateLink({
       type: "recovery",
       email: email,
@@ -61,14 +61,39 @@ export async function POST(request: Request) {
       throw new Error("No se pudo generar el enlace de recuperación")
     }
 
-    // CORREGIR COMPLETAMENTE EL ENLACE - reemplazar todas las referencias a localhost
+    // CORRECCIÓN COMPLETA Y AGRESIVA DEL ENLACE
     let correctedResetUrl = resetUrl
-      .replace(/http:\/\/localhost:3000/g, "https://www.registronacionaldebicicletas.com")
+      // Reemplazar TODA la base URL de localhost
+      .replace(/https?:\/\/localhost:3000/g, "https://www.registronacionaldebicicletas.com")
       .replace(/localhost:3000/g, "www.registronacionaldebicicletas.com")
       .replace(/localhost/g, "www.registronacionaldebicicletas.com")
+      // Reemplazar específicamente en los parámetros de redirect
+      .replace(
+        /redirect_to=https?%3A%2F%2Flocalhost%3A3000/g,
+        "redirect_to=https%3A%2F%2Fwww.registronacionaldebicicletas.com",
+      )
+      .replace(/redirect_to=localhost%3A3000/g, "redirect_to=www.registronacionaldebicicletas.com")
 
     // También asegurar que el protocolo sea HTTPS
     correctedResetUrl = correctedResetUrl.replace(/^http:/, "https:")
+
+    // CREAR ENLACE COMPLETAMENTE NUEVO SI ES NECESARIO
+    if (correctedResetUrl.includes("localhost")) {
+      // Si aún contiene localhost, construir el enlace manualmente
+      const urlParams = new URL(resetUrl)
+      const accessToken =
+        urlParams.searchParams.get("access_token") || urlParams.hash.match(/access_token=([^&]+)/)?.[1]
+      const refreshToken =
+        urlParams.searchParams.get("refresh_token") || urlParams.hash.match(/refresh_token=([^&]+)/)?.[1]
+      const expiresAt = urlParams.searchParams.get("expires_at") || urlParams.hash.match(/expires_at=([^&]+)/)?.[1]
+      const expiresIn = urlParams.searchParams.get("expires_in") || urlParams.hash.match(/expires_in=([^&]+)/)?.[1]
+      const tokenType = urlParams.searchParams.get("token_type") || urlParams.hash.match(/token_type=([^&]+)/)?.[1]
+      const type = urlParams.searchParams.get("type") || urlParams.hash.match(/type=([^&]+)/)?.[1]
+
+      if (accessToken && refreshToken) {
+        correctedResetUrl = `https://www.registronacionaldebicicletas.com/auth/reset-password/confirm#access_token=${accessToken}&expires_at=${expiresAt}&expires_in=${expiresIn}&refresh_token=${refreshToken}&token_type=${tokenType}&type=${type}`
+      }
+    }
 
     console.log("URL original:", resetUrl)
     console.log("URL corregida:", correctedResetUrl)

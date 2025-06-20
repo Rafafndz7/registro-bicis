@@ -3,11 +3,14 @@ import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import Stripe from "stripe"
 
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-04-30.basil" as any,
+})
+
 export async function POST(request: Request) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
 
-    // Verificar autenticación
     const {
       data: { session },
     } = await supabase.auth.getSession()
@@ -16,58 +19,60 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    const { subscriptionId } = await request.json()
+    const { immediate = false } = await request.json()
 
-    if (!subscriptionId) {
-      return NextResponse.json({ error: "Se requiere subscriptionId" }, { status: 400 })
-    }
-
-    console.log("Cancelando suscripción:", subscriptionId)
-
-    // Verificar que la suscripción pertenezca al usuario
+    // Obtener suscripción activa
     const { data: subscription, error: subError } = await supabase
       .from("subscriptions")
       .select("*")
-      .eq("stripe_subscription_id", subscriptionId)
       .eq("user_id", session.user.id)
+      .eq("status", "active")
       .single()
 
     if (subError || !subscription) {
-      return NextResponse.json({ error: "Suscripción no encontrada" }, { status: 404 })
+      return NextResponse.json({ error: "No tienes suscripción activa" }, { status: 404 })
     }
 
-    // Inicializar Stripe
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: "2025-04-30.basil" as any,
-    })
+    if (immediate) {
+      // Cancelar inmediatamente
+      await stripe.subscriptions.cancel(subscription.stripe_subscription_id)
 
-    // Cancelar en Stripe
-    const canceledSubscription = await stripe.subscriptions.cancel(subscriptionId)
-    console.log("Suscripción cancelada en Stripe:", canceledSubscription.id)
+      // Actualizar en base de datos
+      await supabase
+        .from("subscriptions")
+        .update({
+          status: "canceled",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", subscription.id)
 
-    // Actualizar en la base de datos
-    const { error: updateError } = await supabase
-      .from("subscriptions")
-      .update({
-        status: "canceled",
-        updated_at: new Date().toISOString(),
+      return NextResponse.json({
+        success: true,
+        message: "Suscripción cancelada inmediatamente",
       })
-      .eq("stripe_subscription_id", subscriptionId)
-      .eq("user_id", session.user.id)
+    } else {
+      // Cancelar al final del período
+      await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+        cancel_at_period_end: true,
+      })
 
-    if (updateError) {
-      console.error("Error al actualizar suscripción:", updateError)
-      throw updateError
+      // Actualizar en base de datos
+      await supabase
+        .from("subscriptions")
+        .update({
+          cancel_at_period_end: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", subscription.id)
+
+      return NextResponse.json({
+        success: true,
+        message: "Suscripción se cancelará al final del período actual",
+        cancelDate: subscription.current_period_end,
+      })
     }
-
-    console.log("Suscripción cancelada exitosamente")
-
-    return NextResponse.json({
-      success: true,
-      message: "Suscripción cancelada exitosamente",
-    })
   } catch (error) {
     console.error("Error al cancelar suscripción:", error)
-    return NextResponse.json({ error: "Error al cancelar suscripción", details: error }, { status: 500 })
+    return NextResponse.json({ error: "Error al cancelar suscripción" }, { status: 500 })
   }
 }

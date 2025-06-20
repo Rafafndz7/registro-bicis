@@ -21,6 +21,34 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
+    // Verificar suscripción activa del usuario
+    const { data: subscription, error: subscriptionError } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single()
+
+    if (subscriptionError || !subscription) {
+      console.error("Error al verificar suscripción:", subscriptionError)
+      return NextResponse.json({ error: "No tienes una suscripción activa para generar certificados" }, { status: 403 })
+    }
+
+    // Verificar si la suscripción está próxima a vencer (menos de 7 días)
+    const currentDate = new Date()
+    const expirationDate = new Date(subscription.current_period_end)
+    const daysUntilExpiration = Math.ceil((expirationDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24))
+
+    // Si la suscripción ya expiró
+    if (expirationDate < currentDate) {
+      return NextResponse.json(
+        { error: "Tu suscripción ha expirado. Renueva tu suscripción para generar certificados." },
+        { status: 403 },
+      )
+    }
+
     // Obtener datos de la bicicleta y el usuario
     const { data: bicycle, error: bicycleError } = await supabase
       .from("bicycles")
@@ -61,12 +89,27 @@ export async function GET(request: Request) {
 
     // Generar número de folio único
     const folioNumber = `RNB-${new Date().getFullYear()}-${String(bicycle.id).padStart(6, "0")}`
-    const currentDate = new Date()
-    const formattedDate = currentDate.toLocaleDateString("es-MX", {
+    const currentDateFormatted = currentDate.toLocaleDateString("es-MX", {
       year: "numeric",
       month: "long",
       day: "numeric",
     })
+
+    // Formatear fecha de vencimiento de la suscripción
+    const expirationDateFormatted = expirationDate.toLocaleDateString("es-MX", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+
+    // Determinar el estado de validez
+    let validityStatus = "Válido"
+    let validityClass = "status-verified"
+
+    if (daysUntilExpiration <= 7) {
+      validityStatus = `Expira en ${daysUntilExpiration} día${daysUntilExpiration !== 1 ? "s" : ""}`
+      validityClass = "status-pending"
+    }
 
     // Crear contenido HTML del certificado como factura oficial
     const htmlContent = `
@@ -87,7 +130,7 @@ body {
   background: white;
   color: #333;
   line-height: 1.2;
-  font-size: 9px;
+  font-size: 10px;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
@@ -105,7 +148,7 @@ body {
 .header {
   background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
   color: white;
-  padding: 12px;
+  padding: 16px;
   text-align: center;
   position: relative;
   flex-shrink: 0;
@@ -122,7 +165,7 @@ body {
 }
 
 .main-title {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: bold;
   letter-spacing: 1px;
   margin-bottom: 2px;
@@ -159,17 +202,17 @@ body {
 }
 
 .content {
-  padding: 12px;
+  padding: 16px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .section-title {
   background: linear-gradient(90deg, #4F46E5, #3B82F6);
   color: white;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: bold;
   padding: 4px 10px;
   margin-bottom: 8px;
@@ -203,7 +246,7 @@ body {
 
 .info-value {
   color: #1F2937;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
 }
 
@@ -223,6 +266,21 @@ body {
   border: 2px solid #10B981;
   position: relative;
   font-size: 8px;
+}
+
+.validity-section {
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  padding: 8px;
+  border-radius: 6px;
+  border: 2px solid #F59E0B;
+  position: relative;
+  font-size: 8px;
+  margin-top: 8px;
+}
+
+.validity-section.valid {
+  background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+  border-color: #10B981;
 }
 
 .official-seal {
@@ -312,7 +370,7 @@ body {
 }
 
 .doc-value {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: bold;
   color: #1F2937;
 }
@@ -408,6 +466,11 @@ body {
 
 .status-pending {
   background: #F59E0B;
+  color: white;
+}
+
+.status-expired {
+  background: #EF4444;
   color: white;
 }
 
@@ -508,7 +571,7 @@ body {
   
   /* Optimizar espacios para una sola página */
   .header {
-    padding: 8px !important;
+    padding: 12px !important;
     flex-shrink: 0 !important;
   }
   
@@ -518,9 +581,8 @@ body {
   }
   
   .content {
-    padding: 8px !important;
-    flex: 1 !important;
-    gap: 6px !important;
+    padding: 12px !important;
+    gap: 8px !important;
     overflow: hidden !important;
   }
   
@@ -535,7 +597,7 @@ body {
   }
   
   .section-title {
-    padding: 3px 8px !important;
+    padding: 4px 10px !important;
     margin-bottom: 4px !important;
     font-size: 8px !important;
   }
@@ -550,7 +612,8 @@ body {
   }
   
   .verification-section,
-  .invoice-section {
+  .invoice-section,
+  .validity-section {
     padding: 6px !important;
     font-size: 7px !important;
   }
@@ -603,11 +666,7 @@ body {
           </div>
           <div class="doc-item">
             <div class="doc-label">Fecha de Emisión</div>
-            <div class="doc-value">${formattedDate}</div>
-          </div>
-          <div class="doc-item">
-            <div class="doc-label">Validez del Certificado</div>
-            <div class="doc-value">Indefinida</div>
+            <div class="doc-value">${currentDateFormatted}</div>
           </div>
         </div>
         
@@ -678,6 +737,15 @@ body {
                 Código QR aquí
               </div>
             </div>
+          </div>
+
+          <div class="validity-section ${daysUntilExpiration > 7 ? "valid" : ""}">
+            <strong>Estado de Validez:</strong> Este certificado es válido mientras la suscripción del propietario esté activa.
+            <br><br>
+            <strong>Plan:</strong> ${subscription.plan_type} (${subscription.bicycle_limit} bicicleta${subscription.bicycle_limit !== 1 ? "s" : ""})
+            <br>
+            <strong>Vence:</strong> ${expirationDateFormatted}
+            <span class="status-badge ${validityClass}">${validityStatus}</span>
           </div>
           
           <div class="section">

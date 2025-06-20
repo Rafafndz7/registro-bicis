@@ -20,6 +20,7 @@ import {
   Trash2,
   AlertTriangle,
   FileText,
+  User,
 } from "lucide-react"
 import Link from "next/link"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -64,6 +65,11 @@ interface Invoice {
   original_filename: string
 }
 
+interface Profile {
+  full_name: string | null
+  phone: string | null
+}
+
 export default function BicycleDetailsPage({ params }: { params: { id: string } }) {
   const { user } = useAuth()
   const router = useRouter()
@@ -71,6 +77,7 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
   const [bicycle, setBicycle] = useState<Bicycle | null>(null)
   const [images, setImages] = useState<BicycleImage[]>([])
   const [invoice, setInvoice] = useState<Invoice | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [downloadingCertificate, setDownloadingCertificate] = useState(false)
@@ -103,8 +110,20 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
 
         if (imagesError) throw imagesError
 
+        // Obtener perfil del usuario
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("full_name, phone")
+          .eq("id", user.id)
+          .single()
+
+        if (profileError) {
+          console.error("Error al cargar perfil:", profileError)
+        }
+
         setBicycle(bicycleData)
         setImages(imagesData || [])
+        setProfile(profileData)
         if (imagesData && imagesData.length > 0) {
           setSelectedImage(imagesData[0].image_url)
         }
@@ -322,6 +341,22 @@ export default function BicycleDetailsPage({ params }: { params: { id: string } 
               ))}
             </div>
           )}
+
+          {/* Información del propietario */}
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <User className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-medium text-blue-800">Propietario</h3>
+                  <p className="text-blue-900 font-semibold">{profile?.full_name || "No disponible"}</p>
+                  {profile?.phone && <p className="text-sm text-blue-600">{profile.phone}</p>}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="space-y-6">

@@ -14,6 +14,8 @@ export async function POST(request: Request) {
     const body = await request.json()
     const { email } = resetPasswordSchema.parse(body)
 
+    console.log("Iniciando proceso de reset para:", email)
+
     const supabase = createServerClient()
 
     // Verificar que el usuario existe
@@ -22,6 +24,9 @@ export async function POST(request: Request) {
       .select("email, full_name")
       .eq("email", email)
       .single()
+
+    console.log("Usuario encontrado:", user)
+    console.log("Error de usuario:", userError)
 
     if (userError || !user) {
       // Por seguridad, no revelamos si el email existe o no
@@ -40,6 +45,9 @@ export async function POST(request: Request) {
       },
     })
 
+    console.log("Enlace generado:", data)
+    console.log("Error generando enlace:", error)
+
     if (error) {
       console.error("Error generando enlace:", error)
       throw error
@@ -51,6 +59,8 @@ export async function POST(request: Request) {
     if (!resetUrl) {
       throw new Error("No se pudo generar el enlace de recuperación")
     }
+
+    console.log("URL de reset:", resetUrl)
 
     const emailHtml = `
   <!DOCTYPE html>
@@ -101,19 +111,23 @@ export async function POST(request: Request) {
   </html>
 `
 
-    await resend.emails.send({
+    console.log("Enviando email...")
+
+    const emailResult = await resend.emails.send({
       from: "Registro Nacional de Bicis <soporteregistronacionalbicis@gmail.com>",
       to: [email],
       subject: "Recuperar tu contraseña - Registro Nacional de Bicis",
       html: emailHtml,
     })
 
+    console.log("Resultado del envío:", emailResult)
+
     return NextResponse.json({
       success: true,
       message: "Se ha enviado un enlace de recuperación a tu correo electrónico.",
     })
   } catch (error: any) {
-    console.error("Error en reset password:", error)
+    console.error("Error completo en reset password:", error)
 
     if (error.message?.includes("rate limit")) {
       return NextResponse.json(

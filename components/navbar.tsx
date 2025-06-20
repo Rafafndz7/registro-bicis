@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { BikeIcon as BicycleIcon, User, Menu, LogOut, Home, Info, Phone, FileText, Shield } from "lucide-react"
+import { BikeIcon as BicycleIcon, User, Menu, LogOut, Home, Info, Phone, FileText, Shield, Search } from "lucide-react"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { useRouter } from "next/navigation"
 
@@ -72,6 +72,7 @@ export function Navbar() {
 
   const navItems = [
     { name: "Inicio", href: "/", icon: <Home className="h-4 w-4 mr-2" /> },
+    { name: "Buscar", href: "/search", icon: <Search className="h-4 w-4 mr-2" /> },
     { name: "Acerca de", href: "/about", icon: <Info className="h-4 w-4 mr-2" /> },
     { name: "Contacto", href: "/contact", icon: <Phone className="h-4 w-4 mr-2" /> },
   ]

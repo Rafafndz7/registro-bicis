@@ -196,7 +196,17 @@ export default function ManageSubscriptionPage() {
     )
   }
 
-  const currentPlan = planDetails[subscription.plan_type as keyof typeof planDetails]
+  // Verificar si el plan existe en planDetails
+  const validPlan = planDetails[subscription.plan_type as keyof typeof planDetails]
+  if (!validPlan) {
+    console.warn(`Plan type ${subscription.plan_type} not found in planDetails`)
+  }
+
+  const currentPlan = planDetails[subscription.plan_type as keyof typeof planDetails] || {
+    name: subscription.plan_type,
+    price: 0,
+    bicycles: subscription.bicycle_limit,
+  }
   const availablePlans = Object.entries(planDetails).filter(([key]) => key !== subscription.plan_type)
 
   return (

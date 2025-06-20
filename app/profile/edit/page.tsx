@@ -46,6 +46,15 @@ export default function EditProfilePage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPasswordSection, setShowPasswordSection] = useState(false)
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  })
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -112,6 +121,48 @@ export default function EditProfilePage() {
       setError("Error al actualizar perfil")
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handlePasswordChange = async () => {
+    if (!passwordData.newPassword || !passwordData.confirmPassword) {
+      setPasswordError("Todos los campos son requeridos")
+      return
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError("Las contraseñas no coinciden")
+      return
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      setPasswordError("La contraseña debe tener al menos 6 caracteres")
+      return
+    }
+
+    setIsChangingPassword(true)
+    setPasswordError(null)
+    setPasswordSuccess(null)
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword,
+      })
+
+      if (error) throw error
+
+      setPasswordSuccess("Contraseña actualizada correctamente")
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      })
+      setShowPasswordSection(false)
+    } catch (error) {
+      console.error("Error al cambiar contraseña:", error)
+      setPasswordError("Error al cambiar contraseña")
+    } finally {
+      setIsChangingPassword(false)
     }
   }
 
@@ -246,6 +297,61 @@ export default function EditProfilePage() {
               </Button>
             </form>
           </Form>
+          {/* Sección de Cambio de Contraseña */}
+          <div className="border-t pt-6 mt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Cambiar Contraseña</h3>
+              <Button type="button" variant="outline" onClick={() => setShowPasswordSection(!showPasswordSection)}>
+                {showPasswordSection ? "Cancelar" : "Cambiar Contraseña"}
+              </Button>
+            </div>
+
+            {showPasswordSection && (
+              <div className="space-y-4">
+                {passwordError && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{passwordError}</AlertDescription>
+                  </Alert>
+                )}
+
+                {passwordSuccess && (
+                  <Alert className="bg-green-50">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <AlertTitle className="text-green-600">Éxito</AlertTitle>
+                    <AlertDescription className="text-green-600">{passwordSuccess}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">Nueva Contraseña</label>
+                    <Input
+                      type="password"
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData((prev) => ({ ...prev, newPassword: e.target.value }))}
+                      placeholder="Ingresa tu nueva contraseña"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium">Confirmar Nueva Contraseña</label>
+                    <Input
+                      type="password"
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                      placeholder="Confirma tu nueva contraseña"
+                    />
+                  </div>
+
+                  <Button type="button" onClick={handlePasswordChange} disabled={isChangingPassword} className="w-full">
+                    {isChangingPassword ? "Cambiando..." : "Cambiar Contraseña"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         </CardContent>
         <CardFooter className="flex justify-between">
           <Button variant="outline" onClick={() => router.push("/profile")}>

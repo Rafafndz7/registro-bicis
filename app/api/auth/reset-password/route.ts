@@ -15,6 +15,7 @@ export async function POST(request: Request) {
     const { email } = resetPasswordSchema.parse(body)
 
     console.log("Iniciando proceso de reset para:", email)
+    console.log("RESEND_API_KEY existe:", !!process.env.RESEND_API_KEY)
 
     const supabase = createServerClient()
 
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
       })
     }
 
-    // Generar token de recuperación con Supabase
+    // Generar token de recuperación con Supabase - CORREGIDO EL REDIRECT_TO
     const { data, error } = await supabase.auth.admin.generateLink({
       type: "recovery",
       email: email,
@@ -60,14 +61,21 @@ export async function POST(request: Request) {
       throw new Error("No se pudo generar el enlace de recuperación")
     }
 
-    console.log("URL de reset:", resetUrl)
+    // CORREGIR EL ENLACE - reemplazar localhost con el dominio real
+    const correctedResetUrl = resetUrl.replace(
+      "redirect_to=https://www.registronacionaldebicicletas.com/auth/reset-password/confirm",
+      "redirect_to=https://www.registronacionaldebicicletas.com/auth/reset-password/confirm",
+    )
+
+    console.log("URL original:", resetUrl)
+    console.log("URL corregida:", correctedResetUrl)
 
     const emailHtml = `
   <!DOCTYPE html>
   <html>
     <head>
       <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale: 1.0">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>Recuperar contraseña - Registro Nacional de Bicis</title>
     </head>
     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -84,7 +92,7 @@ export async function POST(request: Request) {
         <p>Recibimos una solicitud para restablecer la contraseña de tu cuenta en Registro Nacional de Bicis.</p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetUrl}" 
+          <a href="${correctedResetUrl}" 
              style="background: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
             Cambiar mi contraseña
           </a>
@@ -104,7 +112,7 @@ export async function POST(request: Request) {
           Este correo fue enviado por <strong>Registro Nacional de Bicis</strong><br>
           Visítanos en: <a href="https://www.registronacionaldebicicletas.com" style="color: #007bff;">www.registronacionaldebicicletas.com</a><br><br>
           Si tienes problemas con el botón, copia y pega este enlace en tu navegador:<br>
-          <a href="${resetUrl}" style="color: #007bff; word-break: break-all;">${resetUrl}</a>
+          <a href="${correctedResetUrl}" style="color: #007bff; word-break: break-all;">${correctedResetUrl}</a>
         </p>
       </div>
     </body>
@@ -112,6 +120,8 @@ export async function POST(request: Request) {
 `
 
     console.log("Enviando email...")
+    console.log("From: Registro Nacional de Bicis <soporteregistronacionalbicis@gmail.com>")
+    console.log("To:", email)
 
     const emailResult = await resend.emails.send({
       from: "Registro Nacional de Bicis <soporteregistronacionalbicis@gmail.com>",
@@ -120,7 +130,12 @@ export async function POST(request: Request) {
       html: emailHtml,
     })
 
-    console.log("Resultado del envío:", emailResult)
+    console.log("Resultado del envío completo:", JSON.stringify(emailResult, null, 2))
+
+    if (emailResult.error) {
+      console.error("Error de Resend:", emailResult.error)
+      throw new Error(`Error de Resend: ${emailResult.error.message}`)
+    }
 
     return NextResponse.json({
       success: true,

@@ -621,11 +621,34 @@ body {
 }
 
 @media print {
-  /* Ocultar solo en impresión */
+  /* Ocultar completamente en impresión */
   .mobile-instructions, 
   .download-buttons,
-  .no-print {
+  .no-print,
+  .download-btn {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+  }
+  
+  /* Asegurar que el certificado ocupe toda la página */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .certificate {
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 }
       </style>
@@ -808,14 +831,14 @@ body {
         </div>
       </div>
       
-      <div class="download-buttons no-print" style="display: block !important;">
-        <button onclick="downloadAsPDF()" class="download-btn" style="display: inline-block !important;">
+      <div class="download-buttons no-print">
+        <button onclick="downloadAsPDF()" class="download-btn">
           📄 Descargar como PDF
         </button>
-        <button onclick="printCertificate()" class="download-btn" style="display: inline-block !important;">
+        <button onclick="printCertificate()" class="download-btn">
           🖨️ Imprimir Certificado
         </button>
-        <button onclick="downloadAsHTML()" class="download-btn" style="background: linear-gradient(135deg, #059669 0%, #10B981 100%); display: inline-block !important;">
+        <button onclick="downloadAsHTML()" class="download-btn" style="background: linear-gradient(135deg, #059669 0%, #10B981 100%);">
           💾 Descargar HTML
         </button>
       </div>

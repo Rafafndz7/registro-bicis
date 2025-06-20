@@ -121,10 +121,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       .insert({
         bicycle_id: bicycleId,
         user_id: user.id,
-        file_name: file.name,
-        file_url: urlData.publicUrl,
+        original_filename: file.name, // Usar original_filename en lugar de file_name
+        invoice_url: urlData.publicUrl, // Usar invoice_url en lugar de file_url
         file_size: file.size,
         mime_type: file.type,
+        upload_date: new Date().toISOString(), // Agregar upload_date
       })
       .select()
       .single()

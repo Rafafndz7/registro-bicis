@@ -50,42 +50,53 @@ export default function ResetPasswordConfirmPage() {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession()
-
-        if (error) {
-          console.error("Error checking session:", error)
-          setIsValidSession(false)
-          return
-        }
-
-        // Verificar si hay parámetros de recuperación en la URL
+        // Primero verificar si hay parámetros de recuperación en la URL
         const accessToken = searchParams.get("access_token")
         const refreshToken = searchParams.get("refresh_token")
         const type = searchParams.get("type")
 
+        console.log("URL params:", { accessToken: !!accessToken, refreshToken: !!refreshToken, type })
+
         if (type === "recovery" && accessToken && refreshToken) {
           // Establecer la sesión con los tokens de recuperación
-          const { error: sessionError } = await supabase.auth.setSession({
+          const { data, error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           })
 
           if (sessionError) {
             console.error("Error setting session:", sessionError)
+            setError("El enlace de recuperación es inválido o ha expirado.")
             setIsValidSession(false)
           } else {
+            console.log("Session set successfully:", data)
             setIsValidSession(true)
           }
-        } else if (session) {
-          setIsValidSession(true)
         } else {
-          setIsValidSession(false)
+          // Verificar si ya hay una sesión activa
+          const {
+            data: { session },
+            error,
+          } = await supabase.auth.getSession()
+
+          if (error) {
+            console.error("Error checking session:", error)
+            setIsValidSession(false)
+            return
+          }
+
+          if (session) {
+            console.log("Existing session found")
+            setIsValidSession(true)
+          } else {
+            console.log("No valid session or recovery tokens")
+            setError("El enlace de recuperación es inválido o ha expirado.")
+            setIsValidSession(false)
+          }
         }
       } catch (error) {
         console.error("Error in session check:", error)
+        setError("Error al verificar el enlace de recuperación.")
         setIsValidSession(false)
       }
     }
@@ -107,7 +118,7 @@ export default function ResetPasswordConfirmPage() {
         throw error
       }
 
-      setSuccess("Contraseña actualizada exitosamente. Serás redirigido al inicio de sesión.")
+      setSuccess("¡Contraseña actualizada exitosamente! Serás redirigido al inicio de sesión.")
 
       // Redirigir después de 3 segundos
       setTimeout(() => {
@@ -136,7 +147,7 @@ export default function ResetPasswordConfirmPage() {
           <CardContent className="flex items-center justify-center p-8">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Verificando enlace...</p>
+              <p className="text-gray-600">Verificando enlace de recuperación...</p>
             </div>
           </CardContent>
         </Card>
@@ -165,7 +176,9 @@ export default function ResetPasswordConfirmPage() {
               <Alert variant="destructive" className="mb-6">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Enlace expirado</AlertTitle>
-                <AlertDescription>Por favor solicita un nuevo enlace de recuperación de contraseña.</AlertDescription>
+                <AlertDescription>
+                  {error || "Por favor solicita un nuevo enlace de recuperación de contraseña."}
+                </AlertDescription>
               </Alert>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4 px-6 pb-6">

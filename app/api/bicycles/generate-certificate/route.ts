@@ -138,7 +138,7 @@ body {
 .certificate {
   max-width: 100%;
   margin: 0 auto;
-  border: 2px solid #4F46E5;
+  border: 2px solid #6B7280;
   background-color: #fff;
   position: relative;
   display: flex;
@@ -193,7 +193,7 @@ body {
 .document-info {
   background: #F8FAFC;
   padding: 8px 12px;
-  border-bottom: 3px solid #4F46E5;
+  border-bottom: 3px solid #6B7280;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 12px;
@@ -210,7 +210,7 @@ body {
 }
 
 .section-title {
-  background: linear-gradient(90deg, #4F46E5, #3B82F6);
+  background: linear-gradient(90deg, #6B7280, #9CA3AF);
   color: white;
   font-size: 11px;
   font-weight: bold;
@@ -232,7 +232,7 @@ body {
   background: #F9FAFB;
   padding: 6px;
   border-radius: 3px;
-  border-left: 3px solid #4F46E5;
+  border-left: 3px solid #6B7280;
 }
 
 .info-label {
@@ -284,6 +284,8 @@ body {
 }
 
 .official-seal {
+  background: radial-gradient(circle, #6B7280 0%, #374151 100%);
+  box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
   position: absolute;
   top: 35%;
   right: 15px;
@@ -434,6 +436,9 @@ body {
 }
 
 .qr-placeholder {
+  border: 2px solid #6B7280;
+  color: #6B7280;
+  background: linear-gradient(45deg, #F3F4F6, #E5E7EB);
   width: 60px;
   height: 60px;
   border: 2px solid #4F46E5;
@@ -521,6 +526,33 @@ body {
 }
 
 @media print {
+  /* Forzar altura específica para móviles */
+  .certificate {
+    height: 297mm !important; /* Altura A4 */
+    max-height: 297mm !important;
+  }
+  
+  /* Reducir aún más los espacios en móviles */
+  .content {
+    padding: 8px !important;
+    gap: 4px !important;
+  }
+  
+  .section {
+    margin-bottom: 3px !important;
+  }
+  
+  .info-grid {
+    gap: 2px !important;
+    margin-bottom: 2px !important;
+  }
+  
+  .verification-section,
+  .invoice-section,
+  .validity-section {
+    padding: 4px !important;
+    font-size: 6px !important;
+  }
   body {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;

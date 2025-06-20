@@ -71,8 +71,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       )
     }
 
+    // Usar el bucket de bicycle-images (que ya funciona)
+    const bucketName = "bicycle-images"
+
     // Verificar que el bucket existe y es accesible
-    console.log("🔍 Verificando bucket...")
+    console.log("🔍 Verificando bucket bicycle-images...")
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets()
 
     if (bucketsError) {
@@ -90,10 +93,10 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       buckets?.map((b) => b.name),
     )
 
-    const bucketExists = buckets?.some((bucket) => bucket.name === "bicycle-invoices")
+    const bucketExists = buckets?.some((bucket) => bucket.name === bucketName)
 
     if (!bucketExists) {
-      console.error("❌ Bucket 'bicycle-invoices' no existe")
+      console.error(`❌ Bucket '${bucketName}' no existe`)
       return NextResponse.json(
         {
           error: "El bucket de almacenamiento no existe. Contacta al administrador.",
@@ -102,12 +105,12 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       )
     }
 
-    console.log("✅ Bucket 'bicycle-invoices' existe")
+    console.log(`✅ Bucket '${bucketName}' existe`)
 
     // Probar listar archivos en el bucket
     const { data: files, error: listError } = await supabase.storage
-      .from("bicycle-invoices")
-      .list(user.id, { limit: 1 })
+      .from(bucketName)
+      .list(`${user.id}/${bicycleId}`, { limit: 1 })
 
     if (listError) {
       console.error("❌ Error listing files:", listError)
@@ -121,20 +124,18 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
 
     console.log("✅ Acceso al bucket confirmado")
 
-    // Generar nombre único para el archivo
+    // Generar nombre único para el archivo (en carpeta de facturas)
     const fileExtension = file.name.split(".").pop()
-    const fileName = `${bicycleId}-${Date.now()}.${fileExtension}`
-    const filePath = `${user.id}/${fileName}`
+    const fileName = `invoice-${Date.now()}.${fileExtension}`
+    const filePath = `${user.id}/${bicycleId}/invoices/${fileName}`
 
-    console.log("📁 Subiendo archivo a:", filePath)
+    console.log("📁 Subiendo factura a:", filePath)
 
-    // Subir archivo a Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("bicycle-invoices")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: false,
-      })
+    // Subir archivo a Supabase Storage (mismo bucket que las imágenes)
+    const { data: uploadData, error: uploadError } = await supabase.storage.from(bucketName).upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+    })
 
     if (uploadError) {
       console.error("❌ Error uploading to storage:", uploadError)
@@ -149,7 +150,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     console.log("✅ Archivo subido:", uploadData.path)
 
     // Obtener URL pública del archivo
-    const { data: urlData } = supabase.storage.from("bicycle-invoices").getPublicUrl(filePath)
+    const { data: urlData } = supabase.storage.from(bucketName).getPublicUrl(filePath)
 
     console.log("🔗 URL pública:", urlData.publicUrl)
 
@@ -181,7 +182,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     if (dbError) {
       console.error("❌ Database error:", dbError)
       // Si falla la inserción en DB, eliminar archivo subido
-      await supabase.storage.from("bicycle-invoices").remove([filePath])
+      await supabase.storage.from(bucketName).remove([filePath])
 
       return NextResponse.json(
         {
@@ -285,14 +286,17 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     // Extraer el path del archivo de la URL
     const urlParts = invoice.file_url.split("/")
-    const fileName = urlParts[urlParts.length - 1]?.split("?")[0]
-    const filePath = `${user.id}/${fileName}`
+    const bucketName = "bicycle-images"
+
+    // El path debería ser algo como: user_id/bicycle_id/invoices/filename
+    const pathParts = invoice.file_url.split(`${bucketName}/`)[1]?.split("?")[0]
+    const filePath = pathParts
 
     console.log("🗑️ Eliminando archivo:", filePath)
 
-    if (fileName) {
+    if (filePath) {
       // Eliminar archivo de storage
-      const { error: storageError } = await supabase.storage.from("bicycle-invoices").remove([filePath])
+      const { error: storageError } = await supabase.storage.from(bucketName).remove([filePath])
 
       if (storageError) {
         console.warn("⚠️ Error deleting file from storage:", storageError)

@@ -7,11 +7,11 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-04-30.basil" as any,
 })
 
-// Price IDs de PRODUCCIÓN
+// Actualizar los Price IDs de PRODUCCIÓN - cambiar el plan familiar
 const PLAN_PRICE_IDS = {
   basic: "price_1RbaIiP2bAdrMLI6LPeUmgmN", // $40 MXN
   standard: "price_1RbaJWP2bAdrMLI61k1RvTtn", // $60 MXN
-  family: "price_1RbaKNP2bAdrMLI6IehK5s3o", // $120 MXN
+  family: "price_NUEVO_PRICE_ID_FAMILIAR_120", // $120 MXN - ACTUALIZAR CON EL NUEVO PRICE ID
   premium: "price_1RbaKoP2bAdrMLI6iNSK4dHl", // $180 MXN
 }
 

@@ -14,6 +14,24 @@ export function formatDate(dateString: string): string {
   }).format(date)
 }
 
+// Nueva función para formatear moneda
+export function formatCurrency(amount: number, currency = "MXN"): string {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: currency,
+  }).format(amount)
+}
+
+// Nueva función para formatear fechas largas
+export function formatLongDate(dateString: string): string {
+  const date = new Date(dateString)
+  return date.toLocaleDateString("es-ES", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })
+}
+
 /**
  * Valida una CURP (Clave Única de Registro de Población) mexicana
  * @param curp - La CURP a validar

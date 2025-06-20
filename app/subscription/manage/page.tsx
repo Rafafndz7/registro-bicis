@@ -8,97 +8,170 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Progress } from "@/components/ui/progress"
-import { CheckCircle, Calendar, CreditCard, Users, Bike, Crown, Star, AlertCircle, ArrowLeft } from "lucide-react"
-import Link from "next/link"
+import { Skeleton } from "@/components/ui/skeleton"
+import { formatDate } from "@/lib/utils"
+import { CreditCard, Calendar, Users, AlertTriangle, ArrowDownCircle, X } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+interface Subscription {
+  id: string
+  plan_type: string
+  bicycle_limit: number
+  status: string
+  current_period_start: string
+  current_period_end: string
+  cancel_at_period_end: boolean
+  pending_plan_change: string | null
+  pending_plan_change_date: string | null
+  created_at: string
+}
+
+const planDetails = {
+  basic: { name: "Básico", price: 40, bicycles: 1 },
+  standard: { name: "Estándar", price: 60, bicycles: 2 },
+  family: { name: "Familiar", price: 120, bicycles: 4 },
+  premium: { name: "Premium", price: 180, bicycles: 6 },
+}
 
 export default function ManageSubscriptionPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
   const router = useRouter()
   const supabase = createClientComponentClient()
+  const [subscription, setSubscription] = useState<Subscription | null>(null)
   const [loading, setLoading] = useState(true)
-  const [subscription, setSubscription] = useState<any>(null)
-  const [bicycleCount, setBicycleCount] = useState(0)
+  const [actionLoading, setActionLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [selectedPlan, setSelectedPlan] = useState<string>("")
 
   useEffect(() => {
-    if (authLoading) return
-
     if (!user) {
-      router.push("/auth/login?redirectTo=/subscription/manage")
+      router.push("/auth/login")
       return
     }
 
-    fetchSubscriptionData()
-  }, [user, authLoading, router])
+    fetchSubscription()
+  }, [user, router])
 
-  const fetchSubscriptionData = async () => {
+  const fetchSubscription = async () => {
     if (!user) return
 
     try {
-      // Obtener suscripción activa
-      const { data: subscriptionData, error: subError } = await supabase
+      const { data, error } = await supabase
         .from("subscriptions")
         .select("*")
         .eq("user_id", user.id)
         .eq("status", "active")
         .single()
 
-      if (subError) {
-        console.error("Error fetching subscription:", subError)
-        router.push("/subscription")
-        return
+      if (error && error.code !== "PGRST116") {
+        throw error
       }
 
-      setSubscription(subscriptionData)
-
-      // Contar bicicletas registradas
-      const { count, error: countError } = await supabase
-        .from("bicycles")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-
-      if (!countError) {
-        setBicycleCount(count || 0)
-      }
+      setSubscription(data)
     } catch (error) {
-      console.error("Error:", error)
-      router.push("/subscription")
+      console.error("Error al cargar suscripción:", error)
+      setError("Error al cargar la suscripción")
     } finally {
       setLoading(false)
     }
   }
 
-  const getPlanIcon = (planType: string) => {
-    switch (planType) {
-      case "premium":
-        return <Crown className="w-6 h-6 text-yellow-500" />
-      case "familiar":
-        return <Users className="w-6 h-6 text-blue-500" />
-      case "estándar":
-        return <Star className="w-6 h-6 text-green-500" />
-      default:
-        return <Bike className="w-6 h-6 text-gray-500" />
+  const handleCancelSubscription = async (immediate = false) => {
+    if (!subscription) return
+
+    setActionLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch("/api/subscriptions/cancel", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ immediate }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al cancelar suscripción")
+      }
+
+      // Recargar datos
+      await fetchSubscription()
+
+      // Mostrar mensaje de éxito
+      alert(result.message)
+    } catch (error) {
+      console.error("Error al cancelar suscripción:", error)
+      setError(error instanceof Error ? error.message : "Error al cancelar suscripción")
+    } finally {
+      setActionLoading(false)
     }
   }
 
-  const getPlanColor = (planType: string) => {
-    switch (planType) {
-      case "premium":
-        return "bg-gradient-to-r from-yellow-400 to-orange-500"
-      case "familiar":
-        return "bg-gradient-to-r from-blue-400 to-blue-600"
-      case "estándar":
-        return "bg-gradient-to-r from-green-400 to-green-600"
-      default:
-        return "bg-gradient-to-r from-gray-400 to-gray-600"
+  const handleChangePlan = async () => {
+    if (!subscription || !selectedPlan) return
+
+    setActionLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch("/api/subscriptions/change-plan", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ newPlan: selectedPlan }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Error al cambiar plan")
+      }
+
+      // Recargar datos
+      await fetchSubscription()
+
+      // Mostrar mensaje de éxito
+      alert(result.message)
+      setSelectedPlan("")
+    } catch (error) {
+      console.error("Error al cambiar plan:", error)
+      setError(error instanceof Error ? error.message : "Error al cambiar plan")
+    } finally {
+      setActionLoading(false)
     }
   }
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
-      <div className="container mx-auto max-w-4xl py-10">
-        <div className="flex items-center justify-center py-20">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      <div className="container py-10">
+        <div className="mx-auto max-w-4xl space-y-8">
+          <Skeleton className="h-8 w-64" />
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-10 w-32" />
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
@@ -106,212 +179,205 @@ export default function ManageSubscriptionPage() {
 
   if (!subscription) {
     return (
-      <div className="container mx-auto max-w-4xl py-10">
-        <Card>
-          <CardHeader>
-            <CardTitle>No tienes suscripción activa</CardTitle>
-            <CardDescription>Necesitas una suscripción para acceder a esta página</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/subscription">
-              <Button>Ver planes de suscripción</Button>
-            </Link>
-          </CardContent>
-        </Card>
+      <div className="container py-10">
+        <div className="mx-auto max-w-4xl">
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-10">
+              <CreditCard className="mb-4 h-16 w-16 text-muted-foreground" />
+              <h2 className="mb-2 text-xl font-semibold">No tienes suscripción activa</h2>
+              <p className="mb-6 text-center text-muted-foreground">
+                Necesitas una suscripción para registrar bicicletas
+              </p>
+              <Button onClick={() => router.push("/subscription")}>Ver planes de suscripción</Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     )
   }
 
-  const usagePercentage = (bicycleCount / subscription.bicycle_limit) * 100
+  const currentPlan = planDetails[subscription.plan_type as keyof typeof planDetails]
+  const availablePlans = Object.entries(planDetails).filter(([key]) => key !== subscription.plan_type)
 
   return (
-    <div className="container mx-auto max-w-4xl py-10">
-      <div className="mb-6">
-        <Link href="/profile" className="inline-flex items-center text-sm text-muted-foreground hover:text-primary">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Volver al perfil
-        </Link>
-      </div>
+    <div className="container py-10">
+      <div className="mx-auto max-w-4xl space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold">Gestionar Suscripción</h1>
+          <p className="text-muted-foreground">Administra tu plan y configuraciones de suscripción</p>
+        </div>
 
-      <div className="space-y-6">
-        {/* Header de suscripción */}
-        <Card className={`${getPlanColor(subscription.plan_type)} text-white`}>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                {getPlanIcon(subscription.plan_type)}
-                <div>
-                  <CardTitle className="text-2xl capitalize">Plan {subscription.plan_type}</CardTitle>
-                  <CardDescription className="text-white/80">
-                    Suscripción activa desde {new Date(subscription.created_at).toLocaleDateString()}
-                  </CardDescription>
-                </div>
-              </div>
-              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
-                <CheckCircle className="w-4 h-4 mr-1" />
-                Activa
-              </Badge>
-            </div>
-          </CardHeader>
-        </Card>
+        {error && (
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
-        {/* Uso de bicicletas */}
+        {/* Información actual de la suscripción */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bike className="w-5 h-5" />
-              Uso de bicicletas
+            <CardTitle className="flex items-center justify-between">
+              <span>Plan Actual</span>
+              <Badge variant={subscription.status === "active" ? "default" : "secondary"}>
+                {subscription.status === "active" ? "Activo" : subscription.status}
+              </Badge>
             </CardTitle>
-            <CardDescription>
-              Has registrado {bicycleCount} de {subscription.bicycle_limit} bicicletas permitidas
-            </CardDescription>
+            <CardDescription>Información de tu suscripción actual</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Bicicletas registradas</span>
-                <span>
-                  {bicycleCount} / {subscription.bicycle_limit}
-                </span>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="flex items-center space-x-3">
+                <CreditCard className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="font-medium">{currentPlan.name}</p>
+                  <p className="text-sm text-muted-foreground">${currentPlan.price} MXN/mes</p>
+                </div>
               </div>
-              <Progress value={usagePercentage} className="h-2" />
+              <div className="flex items-center space-x-3">
+                <Users className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="font-medium">{currentPlan.bicycles} bicicletas</p>
+                  <p className="text-sm text-muted-foreground">Límite del plan</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <Calendar className="h-5 w-5 text-purple-600" />
+                <div>
+                  <p className="font-medium">{formatDate(subscription.current_period_end)}</p>
+                  <p className="text-sm text-muted-foreground">Próxima renovación</p>
+                </div>
+              </div>
             </div>
 
-            {usagePercentage >= 80 && (
-              <Alert className={usagePercentage >= 100 ? "border-red-200 bg-red-50" : "border-yellow-200 bg-yellow-50"}>
-                <AlertCircle className={`h-4 w-4 ${usagePercentage >= 100 ? "text-red-600" : "text-yellow-600"}`} />
-                <AlertTitle className={usagePercentage >= 100 ? "text-red-800" : "text-yellow-800"}>
-                  {usagePercentage >= 100 ? "Límite alcanzado" : "Cerca del límite"}
-                </AlertTitle>
-                <AlertDescription className={usagePercentage >= 100 ? "text-red-700" : "text-yellow-700"}>
-                  {usagePercentage >= 100
-                    ? "Has alcanzado el límite de tu plan. Actualiza para registrar más bicicletas."
-                    : "Estás cerca del límite de tu plan. Considera actualizar si necesitas más espacio."}
+            {subscription.cancel_at_period_end && (
+              <Alert variant="destructive">
+                <X className="h-4 w-4" />
+                <AlertTitle>Suscripción programada para cancelación</AlertTitle>
+                <AlertDescription>
+                  Tu suscripción se cancelará el {formatDate(subscription.current_period_end)}. No se realizarán más
+                  cobros después de esta fecha.
                 </AlertDescription>
               </Alert>
             )}
 
-            <div className="flex gap-2">
-              <Link href="/bicycles">
-                <Button variant="outline" size="sm">
-                  Ver mis bicicletas
-                </Button>
-              </Link>
-              {bicycleCount < subscription.bicycle_limit && (
-                <Link href="/bicycles/register">
-                  <Button size="sm">Registrar nueva bicicleta</Button>
-                </Link>
-              )}
-            </div>
+            {subscription.pending_plan_change && (
+              <Alert>
+                <ArrowDownCircle className="h-4 w-4" />
+                <AlertTitle>Cambio de plan programado</AlertTitle>
+                <AlertDescription>
+                  Tu plan cambiará a {planDetails[subscription.pending_plan_change as keyof typeof planDetails]?.name}{" "}
+                  el{" "}
+                  {subscription.pending_plan_change_date
+                    ? formatDate(subscription.pending_plan_change_date)
+                    : "próximo período"}
+                  .
+                </AlertDescription>
+              </Alert>
+            )}
           </CardContent>
         </Card>
 
-        {/* Detalles de la suscripción */}
-        <div className="grid gap-6 md:grid-cols-2">
+        {/* Cambiar plan */}
+        {!subscription.cancel_at_period_end && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                Período actual
-              </CardTitle>
+              <CardTitle>Cambiar Plan</CardTitle>
+              <CardDescription>Actualiza tu plan para cambiar el límite de bicicletas</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Inicio:</span>
-                <span>{new Date(subscription.current_period_start).toLocaleDateString()}</span>
+            <CardContent className="space-y-4">
+              <div className="flex space-x-4">
+                <Select value={selectedPlan} onValueChange={setSelectedPlan}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Selecciona un nuevo plan" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availablePlans.map(([key, plan]) => (
+                      <SelectItem key={key} value={key}>
+                        {plan.name} - ${plan.price} MXN/mes ({plan.bicycles} bicicletas)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleChangePlan} disabled={!selectedPlan || actionLoading}>
+                  {actionLoading ? "Cambiando..." : "Cambiar Plan"}
+                </Button>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Fin:</span>
-                <span>{new Date(subscription.current_period_end).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Estado:</span>
-                <Badge variant="outline" className="text-green-600 border-green-200">
-                  {subscription.status === "active" ? "Activa" : subscription.status}
-                </Badge>
+              <div className="text-sm text-muted-foreground">
+                <p>
+                  • <strong>Upgrade:</strong> El cambio es inmediato y se cobra la diferencia prorrateada
+                </p>
+                <p>
+                  • <strong>Downgrade:</strong> El cambio se aplica al final del período actual
+                </p>
               </div>
             </CardContent>
           </Card>
+        )}
 
+        {/* Cancelar suscripción */}
+        {!subscription.cancel_at_period_end && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="w-5 h-5" />
-                Información de pago
-              </CardTitle>
+              <CardTitle className="text-red-600">Zona de Peligro</CardTitle>
+              <CardDescription>Acciones irreversibles para tu suscripción</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">ID Stripe:</span>
-                <span className="text-sm font-mono">{subscription.stripe_subscription_id?.slice(-8) || "N/A"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Cliente:</span>
-                <span className="text-sm font-mono">{subscription.stripe_customer_id?.slice(-8) || "N/A"}</span>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" className="flex-1">
+                      Cancelar al final del período
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Cancelar suscripción?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tu suscripción se cancelará el {formatDate(subscription.current_period_end)}. Podrás seguir
+                        usando el servicio hasta esa fecha.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Mantener suscripción</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleCancelSubscription(false)} disabled={actionLoading}>
+                        {actionLoading ? "Cancelando..." : "Cancelar al final del período"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="flex-1">
+                      Cancelar inmediatamente
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Cancelar inmediatamente?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Tu suscripción se cancelará inmediatamente y perderás acceso al servicio. Esta acción no se
+                        puede deshacer y no se realizarán reembolsos.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Mantener suscripción</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => handleCancelSubscription(true)}
+                        disabled={actionLoading}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        {actionLoading ? "Cancelando..." : "Cancelar inmediatamente"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Beneficios del plan */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Beneficios de tu plan</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>Hasta {subscription.bicycle_limit} bicicletas registradas</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>Certificados oficiales PDF</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>Códigos QR de verificación</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>Sistema de reportes de robo</span>
-              </div>
-              {(subscription.plan_type === "familiar" || subscription.plan_type === "premium") && (
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>Gestión familiar</span>
-                </div>
-              )}
-              {subscription.plan_type === "premium" && (
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>Soporte prioritario 24/7</span>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Acciones */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Gestionar suscripción</CardTitle>
-            <CardDescription>Opciones para modificar o cancelar tu suscripción</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/subscription">
-                <Button variant="outline" className="w-full sm:w-auto">
-                  Cambiar plan
-                </Button>
-              </Link>
-              <Button variant="destructive" className="w-full sm:w-auto" disabled>
-                Cancelar suscripción
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground">Para cancelar tu suscripción, contacta con soporte.</p>
-          </CardContent>
-        </Card>
+        )}
       </div>
     </div>
   )

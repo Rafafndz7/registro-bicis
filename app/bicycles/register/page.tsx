@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, Upload, X, ImageIcon, Info, CreditCard, CheckCircle } from "lucide-react"
+import { AlertCircle, Upload, X, ImageIcon, Info, CreditCard, CheckCircle, FileText } from "lucide-react"
 
 // Esquema de validación actualizado
 const bicycleSchema = z.object({
@@ -65,6 +65,7 @@ export default function RegisterBicyclePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [images, setImages] = useState<File[]>([])
   const [imageUrls, setImageUrls] = useState<string[]>([])
+  const [invoice, setInvoice] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState<number>(0)
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -298,6 +299,26 @@ export default function RegisterBicyclePage() {
     setImageUrls((prev) => [...prev, ...newImageUrls])
   }
 
+  const handleInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validar tipo de archivo
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"]
+    if (!allowedTypes.includes(file.type)) {
+      alert("Tipo de archivo no permitido. Solo PDF, JPG, PNG")
+      return
+    }
+
+    // Validar tamaño (5MB máximo)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("El archivo es demasiado grande. Máximo 5MB")
+      return
+    }
+
+    setInvoice(file)
+  }
+
   const removeImage = (index: number) => {
     URL.revokeObjectURL(imageUrls[index]) // Liberar memoria
     setImages((prev) => prev.filter((_, i) => i !== index))
@@ -309,7 +330,7 @@ export default function RegisterBicyclePage() {
 
     const uploadedUrls: string[] = []
     let progress = 0
-    const progressIncrement = 100 / images.length
+    const progressIncrement = 50 / images.length // 50% para imágenes
 
     for (const file of images) {
       const formData = new FormData()
@@ -334,6 +355,27 @@ export default function RegisterBicyclePage() {
     }
 
     return uploadedUrls
+  }
+
+  const uploadInvoice = async (bicycleId: string): Promise<void> => {
+    if (!invoice) return
+
+    const formData = new FormData()
+    formData.append("invoice", invoice)
+
+    try {
+      const response = await fetch(`/api/bicycles/${bicycleId}/invoice`, {
+        method: "POST",
+        body: formData,
+      })
+
+      const result = await response.json()
+      if (!response.ok) throw new Error(result.error || "Error al subir factura")
+
+      setUploadProgress(100)
+    } catch (error) {
+      console.error("Error al subir factura:", error)
+    }
   }
 
   const onSubmit = async (data: BicycleFormValues) => {
@@ -381,12 +423,19 @@ export default function RegisterBicyclePage() {
         throw new Error(result.error || "Error al registrar bicicleta")
       }
 
+      const bicycleId = result.bicycleId
+
       // 2. Subir imágenes si existen
       if (images.length > 0) {
-        await uploadImages(result.bicycleId)
+        await uploadImages(bicycleId)
       }
 
-      // 3. Redirigir al panel de bicicletas
+      // 3. Subir factura si existe
+      if (invoice) {
+        await uploadInvoice(bicycleId)
+      }
+
+      // 4. Redirigir al panel de bicicletas
       router.push("/bicycles?success=true")
     } catch (error) {
       console.error("Error al registrar bicicleta:", error)
@@ -711,12 +760,56 @@ export default function RegisterBicyclePage() {
                 </p>
               </div>
 
+              {/* Nueva sección para factura */}
+              <div className="space-y-4 rounded-lg border p-4">
+                <h3 className="text-lg font-medium">Factura de compra (opcional)</h3>
+                <div className="space-y-4">
+                  {invoice ? (
+                    <div className="flex items-center justify-between p-4 border rounded-lg bg-green-50">
+                      <div className="flex items-center space-x-3">
+                        <FileText className="h-5 w-5 text-green-600" />
+                        <div>
+                          <p className="font-medium text-green-800">{invoice.name}</p>
+                          <p className="text-sm text-green-600">{(invoice.size / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                      </div>
+                      <Button type="button" variant="outline" size="sm" onClick={() => setInvoice(null)}>
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-md border border-dashed p-6 text-sm text-muted-foreground hover:bg-muted/50">
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        <FileText className="h-8 w-8" />
+                        <span>Subir factura</span>
+                        <span className="text-xs">PDF, JPG, PNG (máx. 5MB)</span>
+                      </div>
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        onChange={handleInvoiceChange}
+                      />
+                    </label>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    Sube la factura de compra de tu bicicleta para tener un respaldo adicional (opcional)
+                  </p>
+                </div>
+              </div>
+
               {isSubmitting && uploadProgress > 0 && (
                 <div className="space-y-2">
                   <div className="h-2 w-full rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary" style={{ width: `${uploadProgress}%` }}></div>
                   </div>
-                  <p className="text-sm text-muted-foreground">Subiendo imágenes: {uploadProgress}%</p>
+                  <p className="text-sm text-muted-foreground">
+                    {uploadProgress < 50
+                      ? "Subiendo imágenes..."
+                      : uploadProgress < 100
+                        ? "Subiendo factura..."
+                        : "Completando registro..."}
+                  </p>
                 </div>
               )}
 

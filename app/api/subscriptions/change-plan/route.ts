@@ -1,83 +1,117 @@
+import { type NextRequest, NextResponse } from "next/server"
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
-import { NextResponse } from "next/server"
 import Stripe from "stripe"
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-04-30.basil" as any,
+  apiVersion: "2025-05-28.basil",
 })
 
-const PLAN_PRICE_IDS = {
-  basic: "price_1RbaIiP2bAdrMLI6LPeUmgmN",
-  standard: "price_1RbaJWP2bAdrMLI61k1RvTtn",
-  family: "price_1RbaKNP2bAdrMLI6IehK5s3o",
-  premium: "price_1RbaKoP2bAdrMLI6iNSK4dHl",
+const STRIPE_PRICE_IDS = {
+  basic: "price_1QZrGnP5Z8K9QJxLvQJxLvQJ", // Reemplaza con tus IDs reales
+  standard: "price_1QZrGnP5Z8K9QJxLvQJxLvQK",
+  family: "price_1QZrGnP5Z8K9QJxLvQJxLvQL",
+  premium: "price_1QZrGnP5Z8K9QJxLvQJxLvQM",
 }
 
-const planLimits = {
-  basic: { bicycleLimit: 1, name: "básico" },
-  standard: { bicycleLimit: 2, name: "estándar" },
-  family: { bicycleLimit: 4, name: "familiar" },
-  premium: { bicycleLimit: 6, name: "premium" },
+const PLAN_LIMITS = {
+  basic: 1,
+  standard: 2,
+  family: 4,
+  premium: 6,
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
 
+    // Verificar autenticación
     const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+    if (authError || !user) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
     const { newPlan } = await request.json()
 
-    if (!PLAN_PRICE_IDS[newPlan as keyof typeof PLAN_PRICE_IDS]) {
-      return NextResponse.json({ error: "Plan no válido" }, { status: 400 })
+    if (!newPlan || !STRIPE_PRICE_IDS[newPlan as keyof typeof STRIPE_PRICE_IDS]) {
+      return NextResponse.json(
+        {
+          error: "Plan no válido",
+        },
+        { status: 400 },
+      )
     }
 
-    // Obtener suscripción actual
+    // Obtener suscripción activa
     const { data: subscription, error: subError } = await supabase
       .from("subscriptions")
       .select("*")
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .eq("status", "active")
       .single()
 
     if (subError || !subscription) {
-      return NextResponse.json({ error: "No tienes suscripción activa" }, { status: 404 })
+      return NextResponse.json(
+        {
+          error: "No se encontró suscripción activa",
+        },
+        { status: 404 },
+      )
     }
 
-    const currentPlan = subscription.plan_type
-    const newPriceId = PLAN_PRICE_IDS[newPlan as keyof typeof PLAN_PRICE_IDS]
-
-    // Obtener suscripción de Stripe
-    const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id)
-    const currentPriceId = stripeSubscription.items.data[0].price.id
-
-    if (currentPriceId === newPriceId) {
-      return NextResponse.json({ error: "Ya tienes este plan activo" }, { status: 400 })
+    if (subscription.plan_type === newPlan) {
+      return NextResponse.json(
+        {
+          error: "Ya tienes este plan activo",
+        },
+        { status: 400 },
+      )
     }
 
-    // Determinar si es upgrade o downgrade
-    const planOrder = ["basic", "standard", "family", "premium"]
-    const currentIndex = planOrder.indexOf(currentPlan)
-    const newIndex = planOrder.indexOf(newPlan)
-    const isUpgrade = newIndex > currentIndex
+    if (!subscription.stripe_subscription_id) {
+      return NextResponse.json(
+        {
+          error: "Suscripción sin ID de Stripe",
+        },
+        { status: 400 },
+      )
+    }
 
-    if (isUpgrade) {
-      // Upgrade inmediato con proration
-      await stripe.subscriptions.update(subscription.stripe_subscription_id, {
+    // Verificar si el usuario tiene más bicicletas que el límite del nuevo plan
+    const { count: bicycleCount } = await supabase
+      .from("bicycles")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+
+    const newLimit = PLAN_LIMITS[newPlan as keyof typeof PLAN_LIMITS]
+    if ((bicycleCount || 0) > newLimit) {
+      return NextResponse.json(
+        {
+          error: `No puedes cambiar a este plan. Tienes ${bicycleCount} bicicletas registradas y el plan ${newPlan} solo permite ${newLimit}.`,
+        },
+        { status: 400 },
+      )
+    }
+
+    try {
+      // Obtener la suscripción de Stripe
+      const stripeSubscription = await stripe.subscriptions.retrieve(subscription.stripe_subscription_id)
+
+      const currentPriceId = stripeSubscription.items.data[0].price.id
+      const newPriceId = STRIPE_PRICE_IDS[newPlan as keyof typeof STRIPE_PRICE_IDS]
+
+      // Actualizar la suscripción en Stripe
+      const updatedSubscription = await stripe.subscriptions.update(subscription.stripe_subscription_id, {
         items: [
           {
             id: stripeSubscription.items.data[0].id,
             price: newPriceId,
           },
         ],
-        proration_behavior: "create_prorations",
+        proration_behavior: "create_prorations", // Crear prorrateo
       })
 
       // Actualizar en base de datos
@@ -85,36 +119,34 @@ export async function POST(request: Request) {
         .from("subscriptions")
         .update({
           plan_type: newPlan,
-          bicycle_limit: planLimits[newPlan as keyof typeof planLimits].bicycleLimit,
+          bicycle_limit: newLimit,
           updated_at: new Date().toISOString(),
         })
         .eq("id", subscription.id)
 
       return NextResponse.json({
-        success: true,
-        message: `Plan actualizado a ${newPlan}. Se cobrará la diferencia prorrateada.`,
-        immediate: true,
+        message: `Plan cambiado exitosamente a ${newPlan}`,
+        subscription: {
+          plan_type: newPlan,
+          bicycle_limit: newLimit,
+        },
       })
-    } else {
-      // Downgrade al final del período
-      await supabase
-        .from("subscriptions")
-        .update({
-          pending_plan_change: newPlan,
-          pending_plan_change_date: subscription.current_period_end,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", subscription.id)
-
-      return NextResponse.json({
-        success: true,
-        message: `El plan cambiará a ${newPlan} al final del período actual (${new Date(subscription.current_period_end).toLocaleDateString()})`,
-        immediate: false,
-        changeDate: subscription.current_period_end,
-      })
+    } catch (stripeError: any) {
+      console.error("Error with Stripe:", stripeError)
+      return NextResponse.json(
+        {
+          error: "Error al procesar cambio de plan con Stripe: " + stripeError.message,
+        },
+        { status: 500 },
+      )
     }
   } catch (error) {
-    console.error("Error al cambiar plan:", error)
-    return NextResponse.json({ error: "Error al cambiar plan" }, { status: 500 })
+    console.error("Error en POST /api/subscriptions/change-plan:", error)
+    return NextResponse.json(
+      {
+        error: "Error interno del servidor",
+      },
+      { status: 500 },
+    )
   }
 }

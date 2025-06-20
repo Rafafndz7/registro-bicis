@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       })
     }
 
-    // Generar token de recuperación con Supabase - CORREGIDO EL REDIRECT_TO
+    // Generar token de recuperación con Supabase
     const { data, error } = await supabase.auth.admin.generateLink({
       type: "recovery",
       email: email,
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
 
     // CORREGIR EL ENLACE - reemplazar localhost con el dominio real
     const correctedResetUrl = resetUrl.replace(
-      "redirect_to=https://www.registronacionaldebicicletas.com/auth/reset-password/confirm",
+      "redirect_to=http://localhost:3000",
       "redirect_to=https://www.registronacionaldebicicletas.com/auth/reset-password/confirm",
     )
 

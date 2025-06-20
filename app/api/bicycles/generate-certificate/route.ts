@@ -146,7 +146,7 @@ body {
 }
 
 .header {
-  background: linear-gradient(135deg, #4F46E5 0%, #3B82F6 100%);
+  background: linear-gradient(135deg, #374151 0%, #4B5563 100%);
   color: white;
   padding: 16px;
   text-align: center;
@@ -251,19 +251,19 @@ body {
 }
 
 .verification-section {
-  background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+  background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
   padding: 8px;
   border-radius: 6px;
-  border: 2px solid #4F46E5;
+  border: 2px solid #6B7280;
   position: relative;
   font-size: 8px;
 }
 
 .invoice-section {
-  background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
   padding: 8px;
   border-radius: 6px;
-  border: 2px solid #10B981;
+  border: 2px solid #6B7280;
   position: relative;
   font-size: 8px;
 }
@@ -279,8 +279,8 @@ body {
 }
 
 .validity-section.valid {
-  background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
-  border-color: #10B981;
+  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+  border-color: #6B7280;
 }
 
 .official-seal {
@@ -740,11 +740,17 @@ body {
           </div>
 
           <div class="validity-section ${daysUntilExpiration > 7 ? "valid" : ""}">
-            <strong>Estado de Validez:</strong> Este certificado es válido mientras la suscripción del propietario esté activa.
+            <strong>TÉRMINOS DE VALIDEZ Y CONDICIONES LEGALES</strong>
             <br><br>
-            <strong>Plan:</strong> ${subscription.plan_type} (${subscription.bicycle_limit} bicicleta${subscription.bicycle_limit !== 1 ? "s" : ""})
+            <strong>Validez del Certificado:</strong> Este documento es válido únicamente mientras la suscripción del propietario permanezca activa y en buen estado. La expiración o cancelación de la suscripción invalida automáticamente este certificado.
+            <br><br>
+            <strong>Plan Actual:</strong> ${subscription.plan_type} (${subscription.bicycle_limit} bicicleta${subscription.bicycle_limit !== 1 ? "s" : ""} registradas)
             <br>
-            <strong>Vence:</strong> ${expirationDateFormatted}
+            <strong>Vencimiento de Suscripción:</strong> ${expirationDateFormatted}
+            <br><br>
+            <strong>Responsabilidad Legal:</strong> El propietario es responsable de mantener actualizada su información y suscripción. Este certificado no constituye un título de propiedad legal, sino un registro en la base de datos del RNB.
+            <br><br>
+            <strong>Renovación:</strong> Para mantener la validez de este certificado, la suscripción debe renovarse antes de su vencimiento.
             <span class="status-badge ${validityClass}">${validityStatus}</span>
           </div>
           
@@ -754,19 +760,35 @@ body {
               invoice
                 ? `
                 <div class="invoice-section">
-                  La factura ha sido verificada y se encuentra adjunta a este certificado.
+                  <strong>FACTURA OFICIAL VERIFICADA</strong>
                   <br><br>
-                  <strong>Nombre del Archivo:</strong> ${invoice.original_filename}
+                  La presencia de una factura oficial aumenta significativamente la validez y autenticidad de este certificado. Este documento cuenta con respaldo documental completo.
+                  <br><br>
+                  <strong>Archivo:</strong> ${invoice.original_filename}
                   <br>
-                  <strong>Fecha de Carga:</strong> ${new Date(invoice.upload_date).toLocaleDateString("es-MX")}
-                  <span class="status-badge status-verified">Factura Verificada</span>
+                  <strong>Fecha de Verificación:</strong> ${new Date(invoice.upload_date).toLocaleDateString("es-MX")}
+                  <br><br>
+                  <strong>Beneficios de Factura Verificada:</strong>
+                  <br>• Mayor credibilidad ante autoridades
+                  <br>• Respaldo legal completo
+                  <br>• Verificación de autenticidad mejorada
+                  <br>• Proceso de recuperación facilitado
+                  <span class="status-badge status-verified">Factura Oficial Verificada</span>
                 </div>
               `
                 : `
                 <div class="invoice-section no-invoice">
-                  No se ha adjuntado una factura a este certificado.
+                  <strong>RECOMENDACIÓN IMPORTANTE</strong>
                   <br><br>
-                  Para mayor seguridad, le recomendamos adjuntar la factura de compra de su bicicleta.
+                  Este certificado no cuenta con factura de compra adjunta. Para mayor seguridad legal y credibilidad del documento, se recomienda encarecidamente adjuntar la factura original de compra.
+                  <br><br>
+                  <strong>Beneficios de adjuntar factura:</strong>
+                  <br>• Validación legal completa
+                  <br>• Mayor credibilidad ante autoridades
+                  <br>• Proceso de recuperación más efectivo
+                  <br>• Respaldo documental oficial
+                  <br><br>
+                  <strong>Nota:</strong> Puede adjuntar su factura en cualquier momento desde su panel de usuario.
                   <span class="status-badge status-pending">Factura Pendiente</span>
                 </div>
               `

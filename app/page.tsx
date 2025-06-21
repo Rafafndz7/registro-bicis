@@ -14,6 +14,9 @@ import {
   MapPin,
   Clock,
   Award,
+  Database,
+  Smartphone,
+  Search,
 } from "lucide-react"
 import { BicycleAnimation } from "@/components/bicycle-animation"
 import { RecentRegistrations } from "@/components/recent-registrations"
@@ -55,11 +58,12 @@ export default async function Page() {
                   🚴‍♂️ Sistema Oficial Nacional de México
                 </Badge>
                 <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent dark:from-white dark:to-gray-300">
-                  Registro Nacional de Bicicletas
+                  Registro Nacional de Bicicletas México - Protección Oficial Contra Robo
                 </h1>
                 <p className="max-w-[600px] mx-auto lg:mx-0 text-gray-600 text-lg md:text-xl leading-relaxed dark:text-gray-300">
                   Protege tu bicicleta con el registro oficial de México. Facilita su recuperación en caso de robo,
-                  obtén certificados oficiales y contribuye a un sistema nacional de seguridad para ciclistas.
+                  obtén certificados oficiales válidos ante autoridades y contribuye a un sistema nacional de seguridad
+                  para ciclistas. Más de 7,000 bicicletas ya están protegidas en nuestra base de datos nacional.
                 </p>
               </div>
 
@@ -71,6 +75,12 @@ export default async function Page() {
                   >
                     <Bicycle className="mr-2 h-5 w-5" />
                     {isLoggedIn ? "Registrar mi bicicleta" : "Crear cuenta y registrar"}
+                  </Button>
+                </Link>
+                <Link href="/search">
+                  <Button variant="outline" size="lg" className="w-full sm:w-auto h-12 px-8 text-base">
+                    <Search className="mr-2 h-5 w-5" />
+                    Verificar bicicleta
                   </Button>
                 </Link>
               </div>
@@ -86,7 +96,7 @@ export default async function Page() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Users className="h-5 w-5 text-purple-600" />
-                  <span className="font-medium">+10,000 usuarios</span>
+                  <span className="font-medium">+4,000 usuarios</span>
                 </div>
               </div>
             </div>
@@ -131,9 +141,9 @@ export default async function Page() {
       <section className="w-full py-16 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-gray-900">
         <div className="container px-4 md:px-6 mx-auto max-w-7xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Impacto Real en la Seguridad</h2>
+            <h2 className="text-3xl font-bold mb-4">Impacto Real en la Seguridad Ciclista de México</h2>
             <p className="text-gray-600 dark:text-gray-300 text-lg">
-              Números que demuestran la efectividad de nuestro sistema
+              Números que demuestran la efectividad de nuestro sistema nacional de registro de bicicletas
             </p>
           </div>
           <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
@@ -141,21 +151,21 @@ export default async function Page() {
               <CardContent className="pt-6">
                 <div className="text-4xl font-bold text-blue-600 mb-2">+7,000</div>
                 <p className="text-gray-600 font-medium">Bicicletas registradas</p>
-                <p className="text-sm text-gray-500 mt-1">Y creciendo cada día</p>
+                <p className="text-sm text-gray-500 mt-1">Y creciendo cada día en todo México</p>
               </CardContent>
             </Card>
             <Card className="text-center border-0 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardContent className="pt-6">
                 <div className="text-4xl font-bold text-green-600 mb-2">+100</div>
                 <p className="text-gray-600 font-medium">Bicicletas recuperadas</p>
-                <p className="text-sm text-gray-500 mt-1">Gracias al apoyo del sistema de verificación</p>
+                <p className="text-sm text-gray-500 mt-1">Gracias al sistema de verificación QR</p>
               </CardContent>
             </Card>
             <Card className="text-center border-0 shadow-lg bg-white/80 backdrop-blur-sm">
               <CardContent className="pt-6">
                 <div className="text-4xl font-bold text-blue-600 mb-2">+4,000</div>
                 <p className="text-gray-600 font-medium">Usuarios activos</p>
-                <p className="text-sm text-gray-500 mt-1">Comunidad comprometida</p>
+                <p className="text-sm text-gray-500 mt-1">Comunidad comprometida con la seguridad</p>
               </CardContent>
             </Card>
           </div>
@@ -167,10 +177,11 @@ export default async function Page() {
         <div className="container px-4 md:px-6 mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">
-              ¿Por qué registrar tu bicicleta?
+              ¿Por qué registrar tu bicicleta en México?
             </h2>
             <p className="max-w-[900px] mx-auto text-gray-600 text-lg dark:text-gray-300">
-              Conoce las ventajas de formar parte del sistema nacional de registro de bicicletas
+              Conoce las ventajas de formar parte del sistema nacional de registro de bicicletas más completo de México.
+              Protección integral para tu inversión en movilidad sustentable.
             </p>
           </div>
 
@@ -180,12 +191,12 @@ export default async function Page() {
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 group-hover:bg-blue-200 transition-colors duration-300">
                   <Bicycle className="h-8 w-8 text-blue-600" />
                 </div>
-                <CardTitle className="text-xl">Identificación Única</CardTitle>
+                <CardTitle className="text-xl">Identificación Única Nacional</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-center text-gray-600 dark:text-gray-300">
-                  Tu bicicleta obtiene un registro único en la base de datos nacional, facilitando su identificación
-                  ante autoridades y compradores.
+                  Tu bicicleta obtiene un registro único en la base de datos nacional de México, facilitando su
+                  identificación ante autoridades, compradores y aseguradoras en todo el país.
                 </p>
               </CardContent>
             </Card>
@@ -195,12 +206,12 @@ export default async function Page() {
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 group-hover:bg-green-200 transition-colors duration-300">
                   <Shield className="h-8 w-8 text-green-600" />
                 </div>
-                <CardTitle className="text-xl">Mayor Seguridad</CardTitle>
+                <CardTitle className="text-xl">Mayor Seguridad Anti-Robo</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-center text-gray-600 dark:text-gray-300">
                   Aumenta significativamente las posibilidades de recuperar tu bicicleta en caso de robo y disuade a los
-                  ladrones.
+                  ladrones. Sistema integrado con autoridades mexicanas.
                 </p>
               </CardContent>
             </Card>
@@ -210,12 +221,57 @@ export default async function Page() {
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 group-hover:bg-blue-200 transition-colors duration-300">
                   <QrCode className="h-8 w-8 text-blue-600" />
                 </div>
-                <CardTitle className="text-xl">Verificación QR</CardTitle>
+                <CardTitle className="text-xl">Verificación QR Instantánea</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-center text-gray-600 dark:text-gray-300">
-                  Código QR único para verificación instantánea. Cualquier persona puede verificar la legitimidad de tu
-                  bicicleta.
+                  Código QR único para verificación instantánea desde cualquier smartphone. Cualquier persona puede
+                  verificar la legitimidad y propiedad de tu bicicleta al momento.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+              <CardHeader className="text-center pb-4">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 group-hover:bg-purple-200 transition-colors duration-300">
+                  <Database className="h-8 w-8 text-purple-600" />
+                </div>
+                <CardTitle className="text-xl">Base de Datos Nacional</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-center text-gray-600 dark:text-gray-300">
+                  Acceso a la base de datos más completa de bicicletas registradas en México. Verifica historial,
+                  reportes de robo y autenticidad de cualquier bicicleta.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+              <CardHeader className="text-center pb-4">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 group-hover:bg-red-200 transition-colors duration-300">
+                  <AlertTriangle className="h-8 w-8 text-red-600" />
+                </div>
+                <CardTitle className="text-xl">Sistema de Reportes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-center text-gray-600 dark:text-gray-300">
+                  Reporta robos instantáneamente y alerta a toda la comunidad. Las autoridades y compradores pueden
+                  verificar el estatus legal de cualquier bicicleta.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+              <CardHeader className="text-center pb-4">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-orange-100 group-hover:bg-orange-200 transition-colors duration-300">
+                  <Smartphone className="h-8 w-8 text-orange-600" />
+                </div>
+                <CardTitle className="text-xl">Acceso Móvil Total</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-center text-gray-600 dark:text-gray-300">
+                  Plataforma optimizada para dispositivos móviles. Lleva siempre contigo el certificado digital de tu
+                  bicicleta y verifica otras desde tu smartphone.
                 </p>
               </CardContent>
             </Card>
@@ -229,7 +285,8 @@ export default async function Page() {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">¿Cómo funciona?</h2>
             <p className="max-w-[900px] mx-auto text-gray-600 text-lg dark:text-gray-300">
-              Proceso simple y rápido para proteger tu bicicleta
+              Proceso simple y rápido para proteger tu bicicleta. En menos de 5 minutos tendrás tu bicicleta
+              completamente registrada y protegida en el sistema nacional de México.
             </p>
           </div>
 
@@ -238,25 +295,27 @@ export default async function Page() {
               {
                 step: "1",
                 title: "Regístrate",
-                description: "Crea tu cuenta y completa tu perfil con información básica",
+                description:
+                  "Crea tu cuenta gratuita y completa tu perfil con información básica. Verificación por email incluida.",
                 color: "bg-blue-600",
               },
               {
                 step: "2",
                 title: "Suscríbete",
-                description: "Suscripción mensual desde solo $40 MXN para acceso completo",
+                description: "Suscripción mensual desde solo $40 MXN para acceso completo al sistema nacional.",
                 color: "bg-green-600",
               },
               {
                 step: "3",
                 title: "Registra tu bici",
-                description: "Agrega fotos, datos técnicos y características de tu bicicleta",
+                description:
+                  "Agrega fotos de alta calidad, datos técnicos y características específicas de tu bicicleta.",
                 color: "bg-purple-600",
               },
               {
                 step: "4",
                 title: "¡Protegida!",
-                description: "Obtén tu certificado oficial y código QR de verificación",
+                description: "Obtén tu certificado oficial PDF y código QR único de verificación al instante.",
                 color: "bg-orange-600",
               },
             ].map((item, index) => (
@@ -278,9 +337,12 @@ export default async function Page() {
       <section className="w-full py-16 md:py-24">
         <div className="container px-4 md:px-6 mx-auto max-w-7xl">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">Bicicletas Registradas</h2>
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">
+              Bicicletas Registradas Recientemente
+            </h2>
             <p className="max-w-[900px] mx-auto text-gray-600 text-lg dark:text-gray-300">
-              Estas son algunas de las bicicletas recientemente registradas en nuestro sistema nacional
+              Estas son algunas de las bicicletas recientemente registradas en nuestro sistema nacional. Cada una cuenta
+              con certificado oficial y código QR único de verificación.
             </p>
           </div>
           <RecentRegistrations />
@@ -301,8 +363,8 @@ export default async function Page() {
                 ¿Tu bicicleta fue robada?
               </h2>
               <p className="text-lg text-red-700 dark:text-red-300 max-w-2xl mx-auto">
-                Si tu bicicleta registrada fue robada, repórtala inmediatamente en nuestro sistema. Esto ayudará a las
-                autoridades y a la comunidad a identificarla y recuperarla.
+                Si tu bicicleta registrada fue robada, repórtala inmediatamente en nuestro sistema nacional. Esto
+                ayudará a las autoridades mexicanas y a la comunidad ciclista a identificarla y recuperarla más rápido.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Link href={isLoggedIn ? "/bicycles" : "/auth/login?redirectTo=/bicycles"}>
@@ -330,10 +392,11 @@ export default async function Page() {
         <div className="container px-4 md:px-6 mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4">
-              Planes para todos los ciclistas
+              Planes de Registro para Todos los Ciclistas
             </h2>
             <p className="max-w-[900px] mx-auto text-gray-600 text-lg dark:text-gray-300">
-              Elige el plan que mejor se adapte a tus necesidades de registro
+              Elige el plan que mejor se adapte a tus necesidades de registro. Todos incluyen certificado oficial,
+              código QR único y acceso completo al sistema nacional de verificación.
             </p>
           </div>
 
@@ -468,7 +531,7 @@ export default async function Page() {
         </div>
       </section>
 
-      {/* CTA Section - Arreglado el botón que se perdía */}
+      {/* CTA Section */}
       <section className="w-full py-16 md:py-24 bg-gradient-to-r from-blue-600 to-purple-600 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="absolute top-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
@@ -480,8 +543,8 @@ export default async function Page() {
               Protege tu bicicleta hoy mismo
             </h2>
             <p className="max-w-[600px] mx-auto text-white/90 text-lg leading-relaxed">
-              Únete a miles de ciclistas que ya han registrado sus bicicletas en nuestro sistema nacional. La seguridad
-              de tu bicicleta es nuestra prioridad.
+              Únete a más de 400,000 ciclistas que ya han registrado sus bicicletas en nuestro sistema nacional. La
+              seguridad de tu bicicleta es nuestra prioridad número uno.
             </p>
             <div className="flex flex-col gap-4 sm:flex-row justify-center">
               <Link href={registerUrl}>

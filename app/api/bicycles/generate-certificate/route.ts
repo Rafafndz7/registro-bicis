@@ -138,7 +138,7 @@ body {
 .certificate {
   max-width: 100%;
   margin: 0 auto;
-  border: 2px solid #6B7280;
+  border: 2px solid #1E3A8A;
   background-color: #fff;
   position: relative;
   display: flex;
@@ -146,7 +146,7 @@ body {
 }
 
 .header {
-  background: linear-gradient(135deg, #374151 0%, #4B5563 100%);
+  background: linear-gradient(135deg, #1E40AF 0%, #1D4ED8 100%);
   color: white;
   padding: 16px;
   text-align: center;
@@ -193,7 +193,7 @@ body {
 .document-info {
   background: #F8FAFC;
   padding: 8px 12px;
-  border-bottom: 3px solid #6B7280;
+  border-bottom: 3px solid #1E3A8A;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 12px;
@@ -210,7 +210,7 @@ body {
 }
 
 .section-title {
-  background: linear-gradient(90deg, #6B7280, #9CA3AF);
+  background: linear-gradient(90deg, #1E3A8A, #3B82F6);
   color: white;
   font-size: 11px;
   font-weight: bold;
@@ -232,12 +232,12 @@ body {
   background: #F9FAFB;
   padding: 3px !important;
   border-radius: 3px;
-  border-left: 3px solid #6B7280;
+  border-left: 3px solid #1E3A8A;
 }
 
 .info-label {
   font-weight: bold;
-  color: #374151;
+  color: #1E40AF;
   font-size: 7px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -254,7 +254,7 @@ body {
   background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
   padding: 8px;
   border-radius: 6px;
-  border: 2px solid #6B7280;
+  border: 2px solid #1E3A8A;
   position: relative;
   font-size: 8px;
 }
@@ -263,7 +263,7 @@ body {
   background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
   padding: 8px;
   border-radius: 6px;
-  border: 2px solid #6B7280;
+  border: 2px solid #1E3A8A;
   position: relative;
   font-size: 8px;
 }
@@ -280,11 +280,11 @@ body {
 
 .validity-section.valid {
   background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
-  border-color: #6B7280;
+  border-color: #1E3A8A;
 }
 
 .official-seal {
-  background: radial-gradient(circle, #6B7280 0%, #374151 100%);
+  background: radial-gradient(circle, #1E3A8A 0%, #1E40AF 100%);
   box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
   position: absolute;
   top: 35%;
@@ -362,7 +362,7 @@ body {
 
 .doc-label {
   font-weight: bold;
-  color: #6B7280;
+  color: #1E3A8A;
   text-transform: uppercase;
   font-size: 8px;
   letter-spacing: 1px;
@@ -437,13 +437,13 @@ body {
 .qr-placeholder {
   width: 60px;
   height: 60px;
-  border: 2px solid #6B7280;
+  border: 2px solid #1E3A8A;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 7px;
-  color: #6B7280;
+  color: #1E3A8A;
   text-align: center;
   font-weight: bold;
   background: linear-gradient(45deg, #F3F4F6, #E5E7EB);
@@ -585,38 +585,76 @@ body {
 
 /* Media query específica para móviles en modo impresión */
 @media print and (max-width: 768px) {
+  @page {
+    size: A4 portrait;
+    margin: 5mm !important;
+  }
+  
   body {
-    font-size: 7px !important;
+    font-size: 6px !important;
+    line-height: 1.1 !important;
     height: 100vh !important;
     overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
   
   .certificate {
     height: 100vh !important;
     max-height: 100vh !important;
+    overflow: hidden !important;
+    page-break-inside: avoid !important;
+    transform: scale(0.85) !important;
+    transform-origin: top left !important;
   }
   
   .content {
-    padding: 4px !important;
-    gap: 2px !important;
+    padding: 2px !important;
+    gap: 1px !important;
   }
   
   .section {
     margin-bottom: 1px !important;
+    page-break-inside: avoid !important;
   }
   
   .info-grid {
-    gap: 2px !important;
+    gap: 1px !important;
   }
   
   .info-item {
     padding: 1px !important;
   }
   
+  .verification-section,
+  .invoice-section,
+  .validity-section {
+    padding: 2px !important;
+    font-size: 5px !important;
+    margin-top: 1px !important;
+  }
+  
   .official-seal {
-    width: 35px !important;
-    height: 35px !important;
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 3px !important;
+  }
+  
+  .footer {
+    padding: 2px !important;
     font-size: 4px !important;
+  }
+  
+  .header {
+    padding: 8px !important;
+  }
+  
+  .main-title {
+    font-size: 12px !important;
+  }
+  
+  .document-info {
+    padding: 2px 4px !important;
   }
 }
 

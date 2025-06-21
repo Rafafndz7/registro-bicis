@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Registro Nacional de Bicicletas México - Sistema Oficial",
     description:
-      "Registra tu bicicleta en México con nuestro sistema privado de registro. Obtén certificados digitales, códigos QR únicos y protección contra el robo. Más de 7,000 bicicletas registradas.",
+      "Registra tu bicicleta en México con nuestro sistema privado. Obtén certificado digital, código QR único, respaldo en línea. Fácil, rápido, seguro y confiable.",
     url: "https://registronacionaldebicis.com",
     siteName: "Registro Nacional de Bicicletas México",
     images: [

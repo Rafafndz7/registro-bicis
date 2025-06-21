@@ -122,15 +122,15 @@ export async function GET(request: Request) {
       <style>
         @page {
   size: A4;
-  margin: 8mm;
+  margin: 3mm;
 }
 
 body {
   font-family: 'Arial', 'Helvetica', sans-serif;
   background: white;
   color: #333;
-  line-height: 1.3;
-  font-size: 11px;
+  line-height: 1.2;
+  font-size: 12px;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
   margin: 0;
@@ -205,20 +205,20 @@ body {
 }
 
 .content {
-  padding: 12px;
+  padding: 8px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .section-title {
   background: linear-gradient(90deg, #1E3A8A, #3B82F6);
   color: white;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: bold;
-  padding: 6px 12px;
-  margin-bottom: 8px;
+  padding: 4px 10px;
+  margin-bottom: 4px;
   text-transform: uppercase;
   letter-spacing: 1px;
   border-radius: 4px;
@@ -227,8 +227,8 @@ body {
 .info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 3px;
+  margin-bottom: 4px;
 }
 
 .info-item {
@@ -249,19 +249,19 @@ body {
 
 .info-value {
   color: #1F2937;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   word-break: break-word;
 }
 
 .verification-section {
   background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
-  padding: 10px;
-  border-radius: 6px;
+  padding: 6px;
+  border-radius: 4px;
   border: 2px solid #1E3A8A;
   position: relative;
-  font-size: 9px;
-  margin-bottom: 8px;
+  font-size: 10px;
+  margin-bottom: 4px;
 }
 
 .invoice-section {

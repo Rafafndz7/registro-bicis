@@ -26,6 +26,7 @@ export function Navbar() {
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false)
   const router = useRouter()
   const supabase = createClientComponentClient()
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -40,6 +41,7 @@ export function Navbar() {
   useEffect(() => {
     if (user) {
       checkSubscription()
+      checkAdminRole()
     }
   }, [user])
 
@@ -58,6 +60,18 @@ export function Navbar() {
       setHasActiveSubscription(!error && !!data)
     } catch (error) {
       setHasActiveSubscription(false)
+    }
+  }
+
+  const checkAdminRole = async () => {
+    if (!user) return
+
+    try {
+      const { data, error } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+
+      setIsAdmin(!error && data?.role === "admin")
+    } catch (error) {
+      setIsAdmin(false)
     }
   }
 
@@ -86,6 +100,15 @@ export function Navbar() {
       href: hasActiveSubscription ? "/subscription/manage" : "/subscription",
       icon: <Shield className="h-4 w-4 mr-2" />,
     },
+    ...(isAdmin
+      ? [
+          {
+            name: "Dashboard Admin",
+            href: "/admin/dashboard",
+            icon: <Shield className="h-4 w-4 mr-2" />,
+          },
+        ]
+      : []),
   ]
 
   const footerNavItems = [

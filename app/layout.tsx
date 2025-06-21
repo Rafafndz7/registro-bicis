@@ -13,7 +13,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Registro Nacional de Bicicletas México - Sistema Oficial",
   description:
-    "Registra tu bicicleta en el sistema oficial de México. Obtén certificados válidos, códigos QR únicos y protección contra el robo.",
+    "Registra tu bicicleta en México con nuestro sistema privado de registro. Obtén certificados digitales, códigos QR únicos y protección contra el robo. Más de 7,000 bicicletas registradas.",
   keywords:
     "registro bicicletas méxico, certificado bicicleta oficial, sistema nacional bicicletas, registro bici méxico, código QR bicicleta, verificar bicicleta robada, certificado propiedad bicicleta, base datos bicicletas méxico",
   authors: [{ name: "Registro Nacional de Bicicletas México" }],
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Registro Nacional de Bicicletas México - Sistema Oficial",
     description:
-      "Registra tu bicicleta en el sistema oficial de México. Obtén certificados válidos, códigos QR únicos y protección contra el robo.",
+      "Registra tu bicicleta en México con nuestro sistema privado de registro. Obtén certificados digitales, códigos QR únicos y protección contra el robo. Más de 7,000 bicicletas registradas.",
     url: "https://registronacionaldebicis.com",
     siteName: "Registro Nacional de Bicicletas México",
     images: [
@@ -48,7 +48,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Registro Nacional de Bicicletas México",
-    description: "Sistema oficial de registro de bicicletas. Certificados válidos y protección contra el robo.",
+    description:
+      "Sistema privado de registro de bicicletas en México. Certificados digitales y protección contra el robo.",
     images: ["/logo-rnb.png"],
   },
   robots: {

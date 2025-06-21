@@ -55,15 +55,15 @@ export default async function Page() {
             <div className="flex flex-col justify-center space-y-8 text-center lg:text-left">
               <div className="space-y-4">
                 <Badge className="w-fit mx-auto lg:mx-0 bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-200 text-sm px-4 py-2">
-                  🚴‍♂️ Sistema Oficial Nacional de México
+                  🚴‍♂️ Sistema Privado de Registro
                 </Badge>
                 <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent dark:from-white dark:to-gray-300">
                   Registro Nacional de Bicicletas México - Protección Oficial Contra Robo
                 </h1>
                 <p className="max-w-[600px] mx-auto lg:mx-0 text-gray-600 text-lg md:text-xl leading-relaxed dark:text-gray-300">
-                  Protege tu bicicleta con el registro oficial de México. Facilita su recuperación en caso de robo,
-                  obtén certificados oficiales válidos ante autoridades y contribuye a un sistema nacional de seguridad
-                  para ciclistas. Más de 7,000 bicicletas ya están protegidas en nuestra base de datos nacional.
+                  Protege tu bicicleta con nuestro sistema de registro. Facilita su recuperación en caso de robo, obtén
+                  certificados digitales válidos que pueden apoyar a la recuperación de su bicicleta y contribuye a un sistema nacional de seguridad para
+                  ciclistas. Más de 7,000 bicicletas ya están protegidas en nuestra base de datos nacional.
                 </p>
               </div>
 
@@ -315,7 +315,7 @@ export default async function Page() {
               {
                 step: "4",
                 title: "¡Protegida!",
-                description: "Obtén tu certificado oficial PDF y código QR único de verificación al instante.",
+                description: "Obtén tu certificado digital PDF y código QR único de verificación al instante.",
                 color: "bg-orange-600",
               },
             ].map((item, index) => (
@@ -342,7 +342,7 @@ export default async function Page() {
             </h2>
             <p className="max-w-[900px] mx-auto text-gray-600 text-lg dark:text-gray-300">
               Estas son algunas de las bicicletas recientemente registradas en nuestro sistema nacional. Cada una cuenta
-              con certificado oficial y código QR único de verificación.
+              con certificado digital y código QR único de verificación.
             </p>
           </div>
           <RecentRegistrations />
@@ -416,7 +416,7 @@ export default async function Page() {
                   </li>
                   <li className="flex items-center text-sm">
                     <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
-                    Certificado oficial PDF
+                    Certificado digital PDF
                   </li>
                   <li className="flex items-center text-sm">
                     <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
@@ -446,7 +446,7 @@ export default async function Page() {
                   </li>
                   <li className="flex items-center text-sm">
                     <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
-                    Certificados oficiales PDF
+                    Certificados digitales PDF
                   </li>
                   <li className="flex items-center text-sm">
                     <CheckCircle className="mr-2 h-4 w-4 text-green-600" />

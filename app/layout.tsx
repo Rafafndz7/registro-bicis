@@ -13,7 +13,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Registro Nacional de Bicicletas México - Sistema Oficial",
   description:
-    "Registra tu bicicleta en México con nuestro sistema privado de registro. Obtén certificados digitales, códigos QR únicos y protección contra el robo. Más de 7,000 bicicletas registradas.",
+    "Registra tu bicicleta en México. Certificados digitales, código QR único y protección contra robo. Más de 7,000 bicicletas ya registradas.",
   keywords:
     "registro bicicletas méxico, certificado bicicleta oficial, sistema nacional bicicletas, registro bici méxico, código QR bicicleta, verificar bicicleta robada, certificado propiedad bicicleta, base datos bicicletas méxico",
   authors: [{ name: "Registro Nacional de Bicicletas México" }],

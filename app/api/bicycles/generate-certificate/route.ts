@@ -122,17 +122,19 @@ export async function GET(request: Request) {
       <style>
         @page {
   size: A4;
-  margin: 10mm;
+  margin: 5mm;
 }
 
 body {
   font-family: 'Arial', 'Helvetica', sans-serif;
   background: white;
   color: #333;
-  line-height: 1.2;
-  font-size: 10px;
+  line-height: 1.1;
+  font-size: 9px;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
+  margin: 0;
+  padding: 0;
 }
 
 .certificate {
@@ -143,29 +145,30 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
 }
 
 .header {
   background: linear-gradient(135deg, #1E40AF 0%, #1D4ED8 100%);
   color: white;
-  padding: 16px;
+  padding: 12px;
   text-align: center;
   position: relative;
   flex-shrink: 0;
 }
 
 .logo {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   background: white;
   border-radius: 50%;
-  padding: 6px;
-  margin-right: 12px;
+  padding: 4px;
+  margin-right: 10px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .main-title {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: bold;
   letter-spacing: 1px;
   margin-bottom: 2px;
@@ -173,49 +176,49 @@ body {
 }
 
 .subtitle {
-  font-size: 10px;
-  margin-bottom: 4px;
+  font-size: 9px;
+  margin-bottom: 3px;
   opacity: 0.95;
 }
 
 .certificate-title {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;
   border: 2px solid white;
-  padding: 4px 10px;
+  padding: 3px 8px;
   display: inline-block;
-  border-radius: 15px;
+  border-radius: 12px;
   background: rgba(255,255,255,0.1);
 }
 
 .document-info {
   background: #F8FAFC;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-bottom: 3px solid #1E3A8A;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-  font-size: 8px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 7px;
   flex-shrink: 0;
 }
 
 .content {
-  padding: 8px !important;
+  padding: 6px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px !important;
+  gap: 4px;
 }
 
 .section-title {
   background: linear-gradient(90deg, #1E3A8A, #3B82F6);
   color: white;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: bold;
-  padding: 4px 10px;
-  margin-bottom: 8px;
+  padding: 3px 8px;
+  margin-bottom: 4px;
   text-transform: uppercase;
   letter-spacing: 1px;
   border-radius: 3px;
@@ -224,13 +227,13 @@ body {
 .info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3px !important;
-  margin-bottom: 3px !important;
+  gap: 3px;
+  margin-bottom: 4px;
 }
 
 .info-item {
   background: #F9FAFB;
-  padding: 3px !important;
+  padding: 3px;
   border-radius: 3px;
   border-left: 3px solid #1E3A8A;
 }
@@ -238,44 +241,47 @@ body {
 .info-label {
   font-weight: bold;
   color: #1E40AF;
-  font-size: 7px;
+  font-size: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 2px;
+  margin-bottom: 1px;
 }
 
 .info-value {
   color: #1F2937;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 600;
+  word-break: break-word;
 }
 
 .verification-section {
   background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
-  padding: 8px;
-  border-radius: 6px;
+  padding: 6px;
+  border-radius: 4px;
   border: 2px solid #1E3A8A;
   position: relative;
-  font-size: 8px;
+  font-size: 7px;
+  margin-bottom: 4px;
 }
 
 .invoice-section {
   background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
-  padding: 8px;
-  border-radius: 6px;
+  padding: 6px;
+  border-radius: 4px;
   border: 2px solid #1E3A8A;
   position: relative;
-  font-size: 8px;
+  font-size: 7px;
+  margin-bottom: 4px;
 }
 
 .validity-section {
   background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-  padding: 8px;
-  border-radius: 6px;
+  padding: 6px;
+  border-radius: 4px;
   border: 2px solid #F59E0B;
   position: relative;
-  font-size: 8px;
-  margin-top: 8px;
+  font-size: 7px;
+  margin-bottom: 4px;
 }
 
 .validity-section.valid {
@@ -287,11 +293,11 @@ body {
   background: radial-gradient(circle, #1E3A8A 0%, #1E40AF 100%);
   box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
   position: absolute;
-  top: 35%;
-  right: 15px;
+  top: 30%;
+  right: 10px;
   transform: translateY(-50%);
-  width: 80px;
-  height: 80px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -299,7 +305,7 @@ body {
   justify-content: center;
   color: white;
   font-weight: bold;
-  font-size: 7px;
+  font-size: 6px;
   text-align: center;
   line-height: 1.1;
   border: 3px solid white;
@@ -307,8 +313,8 @@ body {
 }
 
 .seal-logo {
-  width: 25px;
-  height: 25px;
+  width: 20px;
+  height: 20px;
   margin-bottom: 2px;
   filter: brightness(0) invert(1);
 }
@@ -316,37 +322,38 @@ body {
 .footer {
   background: #1F2937;
   color: white;
-  padding: 8px;
+  padding: 6px;
   text-align: center;
   flex-shrink: 0;
+  margin-top: auto;
 }
 
 .footer-title {
-  font-size: 9px;
+  font-size: 8px;
   font-weight: bold;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   color: #60A5FA;
 }
 
 .footer-text {
-  font-size: 7px;
-  line-height: 1.3;
-  margin-bottom: 3px;
+  font-size: 6px;
+  line-height: 1.2;
+  margin-bottom: 2px;
 }
 
 .footer-legal {
-  font-size: 6px;
+  font-size: 5px;
   opacity: 0.8;
   border-top: 1px solid #374151;
-  padding-top: 4px;
-  margin-top: 6px;
+  padding-top: 3px;
+  margin-top: 4px;
 }
 
 .logo-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   position: relative;
   z-index: 1;
 }
@@ -364,20 +371,21 @@ body {
   font-weight: bold;
   color: #1E3A8A;
   text-transform: uppercase;
-  font-size: 8px;
+  font-size: 7px;
   letter-spacing: 1px;
   margin-bottom: 2px;
 }
 
 .doc-value {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
   color: #1F2937;
+  word-break: break-word;
 }
 
 .section {
   page-break-inside: avoid;
-  margin-bottom: 3px !important;
+  margin-bottom: 4px;
 }
 
 .footer-content {
@@ -429,20 +437,20 @@ body {
 .qr-section {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 15px;
+  gap: 10px;
   align-items: center;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .qr-placeholder {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   border: 2px solid #1E3A8A;
-  border-radius: 8px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 7px;
+  font-size: 6px;
   color: #1E3A8A;
   text-align: center;
   font-weight: bold;
@@ -451,13 +459,13 @@ body {
 
 .status-badge {
   display: inline-block;
-  padding: 4px 8px;
-  border-radius: 15px;
-  font-size: 8px;
+  padding: 3px 6px;
+  border-radius: 12px;
+  font-size: 6px;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-top: 5px;
+  margin-top: 3px;
 }
 
 .status-verified {
@@ -486,64 +494,62 @@ body {
 
 @media screen and (max-width: 768px) {
   body {
-    font-size: 8px !important;
+    font-size: 7px;
   }
   
   .certificate {
     border-width: 1px;
-    height: auto;
-    max-height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
   }
   
   .content {
-    padding: 6px !important;
-    gap: 3px !important;
+    padding: 4px;
+    gap: 3px;
   }
   
   .info-grid {
     grid-template-columns: 1fr;
-    gap: 3px !important;
+    gap: 2px;
   }
   
   .document-info {
     grid-template-columns: 1fr;
-    gap: 3px !important;
-    padding: 4px 6px !important;
+    gap: 4px;
+    padding: 4px 6px;
   }
   
   .main-title {
-    font-size: 16px !important;
+    font-size: 14px;
   }
   
   .section {
-    margin-bottom: 2px !important;
+    margin-bottom: 3px;
   }
   
   .section-title {
-    font-size: 9px !important;
-    padding: 2px 6px !important;
-    margin-bottom: 3px !important;
+    font-size: 8px;
+    padding: 2px 6px;
+    margin-bottom: 3px;
   }
   
   .info-item {
-    padding: 2px !important;
+    padding: 2px;
   }
   
   .info-label {
-    font-size: 6px !important;
+    font-size: 5px;
   }
   
   .info-value {
-    font-size: 9px !important;
+    font-size: 8px;
   }
   
   .verification-section,
   .invoice-section,
   .validity-section {
-    padding: 4px !important;
-    font-size: 6px !important;
-    margin-top: 2px !important;
+    padding: 4px;
+    font-size: 6px;
+    margin-bottom: 3px;
   }
   
   .official-seal {
@@ -551,115 +557,114 @@ body {
     right: auto;
     top: auto;
     transform: none;
-    margin: 8px auto;
-    width: 60px !important;
-    height: 60px !important;
-    font-size: 5px !important;
+    margin: 6px auto;
+    width: 50px;
+    height: 50px;
+    font-size: 4px;
   }
   
   .footer {
-    padding: 4px !important;
-    font-size: 5px !important;
+    padding: 4px;
+    font-size: 5px;
   }
   
   .footer-title {
-    font-size: 6px !important;
+    font-size: 6px;
   }
   
   .qr-placeholder {
-    width: 40px !important;
-    height: 40px !important;
-    font-size: 5px !important;
+    width: 35px;
+    height: 35px;
+    font-size: 4px;
   }
   
   .status-badge {
-    font-size: 6px !important;
-    padding: 2px 4px !important;
+    font-size: 5px;
+    padding: 2px 4px;
   }
   
-  /* Ocultar botones en móvil también */
   .download-btn {
-    display: none !important;
+    display: none;
   }
 }
 
-/* Media query específica para móviles en modo impresión */
 @media print and (max-width: 768px) {
   @page {
     size: A4 portrait;
-    margin: 5mm !important;
+    margin: 3mm;
   }
   
   body {
-    font-size: 6px !important;
-    line-height: 1.1 !important;
-    height: 100vh !important;
-    overflow: hidden !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    font-size: 5px;
+    line-height: 1.0;
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
   }
   
   .certificate {
-    height: 100vh !important;
-    max-height: 100vh !important;
-    overflow: hidden !important;
-    page-break-inside: avoid !important;
-    transform: scale(0.85) !important;
-    transform-origin: top left !important;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    page-break-inside: avoid;
+    transform: scale(0.9);
+    transform-origin: top left;
+    min-height: 100vh;
   }
   
   .content {
-    padding: 2px !important;
-    gap: 1px !important;
+    padding: 2px;
+    gap: 1px;
+    flex: 1;
   }
   
   .section {
-    margin-bottom: 1px !important;
-    page-break-inside: avoid !important;
+    margin-bottom: 1px;
+    page-break-inside: avoid;
   }
   
   .info-grid {
-    gap: 1px !important;
+    gap: 1px;
   }
   
   .info-item {
-    padding: 1px !important;
+    padding: 1px;
   }
   
   .verification-section,
   .invoice-section,
   .validity-section {
-    padding: 2px !important;
-    font-size: 5px !important;
-    margin-top: 1px !important;
+    padding: 2px;
+    font-size: 4px;
+    margin-bottom: 1px;
   }
   
   .official-seal {
-    width: 30px !important;
-    height: 30px !important;
-    font-size: 3px !important;
+    width: 25px;
+    height: 25px;
+    font-size: 3px;
   }
   
   .footer {
-    padding: 2px !important;
-    font-size: 4px !important;
+    padding: 2px;
+    font-size: 3px;
   }
   
   .header {
-    padding: 8px !important;
+    padding: 4px;
   }
   
   .main-title {
-    font-size: 12px !important;
+    font-size: 10px;
   }
   
   .document-info {
-    padding: 2px 4px !important;
+    padding: 2px 3px;
   }
 }
 
 @media print {
-  /* Ocultar completamente en impresión */
   .mobile-instructions, 
   .download-buttons,
   .no-print,
@@ -677,7 +682,6 @@ body {
     top: -9999px !important;
   }
   
-  /* Asegurar que el certificado ocupe toda la página */
   body {
     margin: 0 !important;
     padding: 0 !important;

@@ -11,14 +11,14 @@ import { Toaster } from "@/components/ui/toaster"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Registro Nacional de Bicicletas México - Sistema Oficial de Registro y Certificación de Bicicletas",
+  title: "Registro Nacional de Bicicletas México - Sistema Oficial",
   description:
-    "Sistema oficial del Registro Nacional de Bicicletas de México. Registra tu bicicleta, obtén tu certificado oficial, protégete contra el robo y verifica la autenticidad de bicicletas usadas. Plataforma segura con códigos QR únicos, base de datos nacional y certificados digitales válidos ante autoridades mexicanas.",
+    "Registra tu bicicleta en el sistema oficial de México. Obtén certificados válidos, códigos QR únicos y protección contra el robo.",
   keywords:
     "registro bicicletas méxico, certificado bicicleta oficial, sistema nacional bicicletas, registro bici méxico, código QR bicicleta, verificar bicicleta robada, certificado propiedad bicicleta, base datos bicicletas méxico",
   authors: [{ name: "Registro Nacional de Bicicletas México" }],
   creator: "Registro Nacional de Bicicletas México",
-  publisher: "Gobierno de México",
+  publisher: "Registro Nacional de Bicicletas México",
   formatDetection: {
     email: false,
     address: false,

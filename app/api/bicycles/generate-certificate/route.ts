@@ -122,15 +122,15 @@ export async function GET(request: Request) {
       <style>
         @page {
   size: A4;
-  margin: 5mm;
+  margin: 8mm;
 }
 
 body {
   font-family: 'Arial', 'Helvetica', sans-serif;
   background: white;
   color: #333;
-  line-height: 1.1;
-  font-size: 9px;
+  line-height: 1.3;
+  font-size: 11px;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
   margin: 0;
@@ -151,137 +151,137 @@ body {
 .header {
   background: linear-gradient(135deg, #1E40AF 0%, #1D4ED8 100%);
   color: white;
-  padding: 12px;
+  padding: 16px;
   text-align: center;
   position: relative;
   flex-shrink: 0;
 }
 
 .logo {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   background: white;
   border-radius: 50%;
-  padding: 4px;
-  margin-right: 10px;
+  padding: 6px;
+  margin-right: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
 .main-title {
-  font-size: 18px;
+  font-size: 24px;
   font-weight: bold;
   letter-spacing: 1px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .subtitle {
-  font-size: 9px;
-  margin-bottom: 3px;
+  font-size: 12px;
+  margin-bottom: 6px;
   opacity: 0.95;
 }
 
 .certificate-title {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;
   border: 2px solid white;
-  padding: 3px 8px;
+  padding: 6px 12px;
   display: inline-block;
-  border-radius: 12px;
+  border-radius: 15px;
   background: rgba(255,255,255,0.1);
 }
 
 .document-info {
   background: #F8FAFC;
-  padding: 6px 10px;
+  padding: 12px 16px;
   border-bottom: 3px solid #1E3A8A;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  font-size: 7px;
+  gap: 16px;
+  font-size: 10px;
   flex-shrink: 0;
 }
 
 .content {
-  padding: 6px;
+  padding: 12px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 .section-title {
   background: linear-gradient(90deg, #1E3A8A, #3B82F6);
   color: white;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: bold;
-  padding: 3px 8px;
-  margin-bottom: 4px;
+  padding: 6px 12px;
+  margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3px;
-  margin-bottom: 4px;
+  gap: 6px;
+  margin-bottom: 8px;
 }
 
 .info-item {
   background: #F9FAFB;
-  padding: 3px;
-  border-radius: 3px;
+  padding: 6px;
+  border-radius: 4px;
   border-left: 3px solid #1E3A8A;
 }
 
 .info-label {
   font-weight: bold;
   color: #1E40AF;
-  font-size: 6px;
+  font-size: 8px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 1px;
+  margin-bottom: 2px;
 }
 
 .info-value {
   color: #1F2937;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 600;
   word-break: break-word;
 }
 
 .verification-section {
   background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
-  padding: 6px;
-  border-radius: 4px;
+  padding: 10px;
+  border-radius: 6px;
   border: 2px solid #1E3A8A;
   position: relative;
-  font-size: 7px;
-  margin-bottom: 4px;
+  font-size: 9px;
+  margin-bottom: 8px;
 }
 
 .invoice-section {
   background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
-  padding: 6px;
-  border-radius: 4px;
+  padding: 10px;
+  border-radius: 6px;
   border: 2px solid #1E3A8A;
   position: relative;
-  font-size: 7px;
-  margin-bottom: 4px;
+  font-size: 9px;
+  margin-bottom: 8px;
 }
 
 .validity-section {
   background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
-  padding: 6px;
-  border-radius: 4px;
+  padding: 10px;
+  border-radius: 6px;
   border: 2px solid #F59E0B;
   position: relative;
-  font-size: 7px;
-  margin-bottom: 4px;
+  font-size: 9px;
+  margin-bottom: 8px;
 }
 
 .validity-section.valid {
@@ -293,11 +293,11 @@ body {
   background: radial-gradient(circle, #1E3A8A 0%, #1E40AF 100%);
   box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
   position: absolute;
-  top: 30%;
-  right: 10px;
+  top: 35%;
+  right: 15px;
   transform: translateY(-50%);
-  width: 70px;
-  height: 70px;
+  width: 85px;
+  height: 85px;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
@@ -305,7 +305,7 @@ body {
   justify-content: center;
   color: white;
   font-weight: bold;
-  font-size: 6px;
+  font-size: 8px;
   text-align: center;
   line-height: 1.1;
   border: 3px solid white;
@@ -313,8 +313,8 @@ body {
 }
 
 .seal-logo {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   margin-bottom: 2px;
   filter: brightness(0) invert(1);
 }
@@ -322,38 +322,38 @@ body {
 .footer {
   background: #1F2937;
   color: white;
-  padding: 6px;
+  padding: 10px;
   text-align: center;
   flex-shrink: 0;
   margin-top: auto;
 }
 
 .footer-title {
-  font-size: 8px;
+  font-size: 11px;
   font-weight: bold;
-  margin-bottom: 3px;
+  margin-bottom: 4px;
   color: #60A5FA;
 }
 
 .footer-text {
-  font-size: 6px;
-  line-height: 1.2;
-  margin-bottom: 2px;
+  font-size: 8px;
+  line-height: 1.3;
+  margin-bottom: 3px;
 }
 
 .footer-legal {
-  font-size: 5px;
+  font-size: 7px;
   opacity: 0.8;
   border-top: 1px solid #374151;
-  padding-top: 3px;
-  margin-top: 4px;
+  padding-top: 4px;
+  margin-top: 6px;
 }
 
 .logo-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   position: relative;
   z-index: 1;
 }
@@ -371,13 +371,13 @@ body {
   font-weight: bold;
   color: #1E3A8A;
   text-transform: uppercase;
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 1px;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 .doc-value {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: bold;
   color: #1F2937;
   word-break: break-word;
@@ -385,7 +385,7 @@ body {
 
 .section {
   page-break-inside: avoid;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .footer-content {
@@ -437,20 +437,20 @@ body {
 .qr-section {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .qr-placeholder {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   border: 2px solid #1E3A8A;
-  border-radius: 6px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 6px;
+  font-size: 7px;
   color: #1E3A8A;
   text-align: center;
   font-weight: bold;
@@ -459,13 +459,13 @@ body {
 
 .status-badge {
   display: inline-block;
-  padding: 3px 6px;
-  border-radius: 12px;
-  font-size: 6px;
+  padding: 4px 8px;
+  border-radius: 15px;
+  font-size: 8px;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;
-  margin-top: 3px;
+  margin-top: 4px;
 }
 
 .status-verified {
@@ -494,7 +494,7 @@ body {
 
 @media screen and (max-width: 768px) {
   body {
-    font-size: 7px;
+    font-size: 9px;
   }
   
   .certificate {
@@ -503,53 +503,53 @@ body {
   }
   
   .content {
-    padding: 4px;
-    gap: 3px;
+    padding: 8px;
+    gap: 6px;
   }
   
   .info-grid {
     grid-template-columns: 1fr;
-    gap: 2px;
+    gap: 4px;
   }
   
   .document-info {
     grid-template-columns: 1fr;
-    gap: 4px;
-    padding: 4px 6px;
+    gap: 8px;
+    padding: 8px 10px;
   }
   
   .main-title {
-    font-size: 14px;
+    font-size: 18px;
   }
   
   .section {
-    margin-bottom: 3px;
+    margin-bottom: 6px;
   }
   
   .section-title {
-    font-size: 8px;
-    padding: 2px 6px;
-    margin-bottom: 3px;
+    font-size: 11px;
+    padding: 4px 8px;
+    margin-bottom: 6px;
   }
   
   .info-item {
-    padding: 2px;
+    padding: 4px;
   }
   
   .info-label {
-    font-size: 5px;
+    font-size: 7px;
   }
   
   .info-value {
-    font-size: 8px;
+    font-size: 10px;
   }
   
   .verification-section,
   .invoice-section,
   .validity-section {
-    padding: 4px;
-    font-size: 6px;
-    margin-bottom: 3px;
+    padding: 6px;
+    font-size: 8px;
+    margin-bottom: 6px;
   }
   
   .official-seal {
@@ -557,30 +557,30 @@ body {
     right: auto;
     top: auto;
     transform: none;
-    margin: 6px auto;
-    width: 50px;
-    height: 50px;
-    font-size: 4px;
-  }
-  
-  .footer {
-    padding: 4px;
-    font-size: 5px;
-  }
-  
-  .footer-title {
+    margin: 8px auto;
+    width: 65px;
+    height: 65px;
     font-size: 6px;
   }
   
+  .footer {
+    padding: 6px;
+    font-size: 7px;
+  }
+  
+  .footer-title {
+    font-size: 8px;
+  }
+  
   .qr-placeholder {
-    width: 35px;
-    height: 35px;
-    font-size: 4px;
+    width: 45px;
+    height: 45px;
+    font-size: 6px;
   }
   
   .status-badge {
-    font-size: 5px;
-    padding: 2px 4px;
+    font-size: 7px;
+    padding: 3px 6px;
   }
   
   .download-btn {
@@ -591,12 +591,12 @@ body {
 @media print and (max-width: 768px) {
   @page {
     size: A4 portrait;
-    margin: 3mm;
+    margin: 5mm;
   }
   
   body {
-    font-size: 5px;
-    line-height: 1.0;
+    font-size: 7px;
+    line-height: 1.1;
     height: 100vh;
     overflow: hidden;
     margin: 0;
@@ -608,59 +608,59 @@ body {
     max-height: 100vh;
     overflow: hidden;
     page-break-inside: avoid;
-    transform: scale(0.9);
+    transform: scale(0.95);
     transform-origin: top left;
     min-height: 100vh;
   }
   
   .content {
-    padding: 2px;
-    gap: 1px;
+    padding: 4px;
+    gap: 2px;
     flex: 1;
   }
   
   .section {
-    margin-bottom: 1px;
+    margin-bottom: 2px;
     page-break-inside: avoid;
   }
   
   .info-grid {
-    gap: 1px;
+    gap: 2px;
   }
   
   .info-item {
-    padding: 1px;
+    padding: 2px;
   }
   
   .verification-section,
   .invoice-section,
   .validity-section {
-    padding: 2px;
-    font-size: 4px;
-    margin-bottom: 1px;
+    padding: 4px;
+    font-size: 6px;
+    margin-bottom: 2px;
   }
   
   .official-seal {
-    width: 25px;
-    height: 25px;
-    font-size: 3px;
+    width: 40px;
+    height: 40px;
+    font-size: 4px;
   }
   
   .footer {
-    padding: 2px;
-    font-size: 3px;
+    padding: 4px;
+    font-size: 5px;
   }
   
   .header {
-    padding: 4px;
+    padding: 8px;
   }
   
   .main-title {
-    font-size: 10px;
+    font-size: 14px;
   }
   
   .document-info {
-    padding: 2px 3px;
+    padding: 4px 6px;
   }
 }
 

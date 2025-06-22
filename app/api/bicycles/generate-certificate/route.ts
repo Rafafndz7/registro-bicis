@@ -755,53 +755,75 @@ body {
             </div>
           </div>
           
-          <div class="section">
-            <h2 class="section-title">Detalles de la Bicicleta</h2>
-            <div class="info-grid">
-              <div class="info-item">
-                <div class="info-label">Marca</div>
-                <div class="info-value">${bicycle.brand || "No Disponible"}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Modelo</div>
-                <div class="info-value">${bicycle.model || "No Disponible"}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Año</div>
-                <div class="info-value">${bicycle.year || "No Disponible"}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Color</div>
-                <div class="info-value">${bicycle.color || "No Disponible"}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Número de Serie</div>
-                <div class="info-value">${bicycle.serial_number || "No Disponible"}</div>
-              </div>
-              <div class="info-item">
-                <div class="info-label">Tipo de Bicicleta</div>
-                <div class="info-value">${bicycle.bicycle_type || "No Disponible"}</div>
-              </div>
-            </div>
-          </div>
+<div class="section">
+  <h2 class="section-title">Detalles de la Bicicleta</h2>
+  <div class="info-grid">
+    <div class="info-item">
+      <div class="info-label">Marca</div>
+      <div class="info-value">${bicycle.brand || "No Disponible"}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Modelo</div>
+      <div class="info-value">${bicycle.model || "No Disponible"}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Año</div>
+      <div class="info-value">${bicycle.year || "No Disponible"}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Color</div>
+      <div class="info-value">${bicycle.color || "No Disponible"}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Número de Serie</div>
+      <div class="info-value">${bicycle.serial_number || "No Disponible"}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Tipo de Bicicleta</div>
+      <div class="info-value">${bicycle.bicycle_type || "No Disponible"}</div>
+    </div>
+
+    <!-- NUEVOS CAMPOS AGREGADOS -->
+    <div class="info-item">
+      <div class="info-label">Rodada</div>
+      <div class="info-value">${bicycle.wheel_size || "No Disponible"}</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Grupo</div>
+      <div class="info-value">${bicycle.groupset || "No Disponible"}</div>
+    </div>
+    <div class="info-item full-width">
+      <div class="info-label">Características</div>
+      <div class="info-value">${bicycle.characteristics || "No Disponible"}</div>
+    </div>
+  </div>
+</div>
+
           
-          <div class="verification-section">
-            Este certificado valida que la bicicleta ha sido registrada en la base de datos del Registro Nacional de Bicicletas (RNB) y está asociada al propietario actual.
-            <div class="qr-section">
-              <div>
-                Para verificar la autenticidad de este certificado, escanee el código QR con su dispositivo móvil.
-              </div>
-              <div class="qr-placeholder">
-                Código QR aquí
-              </div>
-            </div>
-          </div>
+<div class="verification-section">
+  <strong>Autenticidad del Registro</strong>
+  <br><br>
+  Este certificado confirma que la bicicleta ha sido registrada exitosamente en el Registro Nacional de Bicicletas (RNB) y está vinculada al propietario actual.
+  <br><br>
+  Para verificar su autenticidad, escanee el siguiente código QR:
+  <div class="qr-section">
+    <div class="qr-placeholder">Código QR</div>
+  </div>
+</div>
+
 
           <div class="validity-section ${daysUntilExpiration > 7 ? "valid" : ""}">
             <strong>TÉRMINOS DE VALIDEZ Y CONDICIONES</strong>
             <br><br>
-            <strong>Validez del Certificado:</strong> Este documento es válido únicamente mientras la suscripción del propietario permanezca activa. La expiración o cancelación de la suscripción invalida automáticamente este certificado.
-            <br><br>
+<strong>Validez del Certificado:</strong> Vigente únicamente mientras la suscripción del propietario permanezca activa. La cancelación o vencimiento de la suscripción invalida este documento automáticamente.
+<br><br>
+<strong>Plan Contratado:</strong> ${subscription.plan_type} – Hasta ${subscription.bicycle_limit} bicicleta${subscription.bicycle_limit !== 1 ? "s" : ""}
+<br>
+<strong>Vence el:</strong> ${expirationDateFormatted}
+<br><br>
+<strong>Nota:</strong> Este certificado no constituye un título legal de propiedad. Para mantener su validez, debe renovarse antes de la fecha de vencimiento.
+<span class="status-badge ${validityClass}">${validityStatus}</span>
+
             <strong>Plan Actual:</strong> ${subscription.plan_type} (${subscription.bicycle_limit} bicicleta${subscription.bicycle_limit !== 1 ? "s" : ""} registradas)
             <br>
             <strong>Vencimiento de Suscripción:</strong> ${expirationDateFormatted}

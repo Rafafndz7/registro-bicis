@@ -262,7 +262,7 @@ export default function SubscriptionPage() {
     <div className="container mx-auto max-w-6xl py-10">
       <div className="text-center mb-10">
         <h1 className="text-4xl font-bold mb-4">Planes de Suscripción</h1>
-        <p className="text-xl text-muted-foreground">Suscripción mensual desde solo $40 MXN para acceso completo</p>
+        <p className="text-xl text-muted-foreground">Suscripción mensual desde solo $30 MXN para acceso completo</p>
       </div>
 
       {/* Sección de Código Promocional */}

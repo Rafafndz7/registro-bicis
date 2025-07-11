@@ -23,10 +23,10 @@ export async function POST(request: Request) {
 
     // Definir precios base
     const planPrices = {
-      basic: { price: 40, bicycles: 1 },
-      standard: { price: 60, bicycles: 2 },
-      family: { price: 120, bicycles: 4 },
-      premium: { price: 180, bicycles: 6 },
+      basic: { price: 30, bicycles: 1 },
+      standard: { price: 50, bicycles: 2 },
+      family: { price: 90, bicycles: 4 },
+      premium: { price: 140, bicycles: 6 },
     }
 
     const selectedPlan = planPrices[planType as keyof typeof planPrices]

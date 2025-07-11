@@ -19,7 +19,7 @@ const plans = [
   {
     id: "basic",
     name: "Básico",
-    price: 40,
+    price: 30,
     bicycles: 1,
     description: "Perfecto para ciclistas individuales",
     features: [
@@ -35,7 +35,7 @@ const plans = [
   {
     id: "standard",
     name: "Estándar",
-    price: 60,
+    price: 50,
     bicycles: 2,
     description: "Ideal para parejas o ciclistas con múltiples bicis",
     features: [
@@ -51,7 +51,7 @@ const plans = [
   {
     id: "family",
     name: "Familiar",
-    price: 120,
+    price: 90,
     bicycles: 4,
     description: "Perfecto para familias pequeñas",
     features: [
@@ -68,7 +68,7 @@ const plans = [
   {
     id: "premium",
     name: "Premium",
-    price: 180,
+    price: 140,
     bicycles: 6,
     description: "Para familias grandes o grupos de ciclistas",
     features: [

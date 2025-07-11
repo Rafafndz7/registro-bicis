@@ -8,10 +8,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 })
 
 const STRIPE_PRICE_IDS = {
-  basic: "price_1QZrGnP5Z8K9QJxLvQJxLvQJ", // Reemplaza con tus IDs reales
-  standard: "price_1QZrGnP5Z8K9QJxLvQJxLvQK",
-  family: "price_1QZrGnP5Z8K9QJxLvQJxLvQL",
-  premium: "price_1QZrGnP5Z8K9QJxLvQJxLvQM",
+  basic: "price_1RjjmZP2bAdrMLI67IFcuy4c", // Reemplaza con tus IDs reales
+  standard: "price_1RjjnnP2bAdrMLI67PMbr076",
+  family: "price_1RjjpIP2bAdrMLI6fMMyUqLK",
+  premium: "price_1RjjooP2bAdrMLI6pKfYfcAn",
 }
 
 const PLAN_LIMITS = {

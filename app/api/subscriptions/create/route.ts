@@ -9,10 +9,10 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 // Actualizar los Price IDs de PRODUCCIÓN - necesito el Price ID real del plan familiar
 const PLAN_PRICE_IDS = {
-  basic: "price_1RbaIiP2bAdrMLI6LPeUmgmN", // $40 MXN
-  standard: "price_1RbaJWP2bAdrMLI61k1RvTtn", // $60 MXN
-  family: "price_1Rc6XxP2bAdrMLI6WYUue92V", // $120 MXN - Plan familiar actualizado
-  premium: "price_1RbaKoP2bAdrMLI6iNSK4dHl", // $180 MXN
+  basic: "price_1RjjmZP2bAdrMLI67IFcuy4c", // $40 MXN
+  standard: "price_1RjjnnP2bAdrMLI67PMbr076", // $60 MXN
+  family: "price_1RjjpIP2bAdrMLI6fMMyUqLK", // $120 MXN - Plan familiar actualizado
+  premium: "price_1RjjooP2bAdrMLI6pKfYfcAn", // $180 MXN
 }
 
 const planLimits = {

@@ -302,7 +302,7 @@ export default async function Page() {
               {
                 step: "2",
                 title: "Suscríbete",
-                description: "Suscripción mensual desde solo $40 MXN para acceso completo al sistema nacional.",
+                description: "Suscripción mensual desde solo $30 MXN para acceso completo al sistema nacional.",
                 color: "bg-green-600",
               },
               {
@@ -406,7 +406,7 @@ export default async function Page() {
               <CardHeader className="text-center">
                 <CardTitle className="text-xl">Básico</CardTitle>
                 <CardDescription>Perfecto para un ciclista</CardDescription>
-                <div className="text-4xl font-bold text-blue-600 mt-4">$40</div>
+                <div className="text-4xl font-bold text-blue-600 mt-4">$30</div>
                 <div className="text-gray-500">MXN/mes</div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -436,7 +436,7 @@ export default async function Page() {
               <CardHeader className="text-center">
                 <CardTitle className="text-xl">Estándar</CardTitle>
                 <CardDescription>Ideal para múltiples bicis</CardDescription>
-                <div className="text-4xl font-bold text-blue-600 mt-4">$60</div>
+                <div className="text-4xl font-bold text-blue-600 mt-4">$50</div>
                 <div className="text-gray-500">MXN/mes</div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -466,7 +466,7 @@ export default async function Page() {
               <CardHeader className="text-center">
                 <CardTitle className="text-xl">Familiar</CardTitle>
                 <CardDescription>Perfecto para familias</CardDescription>
-                <div className="text-4xl font-bold text-purple-600 mt-4">$120</div>
+                <div className="text-4xl font-bold text-purple-600 mt-4">$90</div>
                 <div className="text-gray-500">MXN/mes</div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -496,7 +496,7 @@ export default async function Page() {
               <CardHeader className="text-center">
                 <CardTitle className="text-xl">Premium</CardTitle>
                 <CardDescription>Para coleccionistas</CardDescription>
-                <div className="text-4xl font-bold text-yellow-600 mt-4">$180</div>
+                <div className="text-4xl font-bold text-yellow-600 mt-4">$140</div>
                 <div className="text-gray-500">MXN/mes</div>
               </CardHeader>
               <CardContent className="space-y-4">

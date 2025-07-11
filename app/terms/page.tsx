@@ -24,7 +24,7 @@ export default function TermsOfServicePage() {
           <div className="px-8 py-12 space-y-8">
             <div className="prose prose-lg max-w-none dark:prose-invert">
               <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                Bienvenido a Registro Nacional de Bicis. Estos términos y condiciones describen las reglas y
+                Bienvenido a Registro Nacional de Bicicletas. Estos términos y condiciones describen las reglas y
                 regulaciones para el uso del sitio web de Registro Nacional de Bicis, ubicado en
                 registronacionaldebicis.com.
               </p>
@@ -112,13 +112,13 @@ export default function TermsOfServicePage() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-                    <h3 className="font-bold text-blue-600 dark:text-blue-400 mb-2">Plan Básico - $40 MXN/mes</h3>
+                    <h3 className="font-bold text-blue-600 dark:text-blue-400 mb-2">Plan Básico - $30 MXN/mes</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       1 bicicleta registrada, certificado oficial PDF, código QR de verificación, sistema de reportes
                     </p>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-                    <h3 className="font-bold text-green-600 dark:text-green-400 mb-2">Plan Estándar - $60 MXN/mes</h3>
+                    <h3 className="font-bold text-green-600 dark:text-green-400 mb-2">Plan Estándar - $50 MXN/mes</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       2 bicicletas registradas, certificados oficiales PDF, códigos QR de verificación, soporte
                       prioritario
@@ -126,14 +126,14 @@ export default function TermsOfServicePage() {
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                     <h3 className="font-bold text-purple-600 dark:text-purple-400 mb-2">
-                      Plan Familiar - $120 MXN/mes
+                      Plan Familiar - $90 MXN/mes
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       4 bicicletas registradas, gestión familiar, soporte prioritario, todos los beneficios
                     </p>
                   </div>
                   <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-                    <h3 className="font-bold text-yellow-600 dark:text-yellow-400 mb-2">Plan Premium - $180 MXN/mes</h3>
+                    <h3 className="font-bold text-yellow-600 dark:text-yellow-400 mb-2">Plan Premium - $140 MXN/mes</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       6 bicicletas registradas, soporte VIP 24/7, reportes avanzados, todos los beneficios
                     </p>
